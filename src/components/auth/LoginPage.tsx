@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, EyeOff, Loader2, Building2, AlertCircle, LogIn, Sparkles, Shield, TrendingUp } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Activity, AlertCircle, Lock, Mail } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -24,7 +24,6 @@ export function LoginPage() {
       const result = await login(email, password);
       
       if (!result.success) {
-        // Better error messages
         const errorMsg = result.error || 'Login failed';
         
         if (errorMsg.includes('not found') || errorMsg.includes('endpoint')) {
@@ -37,7 +36,6 @@ export function LoginPage() {
           setError(errorMsg);
         }
       }
-      // Success is handled by AuthContext (redirects automatically)
     } catch (err: any) {
       console.error('Login error:', err);
       setError('Unable to connect to the server. Please check your internet connection and try again.');
@@ -47,106 +45,74 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-700"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
-      </div>
-
-      <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
-          {/* Left Side - Marketing Content */}
-          <div className="hidden lg:block text-white space-y-8">
+          {/* Left Side - Branding & Features */}
+          <div className="hidden lg:block space-y-8">
+            {/* Logo & Title */}
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-                <Sparkles className="w-4 h-4 text-yellow-300" />
-                <span className="text-sm font-medium">Welcome Back!</span>
-              </div>
-              
-              <h1 className="text-5xl font-bold leading-tight">
-                Monitor, Track, and
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
-                  Optimize Performance
-                </span>
-              </h1>
-              
-              <p className="text-xl text-blue-100">
-                Access your dashboard to view real-time employee activity, productivity metrics, and comprehensive analytics.
-              </p>
-            </div>
-
-            {/* Features */}
-            <div className="space-y-4">
-              <div className="flex items-start gap-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-6 h-6 text-blue-400" />
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center">
+                  <Activity className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Real-Time Analytics</h3>
-                  <p className="text-blue-100 text-sm">Track productivity and activity in real-time</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-6 h-6 text-indigo-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Secure Access</h3>
-                  <p className="text-blue-100 text-sm">Protected with enterprise-grade security</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Building2 className="w-6 h-6 text-purple-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Multi-Tenant Dashboard</h3>
-                  <p className="text-blue-100 text-sm">Each company gets their own isolated workspace</p>
+                  <h1 className="text-3xl font-bold text-slate-900">TrackPro</h1>
+                  <p className="text-sm text-slate-600">Employee Tracking System</p>
                 </div>
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                <div className="text-3xl font-bold text-white mb-1">1000+</div>
-                <div className="text-sm text-blue-200">Companies</div>
+            {/* Features List */}
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
+                  <Activity className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-1">Real-time Monitoring</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    Track employee activity and productivity in real-time with automated screenshots
+                  </p>
+                </div>
               </div>
-              <div className="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                <div className="text-3xl font-bold text-white mb-1">50K+</div>
-                <div className="text-sm text-blue-200">Employees</div>
-              </div>
-              <div className="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                <div className="text-3xl font-bold text-white mb-1">99.9%</div>
-                <div className="text-sm text-blue-200">Uptime</div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
+                  <Lock className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-1">Secure & Private</h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    Enterprise-grade security with encrypted data storage and access controls
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Right Side - Login Form */}
-          <div className="w-full">
-            {/* Logo & Header for Mobile */}
-            <div className="text-center mb-8 lg:hidden">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-4 shadow-lg border border-white/20">
-                <Building2 className="w-8 h-8 text-white" />
+          <div className="w-full max-w-md mx-auto lg:mx-0">
+            {/* Mobile Logo */}
+            <div className="lg:hidden text-center mb-8">
+              <div className="inline-flex items-center gap-2 mb-2">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                  <Activity className="w-6 h-6 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold text-slate-900">TrackPro</h1>
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">Work-Eye</h1>
-              <p className="text-blue-200">Welcome back to your dashboard</p>
+              <p className="text-sm text-slate-600">Employee Tracking System</p>
             </div>
 
-            {/* Login Form Card */}
-            <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
+            {/* Login Card */}
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
-                <p className="text-slate-600">Sign in to access your dashboard</p>
+                <p className="text-slate-600">Sign in to your admin account</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Error Alert */}
                 {error && (
                   <Alert variant="destructive" className="bg-red-50 border-red-200">
@@ -160,20 +126,23 @@ export function LoginPage() {
                   <Label htmlFor="email" className="text-slate-700 font-medium">
                     Email Address
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@company.com"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setError(''); // Clear error when user starts typing
-                    }}
-                    required
-                    disabled={loading}
-                    className="h-12 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                    autoComplete="email"
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="admin@company.com"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setError('');
+                      }}
+                      required
+                      disabled={loading}
+                      className="h-12 pl-10 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      autoComplete="email"
+                    />
+                  </div>
                 </div>
 
                 {/* Password Field */}
@@ -190,6 +159,7 @@ export function LoginPage() {
                     </button>
                   </div>
                   <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
@@ -197,11 +167,11 @@ export function LoginPage() {
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
-                        setError(''); // Clear error when user starts typing
+                        setError('');
                       }}
                       required
                       disabled={loading}
-                      className="h-12 pr-10 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      className="h-12 pl-10 pr-10 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                       autoComplete="current-password"
                     />
                     <button
@@ -216,21 +186,23 @@ export function LoginPage() {
                 </div>
 
                 {/* Remember Me */}
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="remember"
-                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <Label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer">
-                    Remember me for 30 days
-                  </Label>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="remember"
+                      className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <Label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer">
+                      Remember me
+                    </Label>
+                  </div>
                 </div>
 
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+                  className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all"
                   disabled={loading}
                 >
                   {loading ? (
@@ -239,55 +211,23 @@ export function LoginPage() {
                       Signing in...
                     </>
                   ) : (
-                    <>
-                      <LogIn className="w-5 h-5 mr-2" />
-                      Sign In to Dashboard
-                    </>
+                    'Sign In'
                   )}
                 </Button>
               </form>
 
-              {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-slate-500">Don't have an account?</span>
-                </div>
-              </div>
-
               {/* Sign Up Link */}
-              <Link to="/signup">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-12 border-2 border-slate-200 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50 font-semibold transition-all"
-                >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Create New Company Account
-                </Button>
-              </Link>
-
-              {/* Demo Access Info */}
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <AlertCircle className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-blue-900 mb-1">Need a demo?</h4>
-                    <p className="text-xs text-blue-700">
-                      Contact our sales team for a personalized demo of Work-Eye's features and capabilities.
-                    </p>
-                  </div>
-                </div>
+              <div className="mt-6 text-center text-sm">
+                <span className="text-slate-600">Don't have an account? </span>
+                <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-semibold hover:underline">
+                  Sign up
+                </Link>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="text-center mt-6 text-sm text-blue-200">
-              <p>© 2026 Work-Eye. All rights reserved.</p>
+            <div className="text-center mt-6 text-sm text-slate-600">
+              <p>Secure admin access only</p>
             </div>
           </div>
         </div>
