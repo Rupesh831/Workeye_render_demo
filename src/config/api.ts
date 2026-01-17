@@ -87,6 +87,47 @@ export interface DashboardMember extends Member {
   last_activity_at: string | null;
 }
 
+export interface Screenshot {
+  id: number;
+  timestamp: string;
+  tracking_date: string;
+  file_size: number;
+  width: number;
+  height: number;
+  url: string;
+  created_at: string | null;
+}
+
+export interface ActivityLog {
+  id: number;
+  timestamp: string;
+  window_title: string | null;
+  process_name: string | null;
+  app_name: string | null;
+  is_idle: boolean;
+  is_locked: boolean;
+  duration_seconds: number;
+  created_at: string;
+}
+
+export interface WebsiteVisit {
+  domain: string;
+  visit_count: number;
+  first_visit: string;
+  last_visit: string;
+  unique_urls: number;
+}
+
+export interface AppUsage {
+  app_name: string;
+  usage_count: number;
+  active_time_seconds: number;
+  idle_time_seconds: number;
+  total_time_seconds: number;
+  active_time_formatted: string;
+  total_time_formatted: string;
+}
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -562,6 +603,61 @@ export const dashboard = {
 };
 
 // ============================================================================
+// TRACKER DOWNLOAD API
+// ============================================================================
+
+export const tracker = {
+  download: async (): Promise<{ success: boolean; filename: string }> => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/tracker/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Download failed' }));
+        throw new Error(error.error || 'Failed to download tracker');
+      }
+
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'WorkEyeTracker.py';
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+
+      return { success: true, filename };
+    } catch (error: any) {
+      console.error('Tracker download error:', error);
+      throw error;
+    }
+  },
+};
+
+// ============================================================================
 // MEMBERS API
 // ============================================================================
 
@@ -591,6 +687,28 @@ export const members = {
   delete: async (memberId: number) => {
     return fetchAPI(`/admin/members/${memberId}`, { method: 'DELETE' });
   },
+
+  downloadTracker: async (): Promise<{
+    success: boolean;
+    download_url?: string;
+    filename?: string;
+    message?: string;
+    error?: string;
+  }> => {
+    try {
+      const result = await tracker.download();
+      return {
+        success: result.success,
+        filename: result.filename,
+        message: 'Tracker downloaded successfully'
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to download tracker'
+      };
+    }
+  },
 };
 
 // ============================================================================
@@ -611,6 +729,215 @@ export const screenshots = {
   getImageUrl: (screenshotId: number): string => {
     return `${API_BASE_URL}/api/screenshots/image/${screenshotId}`;
   },
+
+  getImageBlob: async (screenshotId: number): Promise<string> => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/screenshots/image/${screenshotId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch screenshot');
+      }
+
+      const blob = await response.blob();
+      return window.URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Screenshot fetch error:', error);
+      throw error;
+    }
+  },
+};
+
+// ============================================================================
+// ACTIVITY LOGS API
+// ============================================================================
+
+export const activityLogs = {
+  getByMember: async (memberId: number, options?: { date?: string; limit?: number; offset?: number }) => {
+    const params = new URLSearchParams();
+    if (options?.date) params.append('date', options.date);
+    if (options?.limit) params.append('limit', options.limit.toString());
+    if (options?.offset) params.append('offset', options.offset.toString());
+    
+    const query = params.toString();
+    return fetchAPI(`/api/activity-logs/${memberId}${query ? `?${query}` : ''}`, { method: 'GET' });
+  },
+};
+
+// ============================================================================
+// WEBSITE VISITS API
+// ============================================================================
+
+export const websiteVisits = {
+  getByMember: async (memberId: number, options?: { startDate?: string; endDate?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (options?.startDate) params.append('start_date', options.startDate);
+    if (options?.endDate) params.append('end_date', options.endDate);
+    if (options?.limit) params.append('limit', options.limit.toString());
+    
+    const query = params.toString();
+    return fetchAPI(`/api/website-visits/${memberId}${query ? `?${query}` : ''}`, { method: 'GET' });
+  },
+};
+
+// ============================================================================
+// APP USAGE API
+// ============================================================================
+
+export const appUsage = {
+  getByMember: async (memberId: number, options?: { date?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (options?.date) params.append('date', options.date);
+    if (options?.limit) params.append('limit', options.limit.toString());
+    
+    const query = params.toString();
+    return fetchAPI(`/api/app-usage/${memberId}${query ? `?${query}` : ''}`, { method: 'GET' });
+  },
+};
+
+// ============================================================================
+// ANALYTICS API
+// ============================================================================
+
+export const analytics = {
+  getMemberAnalytics: async (memberId: number, options?: { startDate?: string; endDate?: string }) => {
+    const params = new URLSearchParams();
+    if (options?.startDate) params.append('start_date', options.startDate);
+    if (options?.endDate) params.append('end_date', options.endDate);
+    
+    const query = params.toString();
+    return fetchAPI(`/analytics/member/${memberId}${query ? `?${query}` : ''}`, { method: 'GET' });
+  },
+
+  getProductivityTrends: async (options?: { days?: number }) => {
+    const params = new URLSearchParams();
+    if (options?.days) params.append('days', options.days.toString());
+    
+    const query = params.toString();
+    return fetchAPI(`/analytics/productivity-trends${query ? `?${query}` : ''}`, { method: 'GET' });
+  },
+
+  getAppUsage: async (companyId?: number, deviceId?: number | string, options?: any) => {
+    const params = new URLSearchParams();
+    if (options?.startDate) params.append('start_date', options.startDate);
+    if (options?.endDate) params.append('end_date', options.endDate);
+    
+    const query = params.toString();
+    const response = await fetchAPI<any>(
+      `/analytics/app-usage${query ? `?${query}` : ''}`,
+      { method: 'GET' }
+    );
+
+    const totalTrackedHours = response.apps?.reduce((sum: number, app: any) => sum + (app.total_hours || 0), 0) || 0;
+
+    return {
+      ...response,
+      totalTrackedHours
+    };
+  },
+
+  getOverview: async () => {
+    try {
+      const trends = await analytics.getProductivityTrends({ days: 7 });
+      return {
+        success: true,
+        overview: {
+          trends: trends.trends || [],
+          summary: {
+            total_activities: trends.trends?.reduce((sum: number, t: any) => sum + (t.total_activities || 0), 0) || 0,
+            total_hours: trends.trends?.reduce((sum: number, t: any) => sum + (t.total_hours || 0), 0) || 0,
+            active_members: Math.max(...(trends.trends?.map((t: any) => t.active_members || 0) || [0])),
+          }
+        }
+      };
+    } catch (error) {
+      console.error('getOverview error:', error);
+      return {
+        success: false,
+        overview: {}
+      };
+    }
+  },
+
+  getHistorical: async (companyId?: number, deviceId?: number | string, options?: any) => {
+    try {
+      let days = 30;
+      if (options?.range === '7d') days = 7;
+      else if (options?.range === '30d') days = 30;
+      else if (options?.range === '90d') days = 90;
+
+      const response = await analytics.getProductivityTrends({ days });
+
+      const data = (response.trends || []).map((trend: any) => ({
+        date: trend.date,
+        screenTime: trend.total_hours || 0,
+        activeTime: (trend.total_hours || 0) * 0.7,
+        idleTime: (trend.total_hours || 0) * 0.3,
+        productivity: Math.min(100, Math.round(((trend.active_members || 0) / Math.max((trend.total_activities || 0) / 10, 1)) * 100))
+      }));
+
+      return {
+        success: true,
+        data
+      };
+    } catch (error) {
+      console.error('getHistorical error:', error);
+      return {
+        success: false,
+        data: []
+      };
+    }
+  },
+
+  getDailySummary: async (companyId?: number, deviceId?: number | string, days?: number | string) => {
+    const memberId = typeof deviceId === 'number' ? deviceId : undefined;
+    
+    if (!memberId) {
+      return {
+        success: true,
+        summary: []
+      };
+    }
+
+    try {
+      const endDate = new Date();
+      const numDays = typeof days === 'number' ? days : parseInt(String(days) || '7');
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - numDays);
+
+      const response = await analytics.getMemberAnalytics(memberId, {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0]
+      });
+
+      const summary = (response.daily_activity || []).map((day: any) => ({
+        date: day.date,
+        screenTime: day.hours || 0,
+        activeTime: (day.hours || 0) * 0.7,
+        idleTime: (day.hours || 0) * 0.3,
+        productivity: Math.min(100, Math.round(((day.activity_count || 0) / Math.max((day.hours || 0) * 12, 1)) * 100))
+      }));
+
+      return {
+        success: true,
+        summary
+      };
+    } catch (error) {
+      console.error('getDailySummary error:', error);
+      return {
+        success: false,
+        summary: []
+      };
+    }
+  },
 };
 
 // ============================================================================
@@ -630,8 +957,13 @@ export const health = {
 export default {
   auth,
   dashboard,
+  tracker,
   members,
   screenshots,
+  activityLogs,
+  websiteVisits,
+  appUsage,
+  analytics,
   health,
   wsClient,
   fetchAPI,
