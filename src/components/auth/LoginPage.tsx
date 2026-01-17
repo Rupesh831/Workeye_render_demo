@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   Eye, EyeOff, Lock, Mail, Shield, Activity, 
   TrendingUp, Smartphone, Database, Loader2, AlertCircle
 } from 'lucide-react';
 
-const Login: React.FC = () => {
+const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -296,4 +296,5 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export { LoginPage };
+export default LoginPage;
