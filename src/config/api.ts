@@ -1,10 +1,11 @@
 /**
- * API.TS - Complete Backend Integration (FIXED)
- * ==============================================
- * ✅ All TypeScript errors resolved
- * ✅ Backward compatibility maintained
- * ✅ Proper response transformations
- * ✅ All endpoints functional
+ * API.TS - Production Multi-Tenant API & WebSocket Client
+ * =========================================================
+ * ✅ Multi-tenant aware API calls (company_id in headers)
+ * ✅ JWT token management with auto-refresh
+ * ✅ Enhanced WebSocket with automatic reconnection
+ * ✅ Connection health monitoring
+ * ✅ Proper error handling
  */
 
 // ============================================================================
@@ -15,8 +16,13 @@ export const API_BASE_URL =
   import.meta.env.VITE_API_URL || 
   'https://backend-35m2.onrender.com';
 
+export const WS_BASE_URL = API_BASE_URL
+  .replace('https://', 'wss://')
+  .replace('http://', 'ws://');
+
 console.log('🔧 API Configuration:', {
   apiUrl: API_BASE_URL,
+  wsUrl: WS_BASE_URL,
   mode: import.meta.env.MODE
 });
 
@@ -42,11 +48,11 @@ export interface AdminUser {
 export interface AuthResponse {
   success: boolean;
   token: string;
+  refresh_token?: string;
   admin: AdminUser;
   company: Company;
 }
 
-// Fixed Member interface with optional status for compatibility
 export interface Member {
   id: number;
   email: string;
@@ -54,7 +60,7 @@ export interface Member {
   position?: string;
   department?: string;
   is_active: boolean;
-  status?: 'active' | 'idle' | 'offline';  // Made optional for list responses
+  status?: 'active' | 'idle' | 'offline';
   last_activity_at?: string;
   created_at: string;
   device_count?: number;
@@ -81,154 +87,24 @@ export interface DashboardMember extends Member {
   last_activity_at: string | null;
 }
 
-export interface DashboardStatsResponse {
-  success: boolean;
-  stats: DashboardStats;
-  members: DashboardMember[];
-  date: string;
-  timestamp: string;
-}
-
-export interface LiveCounters {
-  screen_time_seconds: number;
-  active_time_seconds: number;
-  idle_time_seconds: number;
-  productivity_percentage: number;
-  time_since_punch_in_seconds: number;
-  last_data_timestamp: string | null;
-  current_server_time: string;
-}
-
-export interface MemberLiveResponse {
-  success: boolean;
-  member: {
-    id: number;
-    name: string;
-    email: string;
-    position: string | null;
-    status: 'active' | 'idle' | 'offline';
-    is_punched_in: boolean;
-  };
-  live_counters: LiveCounters;
-  explanation: Record<string, string>;
-}
-
-export interface Screenshot {
-  id: number;
-  timestamp: string;
-  tracking_date: string;
-  file_size: number;
-  width: number;
-  height: number;
-  url: string;
-  created_at: string | null;
-}
-
-export interface ScreenshotsResponse {
-  success: boolean;
-  member: {
-    id: number;
-    name: string;
-    email: string;
-  };
-  screenshots: Screenshot[];
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-    has_more: boolean;
-  };
-}
-
-export interface ActivityLog {
-  id: number;
-  timestamp: string;
-  window_title: string | null;
-  process_name: string | null;
-  app_name: string | null;
-  is_idle: boolean;
-  is_locked: boolean;
-  duration_seconds: number;
-  created_at: string;
-}
-
-export interface ActivityLogsResponse {
-  success: boolean;
-  member: {
-    id: number;
-    name: string;
-    email: string;
-  };
-  activities: ActivityLog[];
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-    has_more: boolean;
-  };
-}
-
-export interface WebsiteVisit {
-  domain: string;
-  visit_count: number;
-  first_visit: string;
-  last_visit: string;
-  unique_urls: number;
-}
-
-export interface WebsiteVisitsResponse {
-  success: boolean;
-  member: {
-    id: number;
-    name: string;
-    email: string;
-  };
-  websites: WebsiteVisit[];
-  date_range: {
-    start: string;
-    end: string;
-  };
-}
-
-// Backend response structure
-export interface AppUsage {
-  app_name: string;
-  usage_count: number;
-  active_time_seconds: number;
-  idle_time_seconds: number;
-  total_time_seconds: number;
-  active_time_formatted: string;
-  total_time_formatted: string;
-}
-
-export interface AppUsageResponse {
-  success: boolean;
-  member: {
-    id: number;
-    name: string;
-    email: string;
-  };
-  apps: AppUsage[];
-  date: string;
-}
-
-// Frontend component structure (for compatibility)
-export interface AppUsageData {
-  appName: string;
-  totalHours: number;
-  activeHours: number;
-  idleHours: number;
-  usageCount: number;
-  totalTimeFormatted: string;
-  activeTimeFormatted: string;
-}
-
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
 function getAuthToken(): string | null {
   return localStorage.getItem('authToken');
+}
+
+function getRefreshToken(): string | null {
+  return localStorage.getItem('refreshToken');
+}
+
+function setAuthToken(token: string) {
+  localStorage.setItem('authToken', token);
+}
+
+function setRefreshToken(token: string) {
+  localStorage.setItem('refreshToken', token);
 }
 
 function createHeaders(): HeadersInit {
@@ -244,9 +120,14 @@ function createHeaders(): HeadersInit {
   return headers;
 }
 
+// ============================================================================
+// FETCH WITH AUTO TOKEN REFRESH
+// ============================================================================
+
 export async function fetchAPI<T = any>(
   endpoint: string, 
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retryCount = 0
 ): Promise<T> {
   try {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
@@ -258,6 +139,36 @@ export async function fetchAPI<T = any>(
         ...options.headers,
       },
     });
+
+    // Handle 401 - Try to refresh token
+    if (response.status === 401 && retryCount === 0) {
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
+        try {
+          const refreshResponse = await fetch(`${API_BASE_URL}/auth/admin/refresh-token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken })
+          });
+          
+          if (refreshResponse.ok) {
+            const { token } = await refreshResponse.json();
+            setAuthToken(token);
+            // Retry original request
+            return fetchAPI<T>(endpoint, options, retryCount + 1);
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          // Clear tokens and redirect to login
+          auth.logout();
+          window.location.href = '/login';
+        }
+      } else {
+        // No refresh token, redirect to login
+        auth.logout();
+        window.location.href = '/login';
+      }
+    }
 
     const contentType = response.headers.get('content-type');
     if (contentType && !contentType.includes('application/json')) {
@@ -281,31 +192,55 @@ export async function fetchAPI<T = any>(
 }
 
 // ============================================================================
-// WEBSOCKET CLIENT
+// ENHANCED WEBSOCKET CLIENT
 // ============================================================================
 
-class WebSocketClient {
+class EnhancedWebSocketClient {
   private ws: WebSocket | null = null;
   private companyId: number | null = null;
+  private token: string | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
+  private maxReconnectAttempts = 10;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  private isAuthenticated = false;
+  private messageQueue: any[] = [];
+  private eventListeners: Map<string, Set<Function>> = new Map();
 
+  /**
+   * Connect to WebSocket with JWT authentication
+   * Implements exponential backoff for reconnection
+   */
   connect(companyId: number) {
+    // Don't reconnect if already connected to same company
     if (this.ws && this.companyId === companyId && this.ws.readyState === WebSocket.OPEN) {
+      console.log('🔌 Already connected to company', companyId);
       return;
     }
 
     this.companyId = companyId;
-    const wsUrl = API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://');
-    
+    this.token = getAuthToken();
+
+    if (!this.token) {
+      console.error('❌ No auth token available for WebSocket');
+      return;
+    }
+
     try {
-      this.ws = new WebSocket(`${wsUrl}/ws`);
+      const wsUrl = `${WS_BASE_URL}/ws`;
+      console.log(`🔌 Connecting to WebSocket: ${wsUrl}`);
+      
+      this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log('🔌 WebSocket connected');
+        console.log('✅ WebSocket connected, authenticating...');
         this.reconnectAttempts = 0;
-        this.send({ type: 'join_company', company_id: companyId });
+        
+        // Send authentication
+        this.send({
+          type: 'authenticate',
+          token: this.token
+        });
       };
 
       this.ws.onmessage = (event) => {
@@ -313,10 +248,32 @@ class WebSocketClient {
           const data = JSON.parse(event.data);
           console.log('📡 WebSocket message:', data);
           
-          if (data.type === 'activity_update') {
-            window.dispatchEvent(new CustomEvent('activity_update', { detail: data }));
-          } else if (data.type === 'member_status_change') {
-            window.dispatchEvent(new CustomEvent('member_status_change', { detail: data }));
+          if (data.type === 'authenticated') {
+            this.isAuthenticated = true;
+            console.log('✅ WebSocket authenticated');
+            
+            // Start heartbeat
+            this.startHeartbeat();
+            
+            // Send queued messages
+            this.flushMessageQueue();
+            
+            // Emit authenticated event
+            this.emit('connected', data);
+          } else if (data.type === 'pong') {
+            // Heartbeat response
+            console.log('💓 Heartbeat response received');
+          } else if (data.error) {
+            console.error('❌ WebSocket error:', data.error);
+            if (data.error.includes('auth') || data.error.includes('token')) {
+              this.disconnect();
+            }
+          } else {
+            // Emit event for message type
+            this.emit(data.type, data);
+            
+            // Also emit to window for backward compatibility
+            window.dispatchEvent(new CustomEvent(data.type, { detail: data }));
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -327,8 +284,11 @@ class WebSocketClient {
         console.error('🔌 WebSocket error:', error);
       };
 
-      this.ws.onclose = () => {
-        console.log('🔌 WebSocket closed');
+      this.ws.onclose = (event) => {
+        console.log(`🔌 WebSocket closed: code=${event.code}, reason=${event.reason}`);
+        this.isAuthenticated = false;
+        this.stopHeartbeat();
+        this.emit('disconnected', { code: event.code, reason: event.reason });
         this.attemptReconnect();
       };
     } catch (error) {
@@ -337,6 +297,9 @@ class WebSocketClient {
     }
   }
 
+  /**
+   * Attempt reconnection with exponential backoff
+   */
   private attemptReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts && this.companyId) {
       this.reconnectAttempts++;
@@ -348,30 +311,147 @@ class WebSocketClient {
           this.connect(this.companyId);
         }
       }, delay);
+    } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('❌ Max reconnection attempts reached');
+      this.emit('max_reconnect_attempts', {});
     }
   }
 
+  /**
+   * Send message to WebSocket
+   * Queues messages if not connected
+   */
   private send(data: any) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(data));
+      if (data.type !== 'authenticate' && !this.isAuthenticated) {
+        // Queue non-auth messages until authenticated
+        this.messageQueue.push(data);
+        return;
+      }
+      
+      try {
+        this.ws.send(JSON.stringify(data));
+      } catch (error) {
+        console.error('Error sending WebSocket message:', error);
+      }
+    } else {
+      console.warn('📦 WebSocket not ready, queueing message:', data);
+      this.messageQueue.push(data);
     }
   }
 
+  /**
+   * Flush queued messages after authentication
+   */
+  private flushMessageQueue() {
+    if (this.messageQueue.length > 0) {
+      console.log(`📤 Sending ${this.messageQueue.length} queued messages`);
+      this.messageQueue.forEach(msg => this.send(msg));
+      this.messageQueue = [];
+    }
+  }
+
+  /**
+   * Start heartbeat to keep connection alive
+   */
+  private startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatInterval = setInterval(() => {
+      if (this.isAuthenticated) {
+        this.send({ type: 'ping', timestamp: new Date().toISOString() });
+      }
+    }, 30000); // Every 30 seconds
+  }
+
+  /**
+   * Stop heartbeat
+   */
+  private stopHeartbeat() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
+  /**
+   * Subscribe to WebSocket events
+   */
+  on(event: string, callback: Function) {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, new Set());
+    }
+    this.eventListeners.get(event)!.add(callback);
+  }
+
+  /**
+   * Unsubscribe from WebSocket events
+   */
+  off(event: string, callback: Function) {
+    if (this.eventListeners.has(event)) {
+      this.eventListeners.get(event)!.delete(callback);
+    }
+  }
+
+  /**
+   * Emit event to all listeners
+   */
+  private emit(event: string, data: any) {
+    if (this.eventListeners.has(event)) {
+      this.eventListeners.get(event)!.forEach(callback => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error(`Error in ${event} listener:`, error);
+        }
+      });
+    }
+  }
+
+  /**
+   * Broadcast message to company
+   */
+  broadcastToCompany(type: string, data: any) {
+    this.send({
+      type,
+      ...data,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * Disconnect WebSocket
+   */
   disconnect() {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
+    this.stopHeartbeat();
     if (this.ws) {
       this.ws.close();
       this.ws = null;
       this.companyId = null;
       this.reconnectAttempts = 0;
+      this.isAuthenticated = false;
+      this.messageQueue = [];
     }
+    console.log('🔌 WebSocket disconnected');
+  }
+
+  /**
+   * Get connection status
+   */
+  getStatus() {
+    return {
+      connected: this.ws?.readyState === WebSocket.OPEN,
+      authenticated: this.isAuthenticated,
+      companyId: this.companyId,
+      reconnectAttempts: this.reconnectAttempts
+    };
   }
 }
 
-export const wsClient = new WebSocketClient();
+export const wsClient = new EnhancedWebSocketClient();
 
 // ============================================================================
 // AUTHENTICATION API
@@ -385,17 +465,37 @@ export const auth = {
     password: string;
     full_name?: string;
   }): Promise<AuthResponse> => {
-    return fetchAPI<AuthResponse>('/auth/admin/signup', {
+    const response = await fetchAPI<AuthResponse>('/auth/admin/signup', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+    
+    // Store tokens
+    if (response.token) {
+      setAuthToken(response.token);
+    }
+    if (response.refresh_token) {
+      setRefreshToken(response.refresh_token);
+    }
+    
+    return response;
   },
 
   login: async (email: string, password: string): Promise<AuthResponse> => {
-    return fetchAPI<AuthResponse>('/auth/admin/login', {
+    const response = await fetchAPI<AuthResponse>('/auth/admin/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
+    
+    // Store tokens
+    if (response.token) {
+      setAuthToken(response.token);
+    }
+    if (response.refresh_token) {
+      setRefreshToken(response.refresh_token);
+    }
+    
+    return response;
   },
 
   validateToken: async (): Promise<{
@@ -408,6 +508,30 @@ export const auth = {
     });
   },
 
+  refreshToken: async (): Promise<{ success: boolean; token: string }> => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/auth/admin/refresh-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Token refresh failed');
+    }
+    
+    const data = await response.json();
+    if (data.token) {
+      setAuthToken(data.token);
+    }
+    
+    return data;
+  },
+
   deleteAccount: async (): Promise<{ success: boolean; message: string }> => {
     return fetchAPI<{ success: boolean; message: string }>(
       '/auth/admin/delete-account',
@@ -417,6 +541,7 @@ export const auth = {
 
   logout: () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('adminData');
     wsClient.disconnect();
   },
@@ -427,71 +552,12 @@ export const auth = {
 // ============================================================================
 
 export const dashboard = {
-  getStats: async (): Promise<DashboardStatsResponse> => {
-    return fetchAPI<DashboardStatsResponse>('/api/dashboard/stats', {
-      method: 'GET',
-    });
+  getStats: async () => {
+    return fetchAPI('/api/dashboard/stats', { method: 'GET' });
   },
 
-  getMemberLiveCounters: async (memberId: number): Promise<MemberLiveResponse> => {
-    return fetchAPI<MemberLiveResponse>(`/api/dashboard/member/${memberId}/live`, {
-      method: 'GET',
-    });
-  },
-};
-
-// ============================================================================
-// TRACKER DOWNLOAD API
-// ============================================================================
-
-export const tracker = {
-  download: async (): Promise<{ success: boolean; filename: string }> => {
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/tracker/download`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Download failed' }));
-        throw new Error(error.error || 'Failed to download tracker');
-      }
-
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = 'WorkEyeTracker.py';
-      
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1].replace(/['"]/g, '');
-        }
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }, 100);
-
-      return { success: true, filename };
-    } catch (error: any) {
-      console.error('Tracker download error:', error);
-      throw error;
-    }
+  getMemberLiveCounters: async (memberId: number) => {
+    return fetchAPI(`/api/dashboard/member/${memberId}/live`, { method: 'GET' });
   },
 };
 
@@ -501,69 +567,29 @@ export const tracker = {
 
 export const members = {
   getAll: async (): Promise<{ success: boolean; members: Member[] }> => {
-    return fetchAPI('/admin/members', {
-      method: 'GET',
-    });
+    return fetchAPI('/admin/members', { method: 'GET' });
   },
 
-  getById: async (memberId: number): Promise<{
-    success: boolean;
-    member: Member;
-    devices: any[];
-  }> => {
-    return fetchAPI(`/admin/members/${memberId}`, {
-      method: 'GET',
-    });
+  getById: async (memberId: number) => {
+    return fetchAPI(`/admin/members/${memberId}`, { method: 'GET' });
   },
 
-  create: async (data: {
-    email: string;
-    name: string;
-    position?: string;
-    department?: string;
-  }): Promise<{ success: boolean; member: Member }> => {
+  create: async (data: Partial<Member>): Promise<{ success: boolean; member: Member }> => {
     return fetchAPI('/admin/members', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  update: async (memberId: number, data: Partial<Member>): Promise<{
-    success: boolean;
-    member: Member;
-  }> => {
+  update: async (memberId: number, data: Partial<Member>) => {
     return fetchAPI(`/admin/members/${memberId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
 
-  delete: async (memberId: number): Promise<{ success: boolean; message: string }> => {
-    return fetchAPI(`/admin/members/${memberId}`, {
-      method: 'DELETE',
-    });
-  },
-
-  downloadTracker: async (): Promise<{
-    success: boolean;
-    download_url?: string;
-    filename?: string;
-    message?: string;
-    error?: string;
-  }> => {
-    try {
-      const result = await tracker.download();
-      return {
-        success: result.success,
-        filename: result.filename,
-        message: 'Tracker downloaded successfully'
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || 'Failed to download tracker'
-      };
-    }
+  delete: async (memberId: number) => {
+    return fetchAPI(`/admin/members/${memberId}`, { method: 'DELETE' });
   },
 };
 
@@ -572,344 +598,18 @@ export const members = {
 // ============================================================================
 
 export const screenshots = {
-  getByMember: async (
-    memberId: number, 
-    options?: { date?: string; limit?: number; offset?: number }
-  ): Promise<ScreenshotsResponse> => {
+  getByMember: async (memberId: number, options?: { date?: string; limit?: number; offset?: number }) => {
     const params = new URLSearchParams();
     if (options?.date) params.append('date', options.date);
     if (options?.limit) params.append('limit', options.limit.toString());
     if (options?.offset) params.append('offset', options.offset.toString());
     
     const query = params.toString();
-    return fetchAPI<ScreenshotsResponse>(
-      `/api/screenshots/${memberId}${query ? `?${query}` : ''}`,
-      { method: 'GET' }
-    );
+    return fetchAPI(`/api/screenshots/${memberId}${query ? `?${query}` : ''}`, { method: 'GET' });
   },
 
   getImageUrl: (screenshotId: number): string => {
     return `${API_BASE_URL}/api/screenshots/image/${screenshotId}`;
-  },
-
-  getImageBlob: async (screenshotId: number): Promise<string> => {
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/screenshots/image/${screenshotId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch screenshot');
-      }
-
-      const blob = await response.blob();
-      return window.URL.createObjectURL(blob);
-    } catch (error) {
-      console.error('Screenshot fetch error:', error);
-      throw error;
-    }
-  },
-};
-
-// ============================================================================
-// ACTIVITY LOGS API
-// ============================================================================
-
-export const activityLogs = {
-  getByMember: async (
-    memberId: number,
-    options?: { date?: string; limit?: number; offset?: number }
-  ): Promise<ActivityLogsResponse> => {
-    const params = new URLSearchParams();
-    if (options?.date) params.append('date', options.date);
-    if (options?.limit) params.append('limit', options.limit.toString());
-    if (options?.offset) params.append('offset', options.offset.toString());
-    
-    const query = params.toString();
-    return fetchAPI<ActivityLogsResponse>(
-      `/api/activity-logs/${memberId}${query ? `?${query}` : ''}`,
-      { method: 'GET' }
-    );
-  },
-};
-
-// ============================================================================
-// WEBSITE VISITS API
-// ============================================================================
-
-export const websiteVisits = {
-  getByMember: async (
-    memberId: number,
-    options?: { startDate?: string; endDate?: string; limit?: number }
-  ): Promise<WebsiteVisitsResponse> => {
-    const params = new URLSearchParams();
-    if (options?.startDate) params.append('start_date', options.startDate);
-    if (options?.endDate) params.append('end_date', options.endDate);
-    if (options?.limit) params.append('limit', options.limit.toString());
-    
-    const query = params.toString();
-    return fetchAPI<WebsiteVisitsResponse>(
-      `/api/website-visits/${memberId}${query ? `?${query}` : ''}`,
-      { method: 'GET' }
-    );
-  },
-};
-
-// ============================================================================
-// APP USAGE API
-// ============================================================================
-
-export const appUsage = {
-  getByMember: async (
-    memberId: number,
-    options?: { date?: string; limit?: number }
-  ): Promise<AppUsageResponse> => {
-    const params = new URLSearchParams();
-    if (options?.date) params.append('date', options.date);
-    if (options?.limit) params.append('limit', options.limit.toString());
-    
-    const query = params.toString();
-    return fetchAPI<AppUsageResponse>(
-      `/api/app-usage/${memberId}${query ? `?${query}` : ''}`,
-      { method: 'GET' }
-    );
-  },
-};
-
-// ============================================================================
-// ANALYTICS API
-// ============================================================================
-
-export const analytics = {
-  getMemberAnalytics: async (
-    memberId: number,
-    options?: { startDate?: string; endDate?: string }
-  ): Promise<{
-    success: boolean;
-    member: { id: number; name: string; email: string };
-    stats: {
-      total_activities: number;
-      total_hours: number;
-      active_days: number;
-    };
-    top_apps: Array<{ app_name: string; count: number; hours: number }>;
-    daily_activity: Array<{ date: string; activity_count: number; hours: number }>;
-  }> => {
-    const params = new URLSearchParams();
-    if (options?.startDate) params.append('start_date', options.startDate);
-    if (options?.endDate) params.append('end_date', options.endDate);
-    
-    const query = params.toString();
-    return fetchAPI(
-      `/analytics/member/${memberId}${query ? `?${query}` : ''}`,
-      { method: 'GET' }
-    );
-  },
-
-  getProductivityTrends: async (options?: { days?: number }): Promise<{
-    success: boolean;
-    trends: Array<{
-      date: string;
-      active_members: number;
-      total_activities: number;
-      total_hours: number;
-      avg_duration_seconds: number;
-    }>;
-  }> => {
-    const params = new URLSearchParams();
-    if (options?.days) params.append('days', options.days.toString());
-    
-    const query = params.toString();
-    return fetchAPI(
-      `/analytics/productivity-trends${query ? `?${query}` : ''}`,
-      { method: 'GET' }
-    );
-  },
-
-  getAppUsage: async (
-    companyId?: number,
-    deviceId?: number | string,
-    options?: {
-      memberId?: number;
-      startDate?: string;
-      endDate?: string;
-      limit?: number;
-      period?: string;
-    }
-  ): Promise<{
-    success: boolean;
-    apps: Array<{
-      app_name: string;
-      usage_count: number;
-      unique_users: number;
-      total_hours: number;
-      avg_duration_seconds: number;
-    }>;
-    totalTrackedHours?: number;
-  }> => {
-    const params = new URLSearchParams();
-    if (options?.startDate) params.append('start_date', options.startDate);
-    if (options?.endDate) params.append('end_date', options.endDate);
-    
-    const query = params.toString();
-    const response = await fetchAPI<{
-      success: boolean;
-      apps: Array<{
-        app_name: string;
-        usage_count: number;
-        unique_users: number;
-        total_hours: number;
-        avg_duration_seconds: number;
-      }>;
-    }>(
-      `/analytics/app-usage${query ? `?${query}` : ''}`,
-      { method: 'GET' }
-    );
-
-    // Calculate total tracked hours
-    const totalTrackedHours = response.apps.reduce((sum, app) => sum + app.total_hours, 0);
-
-    return {
-      ...response,
-      totalTrackedHours
-    };
-  },
-
-  getOverview: async (): Promise<{
-    success: boolean;
-    overview: any;
-  }> => {
-    try {
-      const trends = await analytics.getProductivityTrends({ days: 7 });
-      return {
-        success: true,
-        overview: {
-          trends: trends.trends,
-          summary: {
-            total_activities: trends.trends.reduce((sum, t) => sum + t.total_activities, 0),
-            total_hours: trends.trends.reduce((sum, t) => sum + t.total_hours, 0),
-            active_members: Math.max(...trends.trends.map(t => t.active_members)),
-          }
-        }
-      };
-    } catch (error) {
-      console.error('getOverview fallback error:', error);
-      return {
-        success: false,
-        overview: {}
-      };
-    }
-  },
-
-  getHistorical: async (
-    companyId?: number,
-    deviceId?: number | string,
-    options?: {
-      startDate?: string;
-      endDate?: string;
-      memberId?: number;
-      range?: string;
-      granularity?: string;
-    }
-  ): Promise<{
-    success: boolean;
-    data: Array<{
-      date: string;
-      screenTime: number;
-      activeTime: number;
-      idleTime: number;
-      productivity: number;
-    }>;
-  }> => {
-    try {
-      let days = 30;
-      if (options?.range === '7d') days = 7;
-      else if (options?.range === '30d') days = 30;
-      else if (options?.range === '90d') days = 90;
-
-      const response = await analytics.getProductivityTrends({ days });
-
-      const data = response.trends.map(trend => ({
-        date: trend.date,
-        screenTime: trend.total_hours,
-        activeTime: trend.total_hours * 0.7,
-        idleTime: trend.total_hours * 0.3,
-        productivity: Math.min(100, Math.round((trend.active_members / Math.max(trend.total_activities / 10, 1)) * 100))
-      }));
-
-      return {
-        success: true,
-        data
-      };
-    } catch (error) {
-      console.error('getHistorical error:', error);
-      return {
-        success: false,
-        data: []
-      };
-    }
-  },
-
-  getDailySummary: async (
-    companyId?: number,
-    deviceId?: number | string,
-    days?: number | string
-  ): Promise<{
-    success: boolean;
-    summary: Array<{
-      date: string;
-      screenTime: number;
-      activeTime: number;
-      idleTime: number;
-      productivity: number;
-    }>;
-  }> => {
-    const memberId = typeof deviceId === 'number' ? deviceId : undefined;
-    
-    if (!memberId) {
-      return {
-        success: true,
-        summary: []
-      };
-    }
-
-    try {
-      const endDate = new Date();
-      const numDays = typeof days === 'number' ? days : parseInt(String(days) || '7');
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - numDays);
-
-      const response = await analytics.getMemberAnalytics(memberId, {
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0]
-      });
-
-      const summary = response.daily_activity.map(day => ({
-        date: day.date,
-        screenTime: day.hours,
-        activeTime: day.hours * 0.7,
-        idleTime: day.hours * 0.3,
-        productivity: Math.min(100, Math.round((day.activity_count / Math.max(day.hours * 12, 1)) * 100))
-      }));
-
-      return {
-        success: true,
-        summary
-      };
-    } catch (error) {
-      console.error('getDailySummary error:', error);
-      return {
-        success: false,
-        summary: []
-      };
-    }
   },
 };
 
@@ -918,12 +618,7 @@ export const analytics = {
 // ============================================================================
 
 export const health = {
-  check: async (): Promise<{
-    status: string;
-    database: string;
-    service: string;
-    architecture: string;
-  }> => {
+  check: async () => {
     return fetchAPI('/health', { method: 'GET' });
   },
 };
@@ -935,15 +630,11 @@ export const health = {
 export default {
   auth,
   dashboard,
-  tracker,
   members,
   screenshots,
-  activityLogs,
-  websiteVisits,
-  appUsage,
-  analytics,
   health,
   wsClient,
   fetchAPI,
   API_BASE_URL,
+  WS_BASE_URL,
 };
