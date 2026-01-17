@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   User, Mail, Lock, Shield, CheckCircle, 
   BarChart3, Users, Activity, Database, Loader2, AlertCircle, Eye, EyeOff
 } from 'lucide-react';
 
-const Signup: React.FC = () => {
+const SignupPage: React.FC = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -365,4 +365,5 @@ const Signup: React.FC = () => {
   );
 };
 
-export default Signup;
+export { SignupPage };
+export default SignupPage;
