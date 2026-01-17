@@ -79,6 +79,7 @@ const Signup: React.FC = () => {
           setError(errorMsg);
         }
       }
+      // If successful, navigation happens automatically via AuthContext
     } catch (err: any) {
       console.error('Signup error:', err);
       setError('Unable to connect to the server. Please check your internet connection and try again.');
@@ -106,7 +107,7 @@ const Signup: React.FC = () => {
                 <Activity size={24} />
               </div>
               <div>
-                <h1 className="text-xl font-bold">TrackPro</h1>
+                <h1 className="text-xl font-bold">WorkEye</h1>
                 <p className="text-xs text-gray-400">Employee Tracking System</p>
               </div>
             </div>
@@ -305,7 +306,7 @@ const Signup: React.FC = () => {
                 <Activity size={28} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">TrackPro</h1>
+                <h1 className="text-2xl font-bold">WorkEye</h1>
                 <p className="text-sm text-gray-300">Employee Tracking System</p>
               </div>
             </div>
