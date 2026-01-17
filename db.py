@@ -1,16 +1,17 @@
 """
-DB.PY - Synchronous Database Layer with psycopg2
-================================================
-✅ psycopg2 ONLY (no SQLAlchemy)
-✅ Synchronous connection per request
-✅ PostgreSQL connection pooling via Render
-✅ Production-ready for Render deployment
-✅ IST (Indian Standard Time) support
+DB.PY - PostgreSQL Database Connection for WorkEye
+===================================================
+✅ Uses external Render PostgreSQL database
+✅ Proper SSL connection configuration
+✅ Connection pooling with psycopg2
+✅ IST (Indian Standard Time) timezone support
+✅ Compatible with all backend routes
 """
 
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from psycopg2 import pool
 from contextlib import contextmanager
 from datetime import datetime
 import pytz
@@ -37,16 +38,40 @@ def convert_to_ist(utc_dt):
 # DATABASE CONFIGURATION
 # ============================================================================
 
+# Use the external PostgreSQL database URL
 DATABASE_URL = os.environ.get(
     'DATABASE_URL',
-    'postgresql://postgres:password@localhost:5432/workeye'
+    'postgresql://work_eye_db_user:DeXsKDcQNO6rpdQypAjDECEjqRXVa8hr@dpg-d52ij3ali9vc73f8tn40-a.singapore-postgres.render.com/work_eye_db'
 )
 
 # Render uses postgres://, PostgreSQL requires postgresql://
 if DATABASE_URL.startswith('postgres://'):
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 
-print(f"🔗 Database URL: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'local'}")
+print(f"🔗 Database: work_eye_db @ dpg-d52ij3ali9vc73f8tn40-a.singapore-postgres.render.com")
+
+# ============================================================================
+# CONNECTION POOL (for better performance)
+# ============================================================================
+
+connection_pool = None
+
+def initialize_connection_pool():
+    """Initialize the connection pool"""
+    global connection_pool
+    try:
+        connection_pool = psycopg2.pool.SimpleConnectionPool(
+            1,  # minimum connections
+            20,  # maximum connections
+            DATABASE_URL,
+            cursor_factory=RealDictCursor,
+            sslmode='require'  # Required for Render PostgreSQL
+        )
+        print("✅ Database connection pool initialized")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to create connection pool: {e}")
+        return False
 
 # ============================================================================
 # CONNECTION MANAGEMENT
@@ -54,7 +79,8 @@ print(f"🔗 Database URL: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL el
 
 def get_db_connection():
     """
-    Create a new database connection.
+    Get a database connection from the pool.
+    If pool doesn't exist, create a direct connection.
     
     Usage:
         conn = get_db_connection()
@@ -65,11 +91,37 @@ def get_db_connection():
         finally:
             conn.close()
     """
-    return psycopg2.connect(
-        DATABASE_URL,
-        cursor_factory=RealDictCursor,
-        sslmode='require'
-    )
+    global connection_pool
+    
+    if connection_pool is None:
+        # Fallback: create direct connection
+        return psycopg2.connect(
+            DATABASE_URL,
+            cursor_factory=RealDictCursor,
+            sslmode='require'
+        )
+    
+    try:
+        return connection_pool.getconn()
+    except:
+        # Fallback: create direct connection
+        return psycopg2.connect(
+            DATABASE_URL,
+            cursor_factory=RealDictCursor,
+            sslmode='require'
+        )
+
+
+def return_connection(conn):
+    """Return a connection to the pool"""
+    global connection_pool
+    if connection_pool is not None:
+        try:
+            connection_pool.putconn(conn)
+        except:
+            conn.close()
+    else:
+        conn.close()
 
 
 @contextmanager
@@ -92,7 +144,7 @@ def get_db():
         conn.rollback()
         raise
     finally:
-        conn.close()
+        return_connection(conn)
 
 
 # ============================================================================
@@ -101,208 +153,102 @@ def get_db():
 
 def init_db():
     """
-    Initialize database tables.
-    Call this on application startup.
+    Initialize database tables if they don't exist.
+    This is safe to run multiple times - it only creates missing tables.
     """
     conn = get_db_connection()
     cur = conn.cursor()
     
     try:
-        # Check if companies table exists with old schema
+        print("🔧 Checking database schema...")
+        
+        # Check if companies table exists
+        cur.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'companies'
+            )
+        """)
+        companies_exists = cur.fetchone()['exists']
+        
+        if not companies_exists:
+            print("⚠️  Database tables not found. Please run init_db.py first.")
+            conn.close()
+            return False
+        
+        # Check companies table structure
         cur.execute("""
             SELECT column_name 
             FROM information_schema.columns 
-            WHERE table_name = 'companies' AND column_name = 'company_username'
+            WHERE table_name = 'companies'
+            ORDER BY ordinal_position
         """)
+        company_columns = [row['column_name'] for row in cur.fetchall()]
+        print(f"✅ Companies table columns: {', '.join(company_columns)}")
         
-        if cur.fetchone():
-            print("⚠️ Old schema detected. Run migrate_db.py to update schema.")
-            print("   Database will work but some features may fail.")
-            conn.close()
-            return
-        
-        # Create companies table
+        # Check users table (for admin authentication)
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS companies (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(100) UNIQUE NOT NULL,
-                name VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                is_active BOOLEAN DEFAULT TRUE
-            );
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'users'
+            )
         """)
+        users_exists = cur.fetchone()['exists']
         
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_company_username ON companies(username);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_company_active ON companies(is_active);")
+        if users_exists:
+            cur.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'users'
+                ORDER BY ordinal_position
+            """)
+            user_columns = [row['column_name'] for row in cur.fetchall()]
+            print(f"✅ Users table columns: {', '.join(user_columns)}")
+        else:
+            print("⚠️  Users table not found - admin login may not work")
         
-        # Create configuration table (JSONB-based)
+        # Check members table
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS configuration (
-                id SERIAL PRIMARY KEY,
-                company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-                config_data JSONB NOT NULL DEFAULT '{}',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(company_id)
-            );
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'members'
+            )
         """)
+        members_exists = cur.fetchone()['exists']
         
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_config_company ON configuration(company_id);")
-        print("   ✅ configuration table created")
+        if members_exists:
+            cur.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'members'
+                ORDER BY ordinal_position
+            """)
+            member_columns = [row['column_name'] for row in cur.fetchall()]
+            print(f"✅ Members table columns: {', '.join(member_columns)}")
         
-        # Create users table (admin accounts)
+        # List all tables
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                full_name VARCHAR(255),
-                role VARCHAR(50) DEFAULT 'admin',
-                is_active BOOLEAN DEFAULT TRUE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_login TIMESTAMP
-            );
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public'
+            ORDER BY table_name
         """)
-        
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_user_company ON users(company_id);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);")
-        
-        # Create members table (tracked employees)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS members (
-                id SERIAL PRIMARY KEY,
-                company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-                device_id VARCHAR(255) NOT NULL,
-                name VARCHAR(255) NOT NULL,
-                email VARCHAR(255),
-                position VARCHAR(100),
-                department VARCHAR(100),
-                status VARCHAR(50) DEFAULT 'offline',
-                is_active BOOLEAN DEFAULT TRUE,
-                is_punched_in BOOLEAN DEFAULT FALSE,
-                tracker_token VARCHAR(500) UNIQUE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_activity TIMESTAMP,
-                last_heartbeat_at TIMESTAMP,
-                last_activity_at TIMESTAMP,
-                last_punch_in_at TIMESTAMP,
-                last_punch_out_at TIMESTAMP,
-                UNIQUE(company_id, device_id)
-            );
-        """)
-        
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_member_company ON members(company_id);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_member_device ON members(device_id);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_member_token ON members(tracker_token);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_member_email ON members(company_id, email);")
-        
-        # Create activity_logs table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS activity_logs (
-                id SERIAL PRIMARY KEY,
-                company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-                member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-                device_id VARCHAR(255) NOT NULL,
-                timestamp TIMESTAMP NOT NULL,
-                window_title TEXT,
-                process_name VARCHAR(500),
-                app_name VARCHAR(255),
-                url TEXT,
-                domain VARCHAR(255),
-                is_idle BOOLEAN DEFAULT FALSE,
-                is_locked BOOLEAN DEFAULT FALSE,
-                is_active BOOLEAN DEFAULT TRUE,
-                duration_seconds INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_activity_company_time ON activity_logs(company_id, timestamp);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_activity_member_time ON activity_logs(member_id, timestamp);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_activity_app ON activity_logs(app_name);")
-        
-        # Create activity_log table (tracker data aggregation)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS activity_log (
-                id SERIAL PRIMARY KEY,
-                company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-                member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-                device_id VARCHAR(255) NOT NULL,
-                timestamp TIMESTAMP NOT NULL,
-                total_seconds NUMERIC(12, 2) DEFAULT 0,
-                active_seconds NUMERIC(12, 2) DEFAULT 0,
-                idle_seconds NUMERIC(12, 2) DEFAULT 0,
-                locked_seconds NUMERIC(12, 2) DEFAULT 0,
-                current_window TEXT,
-                current_process VARCHAR(255),
-                is_idle BOOLEAN DEFAULT FALSE,
-                locked BOOLEAN DEFAULT FALSE,
-                raw_payload JSONB DEFAULT '{}',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_activity_log_company ON activity_log(company_id, timestamp);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_activity_log_member ON activity_log(member_id, timestamp);")
-        
-        # Create screenshots table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS screenshots (
-                id SERIAL PRIMARY KEY,
-                company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-                member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-                device_id VARCHAR(255) NOT NULL,
-                timestamp TIMESTAMP NOT NULL,
-                tracking_date DATE NOT NULL,
-                file_path VARCHAR(500),
-                url TEXT,
-                thumbnail_url TEXT,
-                file_size INTEGER,
-                width INTEGER,
-                height INTEGER,
-                screenshot_data TEXT,
-                window_title TEXT,
-                process_name VARCHAR(255),
-                is_idle BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_screenshot_company_time ON screenshots(company_id, timestamp);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_screenshot_member_time ON screenshots(member_id, timestamp);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_screenshot_tracking_date ON screenshots(tracking_date);")
-        
-        # Create punch_logs table (for attendance tracking)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS punch_logs (
-                id SERIAL PRIMARY KEY,
-                company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
-                member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-                punch_date DATE NOT NULL,
-                punch_in_time TIMESTAMP,
-                punch_out_time TIMESTAMP,
-                duration_seconds INTEGER,
-                status VARCHAR(50) DEFAULT 'open',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_punch_company_date ON punch_logs(company_id, punch_date);")
-        cur.execute("CREATE INDEX IF NOT EXISTS idx_punch_member_date ON punch_logs(member_id, punch_date);")
+        all_tables = [row['table_name'] for row in cur.fetchall()]
+        print(f"📊 Database tables: {', '.join(all_tables)}")
         
         conn.commit()
-        print("✅ Database tables initialized")
+        print("✅ Database schema verified")
+        return True
         
     except Exception as e:
         conn.rollback()
         print(f"❌ Database initialization error: {e}")
-        raise
+        import traceback
+        traceback.print_exc()
+        return False
     finally:
         cur.close()
-        conn.close()
+        return_connection(conn)
 
 
 # ============================================================================
@@ -317,10 +263,14 @@ def check_db_health():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT 1")
+        cur.execute("SELECT 1 as health_check")
+        result = cur.fetchone()
         cur.close()
-        conn.close()
-        return True
+        return_connection(conn)
+        
+        if result and result['health_check'] == 1:
+            return True
+        return False
     except Exception as e:
         print(f"❌ Database health check failed: {e}")
         return False
@@ -378,11 +328,19 @@ def fetch_all(query, params=None):
 
 
 # ============================================================================
+# INITIALIZATION ON MODULE LOAD
+# ============================================================================
+
+# Initialize connection pool when module is imported
+initialize_connection_pool()
+
+# ============================================================================
 # EXPORTS
 # ============================================================================
 
 __all__ = [
     'get_db_connection',
+    'return_connection',
     'get_db',
     'init_db',
     'check_db_health',
