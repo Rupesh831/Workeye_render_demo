@@ -38,6 +38,7 @@ const Login: React.FC = () => {
           setError(errorMsg);
         }
       }
+      // If successful, navigation happens automatically via AuthContext
     } catch (err: any) {
       console.error('Login error:', err);
       setError('Unable to connect to the server. Please check your internet connection and try again.');
@@ -64,7 +65,7 @@ const Login: React.FC = () => {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                 <Activity size={24} />
               </div>
-              <h1 className="text-2xl font-bold">TrackPro</h1>
+              <h1 className="text-2xl font-bold">WorkEye</h1>
             </div>
             <h2 className="text-4xl font-bold mb-4 leading-tight">
               Employee Tracking
@@ -111,7 +112,7 @@ const Login: React.FC = () => {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                   <Activity size={18} />
                 </div>
-                <span className="font-bold">TrackPro</span>
+                <span className="font-bold">WorkEye</span>
               </div>
             </div>
 
