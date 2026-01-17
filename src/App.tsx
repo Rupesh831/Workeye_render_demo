@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './components/auth/LoginPage';
+import { SignupPage } from './components/auth/SignupPage';
 import { Dashboard } from './components/Dashboard';
 import { EmployeeDetailPage } from './components/EmployeeDetailPage';
 import { ConfigurationPage } from './components/ConfigurationPage';
@@ -17,6 +18,7 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         
         {/* Protected Routes */}
         <Route
