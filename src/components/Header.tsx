@@ -123,7 +123,7 @@ export function Header() {
 
             {/* Profile Dropdown */}
             <ProfileDropdown
-              adminName={user?.name || 'Admin'}
+              adminName={user?.full_name || 'Admin'}
               adminRole={user?.role || 'Administrator'}
               companyName={company?.company_name || 'Company'}
               onLogout={handleLogout}
