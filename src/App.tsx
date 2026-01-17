@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { LoginPage } from './components/auth/LoginPage';
+import Login from './components/Login';
 import { SignupPage } from './components/auth/SignupPage';
 import { Dashboard } from './components/Dashboard';
 import { EmployeeDetailPage } from './components/EmployeeDetailPage';
@@ -17,7 +17,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignupPage />} />
         
         {/* Protected Routes */}
