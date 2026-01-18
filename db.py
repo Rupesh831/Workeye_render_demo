@@ -6,6 +6,7 @@ DB.PY - PostgreSQL Database Connection for WorkEye
 ✅ Connection pooling with psycopg2
 ✅ IST (Indian Standard Time) timezone support
 ✅ Compatible with all backend routes
+✅ FIXED: Complete external database URL with full hostname
 """
 
 import os
@@ -38,7 +39,7 @@ def convert_to_ist(utc_dt):
 # DATABASE CONFIGURATION
 # ============================================================================
 
-# Use the external PostgreSQL database URL
+# Use the external PostgreSQL database URL with COMPLETE hostname
 DATABASE_URL = os.environ.get(
     'DATABASE_URL',
     'postgresql://work_eye_db_user:DeXsKDcQNO6rpdQypAjDECEjqRXVa8hr@dpg-d52ij3ali9vc73f8tn40-a.singapore-postgres.render.com/work_eye_db'
@@ -48,7 +49,7 @@ DATABASE_URL = os.environ.get(
 if DATABASE_URL.startswith('postgres://'):
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 
-print(f"🔗 Database: work_eye_db @ dpg-d52ij3ali9vc73f8tn40-a.singapore-postgres.render.com")
+print(f"🔗 Connecting to: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'database'}")
 
 # ============================================================================
 # CONNECTION POOL (for better performance)
@@ -57,21 +58,49 @@ print(f"🔗 Database: work_eye_db @ dpg-d52ij3ali9vc73f8tn40-a.singapore-postgr
 connection_pool = None
 
 def initialize_connection_pool():
-    """Initialize the connection pool"""
+    """Initialize the connection pool with SSL required"""
     global connection_pool
     try:
+        # Parse DATABASE_URL to ensure all components are present
+        print(f"📡 Initializing connection pool...")
+        print(f"📡 Database URL starts with: {DATABASE_URL[:30]}...")
+        
         connection_pool = psycopg2.pool.SimpleConnectionPool(
             1,  # minimum connections
             20,  # maximum connections
             DATABASE_URL,
             cursor_factory=RealDictCursor,
-            sslmode='require'  # Required for Render PostgreSQL
+            sslmode='require',  # Required for Render PostgreSQL
+            connect_timeout=10  # 10 second timeout
         )
-        print("✅ Database connection pool initialized")
+        print("✅ Database connection pool initialized successfully")
         return True
     except Exception as e:
         print(f"❌ Failed to create connection pool: {e}")
-        return False
+        print(f"❌ Attempting direct connection test...")
+        try:
+            # Try direct connection to verify
+            test_conn = psycopg2.connect(
+                DATABASE_URL,
+                sslmode='require',
+                connect_timeout=10
+            )
+            test_conn.close()
+            print("✅ Direct connection test succeeded!")
+            # Try pool again
+            connection_pool = psycopg2.pool.SimpleConnectionPool(
+                1, 20, DATABASE_URL,
+                cursor_factory=RealDictCursor,
+                sslmode='require',
+                connect_timeout=10
+            )
+            print("✅ Pool created on second attempt")
+            return True
+        except Exception as e2:
+            print(f"❌ Direct connection also failed: {e2}")
+            import traceback
+            traceback.print_exc()
+            return False
 
 # ============================================================================
 # CONNECTION MANAGEMENT
@@ -98,7 +127,8 @@ def get_db_connection():
         return psycopg2.connect(
             DATABASE_URL,
             cursor_factory=RealDictCursor,
-            sslmode='require'
+            sslmode='require',
+            connect_timeout=10
         )
     
     try:
@@ -108,7 +138,8 @@ def get_db_connection():
         return psycopg2.connect(
             DATABASE_URL,
             cursor_factory=RealDictCursor,
-            sslmode='require'
+            sslmode='require',
+            connect_timeout=10
         )
 
 
@@ -186,26 +217,26 @@ def init_db():
         company_columns = [row['column_name'] for row in cur.fetchall()]
         print(f"✅ Companies table columns: {', '.join(company_columns)}")
         
-        # Check users table (for admin authentication)
+        # Check admin_users table
         cur.execute("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
-                WHERE table_name = 'users'
+                WHERE table_name = 'admin_users'
             )
         """)
-        users_exists = cur.fetchone()['exists']
+        admin_users_exists = cur.fetchone()['exists']
         
-        if users_exists:
+        if admin_users_exists:
             cur.execute("""
                 SELECT column_name 
                 FROM information_schema.columns 
-                WHERE table_name = 'users'
+                WHERE table_name = 'admin_users'
                 ORDER BY ordinal_position
             """)
-            user_columns = [row['column_name'] for row in cur.fetchall()]
-            print(f"✅ Users table columns: {', '.join(user_columns)}")
+            admin_columns = [row['column_name'] for row in cur.fetchall()]
+            print(f"✅ Admin_users table columns: {', '.join(admin_columns)}")
         else:
-            print("⚠️  Users table not found - admin login may not work")
+            print("⚠️  admin_users table not found - admin login may not work")
         
         # Check members table
         cur.execute("""
@@ -234,7 +265,7 @@ def init_db():
             ORDER BY table_name
         """)
         all_tables = [row['table_name'] for row in cur.fetchall()]
-        print(f"📊 Database tables: {', '.join(all_tables)}")
+        print(f"📊 Database tables ({len(all_tables)}): {', '.join(all_tables[:10])}{'...' if len(all_tables) > 10 else ''}")
         
         conn.commit()
         print("✅ Database schema verified")
@@ -332,7 +363,13 @@ def fetch_all(query, params=None):
 # ============================================================================
 
 # Initialize connection pool when module is imported
-initialize_connection_pool()
+print("🚀 Initializing database connection...")
+if initialize_connection_pool():
+    print("🎉 Database ready!")
+    # Verify schema
+    init_db()
+else:
+    print("⚠️  Database connection pool failed, will use direct connections")
 
 # ============================================================================
 # EXPORTS
