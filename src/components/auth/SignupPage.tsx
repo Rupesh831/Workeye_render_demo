@@ -101,7 +101,7 @@ const SignupPage: React.FC = () => {
         
         {/* Top Header for Mobile */}
         <div className="lg:hidden p-6 border-b border-gray-700" style={{ backgroundColor: '#ffffff' }}>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-center">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 flex items-center justify-center">
                 <Activity size={24} className="text-white" />
@@ -115,18 +115,18 @@ const SignupPage: React.FC = () => {
         </div>
 
         {/* Left Panel - Signup Form */}
-        <div className="w-full lg:w-3/5 p-8 md:p-12" style={{ backgroundColor: '#ffffff' }}>
-          <div className="max-w-md mx-auto">
+        <div className="w-full lg:w-3/5 flex items-center justify-center py-12 px-8" style={{ backgroundColor: '#ffffff', minHeight: '600px' }}>
+          <div className="w-full max-w-md">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-10"
+              className="text-center mb-8"
             >
               <h2 className="text-3xl font-bold mb-2" style={{ color: '#111827' }}>Create Account</h2>
               <p style={{ color: '#4B5563' }}>Set up your admin account</p>
             </motion.div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Error Alert */}
               {error && (
                 <div className="flex items-start gap-3 p-4 rounded-xl" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA' }}>
