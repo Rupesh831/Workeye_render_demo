@@ -104,9 +104,9 @@ const Login: React.FC = () => {
         </div>
 
         {/* Right Panel - Login Form */}
-        <div className="w-full lg:w-3/5 p-8 md:p-12" style={{ backgroundColor: '#ffffff' }}>
-          <div className="max-w-md mx-auto">
-            <div className="text-right mb-8 lg:hidden">
+        <div className="w-full lg:w-3/5 flex items-center justify-center" style={{ backgroundColor: '#ffffff', minHeight: '600px' }}>
+          <div className="w-full max-w-md px-8">
+            <div className="text-center mb-8 lg:hidden">
               <div className="inline-flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                   <Activity size={18} className="text-white" />
@@ -118,13 +118,13 @@ const Login: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-10"
+              className="text-center mb-8"
             >
               <h2 className="text-3xl font-bold mb-2" style={{ color: '#111827' }}>Welcome Back</h2>
               <p style={{ color: '#4B5563' }}>Sign in to your admin account</p>
             </motion.div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Error Alert */}
               {error && (
                 <div className="flex items-start gap-3 p-4 rounded-xl" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA' }}>
@@ -254,7 +254,7 @@ const Login: React.FC = () => {
                 )}
               </motion.button>
 
-              <div className="relative my-8">
+              <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t" style={{ borderColor: '#D1D5DB' }}></div>
                 </div>
@@ -299,7 +299,7 @@ const Login: React.FC = () => {
                 </button>
               </div>
 
-              <p className="text-center mt-8" style={{ color: '#4B5563' }}>
+              <p className="text-center mt-6" style={{ color: '#4B5563' }}>
                 Don't have an account?{' '}
                 <Link
                   to="/signup"
