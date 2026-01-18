@@ -104,14 +104,14 @@ const Login: React.FC = () => {
         </div>
 
         {/* Right Panel - Login Form */}
-        <div className="w-full lg:w-3/5 p-8 md:p-12">
+        <div className="w-full lg:w-3/5 p-8 md:p-12 bg-white">
           <div className="max-w-md mx-auto">
             <div className="text-right mb-8 lg:hidden">
               <div className="inline-flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                  <Activity size={18} />
+                  <Activity size={18} className="text-white" />
                 </div>
-                <span className="font-bold">TrackPro</span>
+                <span className="font-bold text-gray-900">TrackPro</span>
               </div>
             </div>
 
@@ -120,27 +120,27 @@ const Login: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mb-10"
             >
-              <h2 className="text-3xl font-bold mb-2">Welcome Back</h2>
-              <p className="text-gray-400">Sign in to your admin account</p>
+              <h2 className="text-3xl font-bold mb-2 text-gray-900">Welcome Back</h2>
+              <p className="text-gray-600">Sign in to your admin account</p>
             </motion.div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Error Alert */}
               {error && (
-                <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-300">{error}</p>
+                <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700">{error}</p>
                 </div>
               )}
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail size={20} className="text-gray-500" />
+                      <Mail size={20} className="text-gray-400" />
                     </div>
                     <input
                       type="email"
@@ -150,7 +150,7 @@ const Login: React.FC = () => {
                         setError('');
                       }}
                       placeholder="admin@company.com"
-                      className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-white placeholder-gray-500"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
                       required
                       disabled={loading}
                       autoComplete="email"
@@ -159,12 +159,12 @@ const Login: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock size={20} className="text-gray-500" />
+                      <Lock size={20} className="text-gray-400" />
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
@@ -174,7 +174,7 @@ const Login: React.FC = () => {
                         setError('');
                       }}
                       placeholder="Enter your password"
-                      className="w-full pl-12 pr-12 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-white placeholder-gray-500"
+                      className="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
                       required
                       disabled={loading}
                       autoComplete="current-password"
@@ -186,9 +186,9 @@ const Login: React.FC = () => {
                       disabled={loading}
                     >
                       {showPassword ? (
-                        <EyeOff size={20} className="text-gray-500 hover:text-gray-300" />
+                        <EyeOff size={20} className="text-gray-400 hover:text-gray-600" />
                       ) : (
-                        <Eye size={20} className="text-gray-500 hover:text-gray-300" />
+                        <Eye size={20} className="text-gray-400 hover:text-gray-600" />
                       )}
                     </button>
                   </div>
@@ -205,7 +205,7 @@ const Login: React.FC = () => {
                       className="sr-only"
                       disabled={loading}
                     />
-                    <div className={`w-5 h-5 rounded border ${rememberMe ? 'bg-blue-500 border-blue-500' : 'border-gray-600'}`}>
+                    <div className={`w-5 h-5 rounded border ${rememberMe ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}>
                       {rememberMe && (
                         <svg className="w-full h-full text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -213,12 +213,12 @@ const Login: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <span className="ml-2 text-sm text-gray-300">Remember me</span>
+                  <span className="ml-2 text-sm text-gray-700">Remember me</span>
                 </label>
                 
                 <button
                   type="button"
-                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                  className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
                 >
                   Forgot password?
                 </button>
@@ -245,17 +245,17 @@ const Login: React.FC = () => {
 
               <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-700"></div>
+                  <div className="w-full border-t border-gray-300"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-gray-800 text-gray-400">Or continue with</span>
+                  <span className="px-4 bg-white text-gray-500">Or continue with</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
-                  className="py-3 px-4 bg-gray-800/50 border border-gray-700 rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+                  className="py-3 px-4 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-2 text-gray-700"
                   disabled={loading}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -268,7 +268,7 @@ const Login: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  className="py-3 px-4 bg-gray-800/50 border border-gray-700 rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+                  className="py-3 px-4 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-2 text-gray-700"
                   disabled={loading}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#00A4EF">
@@ -278,11 +278,11 @@ const Login: React.FC = () => {
                 </button>
               </div>
 
-              <p className="text-center text-gray-400 mt-8">
+              <p className="text-center text-gray-600 mt-8">
                 Don't have an account?{' '}
                 <Link
                   to="/signup"
-                  className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
+                  className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
                 >
                   Sign up
                 </Link>
