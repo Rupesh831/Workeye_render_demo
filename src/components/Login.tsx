@@ -104,14 +104,14 @@ const Login: React.FC = () => {
         </div>
 
         {/* Right Panel - Login Form */}
-        <div className="w-full lg:w-3/5 p-8 md:p-12 bg-white">
+        <div className="w-full lg:w-3/5 p-8 md:p-12" style={{ backgroundColor: '#ffffff' }}>
           <div className="max-w-md mx-auto">
             <div className="text-right mb-8 lg:hidden">
               <div className="inline-flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
                   <Activity size={18} className="text-white" />
                 </div>
-                <span className="font-bold text-gray-900">TrackPro</span>
+                <span className="font-bold" style={{ color: '#111827' }}>TrackPro</span>
               </div>
             </div>
 
@@ -120,27 +120,27 @@ const Login: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mb-10"
             >
-              <h2 className="text-3xl font-bold mb-2 text-gray-900">Welcome Back</h2>
-              <p className="text-gray-600">Sign in to your admin account</p>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: '#111827' }}>Welcome Back</h2>
+              <p style={{ color: '#4B5563' }}>Sign in to your admin account</p>
             </motion.div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Error Alert */}
               {error && (
-                <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700">{error}</p>
+                <div className="flex items-start gap-3 p-4 rounded-xl" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA' }}>
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#DC2626' }} />
+                  <p className="text-sm" style={{ color: '#B91C1C' }}>{error}</p>
                 </div>
               )}
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#111827' }}>
                     Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail size={20} className="text-gray-400" />
+                      <Mail size={20} style={{ color: '#9CA3AF' }} />
                     </div>
                     <input
                       type="email"
@@ -150,7 +150,12 @@ const Login: React.FC = () => {
                         setError('');
                       }}
                       placeholder="admin@company.com"
-                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
+                      className="w-full pl-12 pr-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                      style={{ 
+                        backgroundColor: '#F9FAFB', 
+                        border: '1px solid #D1D5DB',
+                        color: '#111827'
+                      }}
                       required
                       disabled={loading}
                       autoComplete="email"
@@ -159,12 +164,12 @@ const Login: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#111827' }}>
                     Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock size={20} className="text-gray-400" />
+                      <Lock size={20} style={{ color: '#9CA3AF' }} />
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
@@ -174,7 +179,12 @@ const Login: React.FC = () => {
                         setError('');
                       }}
                       placeholder="Enter your password"
-                      className="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
+                      className="w-full pl-12 pr-12 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                      style={{ 
+                        backgroundColor: '#F9FAFB', 
+                        border: '1px solid #D1D5DB',
+                        color: '#111827'
+                      }}
                       required
                       disabled={loading}
                       autoComplete="current-password"
@@ -186,9 +196,9 @@ const Login: React.FC = () => {
                       disabled={loading}
                     >
                       {showPassword ? (
-                        <EyeOff size={20} className="text-gray-400 hover:text-gray-600" />
+                        <EyeOff size={20} style={{ color: '#9CA3AF' }} />
                       ) : (
-                        <Eye size={20} className="text-gray-400 hover:text-gray-600" />
+                        <Eye size={20} style={{ color: '#9CA3AF' }} />
                       )}
                     </button>
                   </div>
@@ -213,12 +223,13 @@ const Login: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <span className="ml-2 text-sm text-gray-700">Remember me</span>
+                  <span className="ml-2 text-sm" style={{ color: '#374151' }}>Remember me</span>
                 </label>
                 
                 <button
                   type="button"
-                  className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                  className="text-sm transition-colors"
+                  style={{ color: '#2563EB' }}
                 >
                   Forgot password?
                 </button>
@@ -245,17 +256,22 @@ const Login: React.FC = () => {
 
               <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
+                  <div className="w-full border-t" style={{ borderColor: '#D1D5DB' }}></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">Or continue with</span>
+                  <span className="px-4" style={{ backgroundColor: '#ffffff', color: '#6B7280' }}>Or continue with</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
-                  className="py-3 px-4 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-2 text-gray-700"
+                  className="py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
+                  style={{ 
+                    backgroundColor: '#F9FAFB',
+                    border: '1px solid #D1D5DB',
+                    color: '#374151'
+                  }}
                   disabled={loading}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -268,7 +284,12 @@ const Login: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  className="py-3 px-4 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-2 text-gray-700"
+                  className="py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
+                  style={{ 
+                    backgroundColor: '#F9FAFB',
+                    border: '1px solid #D1D5DB',
+                    color: '#374151'
+                  }}
                   disabled={loading}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#00A4EF">
@@ -278,11 +299,12 @@ const Login: React.FC = () => {
                 </button>
               </div>
 
-              <p className="text-center text-gray-600 mt-8">
+              <p className="text-center mt-8" style={{ color: '#4B5563' }}>
                 Don't have an account?{' '}
                 <Link
                   to="/signup"
-                  className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+                  className="font-semibold transition-colors"
+                  style={{ color: '#2563EB' }}
                 >
                   Sign up
                 </Link>
