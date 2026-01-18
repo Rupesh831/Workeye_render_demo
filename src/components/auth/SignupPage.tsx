@@ -100,49 +100,49 @@ const SignupPage: React.FC = () => {
       <div className="flex flex-col lg:flex-row w-full max-w-6xl bg-gray-800/50 backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl border border-gray-700">
         
         {/* Top Header for Mobile */}
-        <div className="lg:hidden p-6 border-b border-gray-700">
+        <div className="lg:hidden p-6 border-b border-gray-700 bg-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 flex items-center justify-center">
-                <Activity size={24} />
+                <Activity size={24} className="text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">WorkEye</h1>
-                <p className="text-xs text-gray-400">Employee Tracking System</p>
+                <h1 className="text-xl font-bold text-gray-900">WorkEye</h1>
+                <p className="text-xs text-gray-600">Employee Tracking System</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Left Panel - Signup Form */}
-        <div className="w-full lg:w-3/5 p-8 md:p-12">
+        <div className="w-full lg:w-3/5 p-8 md:p-12 bg-white">
           <div className="max-w-md mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-10"
             >
-              <h2 className="text-3xl font-bold mb-2">Create Account</h2>
-              <p className="text-gray-400">Set up your admin account</p>
+              <h2 className="text-3xl font-bold mb-2 text-gray-900">Create Account</h2>
+              <p className="text-gray-600">Set up your admin account</p>
             </motion.div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Error Alert */}
               {error && (
-                <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-300">{error}</p>
+                <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700">{error}</p>
                 </div>
               )}
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Full Name
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User size={20} className="text-gray-500" />
+                      <User size={20} className="text-gray-400" />
                     </div>
                     <input
                       type="text"
@@ -150,7 +150,7 @@ const SignupPage: React.FC = () => {
                       value={formData.fullName}
                       onChange={handleChange}
                       placeholder="John Doe"
-                      className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-white placeholder-gray-500"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
                       required
                       disabled={loading}
                     />
@@ -158,12 +158,12 @@ const SignupPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Email Address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail size={20} className="text-gray-500" />
+                      <Mail size={20} className="text-gray-400" />
                     </div>
                     <input
                       type="email"
@@ -171,7 +171,7 @@ const SignupPage: React.FC = () => {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="admin@company.com"
-                      className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-white placeholder-gray-500"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
                       required
                       disabled={loading}
                     />
@@ -179,12 +179,12 @@ const SignupPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock size={20} className="text-gray-500" />
+                      <Lock size={20} className="text-gray-400" />
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
@@ -192,7 +192,7 @@ const SignupPage: React.FC = () => {
                       value={formData.password}
                       onChange={handleChange}
                       placeholder="Create a password"
-                      className="w-full pl-12 pr-12 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-white placeholder-gray-500"
+                      className="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
                       required
                       disabled={loading}
                     />
@@ -203,21 +203,21 @@ const SignupPage: React.FC = () => {
                       disabled={loading}
                     >
                       {showPassword ? (
-                        <EyeOff size={20} className="text-gray-500 hover:text-gray-300" />
+                        <EyeOff size={20} className="text-gray-400 hover:text-gray-600" />
                       ) : (
-                        <Eye size={20} className="text-gray-500 hover:text-gray-300" />
+                        <Eye size={20} className="text-gray-400 hover:text-gray-600" />
                       )}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Confirm Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <CheckCircle size={20} className="text-gray-500" />
+                      <CheckCircle size={20} className="text-gray-400" />
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
@@ -225,7 +225,7 @@ const SignupPage: React.FC = () => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       placeholder="Confirm your password"
-                      className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-white placeholder-gray-500"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
                       required
                       disabled={loading}
                     />
@@ -245,7 +245,7 @@ const SignupPage: React.FC = () => {
                   />
                   <div 
                     onClick={() => !loading && setAgreeToTerms(!agreeToTerms)}
-                    className={`w-5 h-5 rounded border cursor-pointer flex items-center justify-center ${agreeToTerms ? 'bg-emerald-500 border-emerald-500' : 'border-gray-600'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`w-5 h-5 rounded border cursor-pointer flex items-center justify-center ${agreeToTerms ? 'bg-emerald-500 border-emerald-500' : 'border-gray-400'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {agreeToTerms && (
                       <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -254,13 +254,13 @@ const SignupPage: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <label htmlFor="terms" className="text-sm text-gray-300 cursor-pointer">
+                <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer">
                   I agree to the{' '}
-                  <button type="button" className="text-emerald-400 hover:text-emerald-300">
+                  <button type="button" className="text-emerald-600 hover:text-emerald-700 font-medium">
                     Terms of Service
                   </button>{' '}
                   and{' '}
-                  <button type="button" className="text-emerald-400 hover:text-emerald-300">
+                  <button type="button" className="text-emerald-600 hover:text-emerald-700 font-medium">
                     Privacy Policy
                   </button>
                 </label>
@@ -271,9 +271,9 @@ const SignupPage: React.FC = () => {
                 whileTap={{ scale: loading ? 1 : 0.98 }}
                 type="submit"
                 disabled={!agreeToTerms || loading}
-                className={`w-full py-3 px-4 font-semibold rounded-xl transition-all shadow-lg ${(agreeToTerms && !loading)
+                className={`w-full py-3 px-4 font-semibold rounded-xl transition-all shadow-lg text-white ${(agreeToTerms && !loading)
                   ? 'bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 shadow-emerald-500/25' 
-                  : 'bg-gray-700 cursor-not-allowed opacity-70'}`}
+                  : 'bg-gray-400 cursor-not-allowed opacity-70'}`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -285,11 +285,11 @@ const SignupPage: React.FC = () => {
                 )}
               </motion.button>
 
-              <p className="text-center text-gray-400 mt-6">
+              <p className="text-center text-gray-600 mt-6">
                 Already have an account?{' '}
                 <Link
                   to="/login"
-                  className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
+                  className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors"
                 >
                   Sign in
                 </Link>
