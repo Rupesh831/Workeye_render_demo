@@ -9,6 +9,7 @@ ADMIN_AUTH_ROUTES.PY - Production Multi-Tenant Authentication
 ✅ Input validation and sanitization
 ✅ Token refresh mechanism
 ✅ Secure session management
+✅ FIXED: Uses admin_users table (matches actual DB schema)
 """
 
 from flask import Blueprint, request, jsonify
@@ -183,7 +184,7 @@ def require_admin_auth(f):
     return decorated_function
 
 # ============================================================================
-# ADMIN SIGNUP
+# ADMIN SIGNUP - USING admin_users TABLE
 # ============================================================================
 
 @admin_auth_bp.route('/auth/admin/signup', methods=['POST'])
@@ -191,6 +192,7 @@ def admin_signup():
     """
     Admin signup with multi-tenant company creation
     Creates both company and admin user in a single transaction
+    USES: admin_users table (matches actual DB schema)
     """
     try:
         data = request.get_json()
@@ -239,7 +241,7 @@ def admin_signup():
             
             # Check if admin email exists (global check across all companies)
             cur.execute(
-                "SELECT id, company_id FROM users WHERE email = %s",
+                "SELECT id, company_id FROM admin_users WHERE email = %s",
                 (email,)
             )
             existing_user = cur.fetchone()
@@ -252,8 +254,8 @@ def admin_signup():
             # Create company
             cur.execute(
                 """
-                INSERT INTO companies (company_username, company_name, tracker_token, is_active)
-                VALUES (%s, %s, %s, TRUE)
+                INSERT INTO companies (company_username, company_name, tracker_token, is_active, created_at, updated_at)
+                VALUES (%s, %s, %s, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 RETURNING id, company_username, company_name, tracker_token
                 """,
                 (company_username, company_name, temp_tracker_token)
@@ -264,18 +266,18 @@ def admin_signup():
             # Regenerate tracker token with actual company_id
             tracker_token = generate_tracker_token(company_id)
             cur.execute(
-                "UPDATE companies SET tracker_token = %s WHERE id = %s",
+                "UPDATE companies SET tracker_token = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s",
                 (tracker_token, company_id)
             )
             
             # Hash password
             password_hash = hash_password(password)
             
-            # Create admin user (MULTI-TENANT: linked to company_id)
+            # Create admin user in admin_users table
             cur.execute(
                 """
-                INSERT INTO users (company_id, email, password_hash, full_name, role, is_active)
-                VALUES (%s, %s, %s, %s, 'admin', TRUE)
+                INSERT INTO admin_users (company_id, email, password_hash, full_name, role, is_active, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, 'admin', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 RETURNING id, email, full_name, role, company_id
                 """,
                 (company_id, email, password_hash, full_name)
@@ -314,7 +316,7 @@ def admin_signup():
         return jsonify({'error': 'Internal server error during signup'}), 500
 
 # ============================================================================
-# ADMIN LOGIN - MULTI-TENANT AWARE
+# ADMIN LOGIN - USING admin_users TABLE
 # ============================================================================
 
 @admin_auth_bp.route('/auth/admin/login', methods=['POST'])
@@ -322,6 +324,7 @@ def admin_login():
     """
     Admin login with multi-tenant isolation
     Validates user by email AND ensures company_id isolation
+    USES: admin_users table (matches actual DB schema)
     """
     try:
         data = request.get_json()
@@ -343,20 +346,20 @@ def admin_login():
         with get_db() as conn:
             cur = conn.cursor()
             
-            # MULTI-TENANT: Find user with company_id
+            # Query admin_users table (matches actual DB schema)
             cur.execute(
                 """
-                SELECT u.id, u.company_id, u.email, u.password_hash, u.full_name, 
-                       u.role, u.is_active
-                FROM users u
-                WHERE u.email = %s
+                SELECT id, company_id, email, password_hash, full_name, 
+                       role, is_active
+                FROM admin_users
+                WHERE email = %s
                 """,
                 (email,)
             )
             admin = cur.fetchone()
             
             if not admin:
-                print(f"❌ Login failed: User not found for email: {email}")
+                print(f"❌ Login failed: User not found in admin_users for email: {email}")
                 return jsonify({'error': 'Invalid credentials'}), 401
             
             # Verify password
@@ -371,7 +374,7 @@ def admin_login():
             
             company_id = admin['company_id']
             
-            # MULTI-TENANT: Get company data filtered by company_id
+            # Get company data filtered by company_id
             cur.execute(
                 """
                 SELECT id, company_name, company_username, is_active, tracker_token
@@ -388,8 +391,8 @@ def admin_login():
             
             # Update last login timestamp
             cur.execute(
-                "UPDATE users SET last_login = %s WHERE id = %s",
-                (datetime.utcnow(), admin['id'])
+                "UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE id = %s",
+                (admin['id'],)
             )
             
             # Generate JWT tokens with company_id embedded
@@ -424,7 +427,7 @@ def admin_login():
         return jsonify({'error': 'Internal server error during login'}), 500
 
 # ============================================================================
-# TOKEN VALIDATION - MULTI-TENANT
+# TOKEN VALIDATION - USING admin_users TABLE
 # ============================================================================
 
 @admin_auth_bp.route('/auth/admin/validate-token', methods=['GET'])
@@ -449,11 +452,11 @@ def validate_admin_token():
         with get_db() as conn:
             cur = conn.cursor()
             
-            # MULTI-TENANT: Get user filtered by company_id
+            # Query admin_users table (matches actual DB schema)
             cur.execute(
                 """
                 SELECT id, email, full_name, role, is_active, company_id
-                FROM users 
+                FROM admin_users 
                 WHERE id = %s AND company_id = %s
                 """,
                 (admin_id, company_id)
@@ -467,7 +470,7 @@ def validate_admin_token():
             if admin['company_id'] != company_id:
                 return jsonify({'error': 'Company mismatch - potential security violation'}), 401
             
-            # MULTI-TENANT: Get company filtered by company_id
+            # Get company filtered by company_id
             cur.execute(
                 """
                 SELECT id, company_name, company_username, is_active
@@ -557,9 +560,9 @@ def delete_admin_account():
         with get_db() as conn:
             cur = conn.cursor()
             
-            # MULTI-TENANT: Verify admin belongs to company
+            # Verify admin belongs to company (using admin_users table)
             cur.execute(
-                "SELECT id, company_id, role FROM users WHERE id = %s AND company_id = %s",
+                "SELECT id, company_id, role FROM admin_users WHERE id = %s AND company_id = %s",
                 (admin_id, company_id)
             )
             admin = cur.fetchone()
@@ -572,86 +575,51 @@ def delete_admin_account():
             
             print(f"🗑️  Starting account deletion for admin_id={admin_id}, company_id={company_id}")
             
-            # MULTI-TENANT: Delete only data belonging to this company_id
-            # Order matters due to foreign key constraints
+            # Delete data in proper order (respecting foreign keys)
             
-            # 1. Delete screenshots (via devices filtered by company_id)
+            # 1. Delete screenshots
             cur.execute(
-                """
-                DELETE FROM screenshots 
-                WHERE device_id IN (
-                    SELECT id FROM devices WHERE company_id = %s
-                )
-                """,
+                "DELETE FROM screenshots WHERE company_id = %s",
                 (company_id,)
             )
             deleted_screenshots = cur.rowcount
             
             # 2. Delete activity logs
             cur.execute(
-                """
-                DELETE FROM activity_logs 
-                WHERE device_id IN (
-                    SELECT id FROM devices WHERE company_id = %s
-                )
-                """,
+                "DELETE FROM activity_logs WHERE company_id = %s",
                 (company_id,)
             )
             deleted_activities = cur.rowcount
             
-            # 3. Delete website visits
-            cur.execute(
-                """
-                DELETE FROM website_visits 
-                WHERE device_id IN (
-                    SELECT id FROM devices WHERE company_id = %s
-                )
-                """,
-                (company_id,)
-            )
-            deleted_websites = cur.rowcount
-            
-            # 4. Delete application usage
-            cur.execute(
-                """
-                DELETE FROM application_usage 
-                WHERE device_id IN (
-                    SELECT id FROM devices WHERE company_id = %s
-                )
-                """,
-                (company_id,)
-            )
-            deleted_apps = cur.rowcount
-            
-            # 5. Delete devices
-            cur.execute(
-                "DELETE FROM devices WHERE company_id = %s",
-                (company_id,)
-            )
-            deleted_devices = cur.rowcount
-            
-            # 6. Delete punch logs
+            # 3. Delete punch logs
             cur.execute(
                 "DELETE FROM punch_logs WHERE company_id = %s",
                 (company_id,)
             )
             deleted_punch = cur.rowcount
             
-            # 7. Delete members
+            # 4. Delete devices
+            cur.execute(
+                "DELETE FROM devices WHERE company_id = %s",
+                (company_id,)
+            )
+            deleted_devices = cur.rowcount
+            
+            # 5. Delete members
             cur.execute(
                 "DELETE FROM members WHERE company_id = %s",
                 (company_id,)
             )
             deleted_members = cur.rowcount
             
-            # 8. Delete all users (including admin)
+            # 6. Delete all admin users
             cur.execute(
-                "DELETE FROM users WHERE company_id = %s",
+                "DELETE FROM admin_users WHERE company_id = %s",
                 (company_id,)
             )
             deleted_users = cur.rowcount
             
-            # 9. Finally delete company
+            # 7. Finally delete company
             cur.execute(
                 "DELETE FROM companies WHERE id = %s",
                 (company_id,)
@@ -668,12 +636,10 @@ def delete_admin_account():
                 'deleted_counts': {
                     'screenshots': deleted_screenshots,
                     'activity_logs': deleted_activities,
-                    'website_visits': deleted_websites,
-                    'application_usage': deleted_apps,
-                    'devices': deleted_devices,
                     'punch_logs': deleted_punch,
+                    'devices': deleted_devices,
                     'members': deleted_members,
-                    'users': deleted_users,
+                    'admin_users': deleted_users,
                     'companies': deleted_companies
                 }
             }), 200
