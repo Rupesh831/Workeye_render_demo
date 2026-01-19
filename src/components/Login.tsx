@@ -25,7 +25,11 @@ const Login: React.FC = () => {
     try {
       const result = await login(email, password);
       
-      if (!result.success) {
+      if (result.success) {
+        // SUCCESS: Navigate to dashboard
+        navigate('/dashboard', { replace: true });
+      } else {
+        // FAILED: Show error message
         const errorMsg = result.error || 'Login failed';
         
         if (errorMsg.includes('not found') || errorMsg.includes('endpoint')) {
