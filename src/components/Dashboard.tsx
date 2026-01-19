@@ -80,10 +80,34 @@ export function Dashboard() {
     const activeTime = activeTimeSeconds / 3600;
     const idleTime = idleTimeSeconds / 3600;
     
+    // FIXED: Better status detection
     let status: 'active' | 'idle' | 'offline' = 'offline';
-    const rawStatus = (member.status || '').toLowerCase();
-    if (rawStatus === 'active') status = 'active';
-    else if (rawStatus === 'idle') status = 'idle';
+    const rawStatus = (member.status || '').toLowerCase().trim();
+    
+    console.log(`Member ${member.name}: raw status = "${member.status}", normalized = "${rawStatus}"`);
+    
+    if (rawStatus === 'active') {
+      status = 'active';
+    } else if (rawStatus === 'idle') {
+      status = 'idle';
+    } else if (rawStatus === 'offline') {
+      status = 'offline';
+    } else {
+      // Fallback: determine status based on activity
+      const lastActivityAt = member.last_activity_at || member.last_heartbeat_at;
+      if (lastActivityAt) {
+        const timeSinceActivity = Date.now() - new Date(lastActivityAt).getTime();
+        const minutesSinceActivity = timeSinceActivity / 60000;
+        
+        if (minutesSinceActivity < 2) {
+          status = 'active';
+        } else if (minutesSinceActivity < 10) {
+          status = 'idle';
+        } else {
+          status = 'offline';
+        }
+      }
+    }
     
     const lastActivity = member.last_activity || 'Never';
     
@@ -135,8 +159,16 @@ export function Dashboard() {
 
       const data = await response.json();
       
+      console.log('Dashboard API response:', data);
+      
       if (data?.members) {
         const normalized = data.members.map(normalizeEmployee);
+        console.log('Normalized members:', normalized);
+        console.log('Status breakdown:', {
+          active: normalized.filter(m => m.status === 'active').length,
+          idle: normalized.filter(m => m.status === 'idle').length,
+          offline: normalized.filter(m => m.status === 'offline').length
+        });
         setMembers(normalized);
       }
       
@@ -156,7 +188,7 @@ export function Dashboard() {
       const token = localStorage.getItem('authToken');
       
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'https://workeye-render-demo-backend.onrender.com'}/admin/download-tracker`,
+        `${import.meta.env.VITE_API_URL || 'https://workeye-render-demo-backend.onrender.com'}/api/tracker/download`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -189,6 +221,35 @@ export function Dashboard() {
   useEffect(() => {
     fetchDashboardData();
   }, [nameFilter, statusFilter]);
+
+  // Check for midnight reset
+  useEffect(() => {
+    const checkMidnightReset = () => {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0); // Next midnight
+      
+      const timeUntilMidnight = midnight.getTime() - now.getTime();
+      
+      console.log(`⏰ Time until midnight reset: ${Math.floor(timeUntilMidnight / 1000 / 60)} minutes`);
+      
+      // Set timeout to refresh at midnight
+      const timeoutId = setTimeout(() => {
+        console.log('🌙 Midnight reset triggered! Refreshing dashboard...');
+        fetchDashboardData();
+        // Schedule next midnight check
+        checkMidnightReset();
+      }, timeUntilMidnight);
+      
+      return timeoutId;
+    };
+    
+    const timeoutId = checkMidnightReset();
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   // WebSocket and auto-refresh
   useEffect(() => {
@@ -238,20 +299,23 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
+      {/* Header - Single Line */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Logo and Title */}
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+            {/* Logo and Title - Clickable */}
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center cursor-pointer">
                 <Activity className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-slate-800">{companyName}</h1>
                 <p className="text-xs text-slate-500">Real-time employee monitoring</p>
               </div>
-            </div>
+            </button>
 
             {/* Right Section: Tracker Download + Profile */}
             <div className="flex items-center space-x-4">
@@ -310,6 +374,7 @@ export function Dashboard() {
                         onClick={() => {
                           setView('overview');
                           setShowProfileDropdown(false);
+                          navigate('/dashboard');
                         }}
                         className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
                       >
@@ -331,7 +396,6 @@ export function Dashboard() {
                       <button
                         onClick={() => {
                           setShowProfileDropdown(false);
-                          // Add analytics navigation if needed
                         }}
                         className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
                       >
@@ -342,7 +406,6 @@ export function Dashboard() {
                       <button
                         onClick={() => {
                           setShowProfileDropdown(false);
-                          // Add settings navigation if needed
                         }}
                         className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
                       >
@@ -383,10 +446,10 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Stats Grid - 6 cards with IDLE NOW */}
+        {/* Stats Grid - 6 cards in SINGLE ROW */}
         {view === 'overview' && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <div className="grid grid-cols-6 gap-4 mb-6">
               {/* Total Employees */}
               <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
                 <div className="flex items-center justify-between mb-2">
@@ -415,7 +478,7 @@ export function Dashboard() {
                 </div>
               </div>
 
-              {/* Idle Now - NEW CARD */}
+              {/* Idle Now */}
               <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
                 <div className="flex items-center justify-between mb-2">
                   <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
