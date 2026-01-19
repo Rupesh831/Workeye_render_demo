@@ -5,6 +5,7 @@ CONFIGURATION_ROUTES.PY - Company Configuration Management
 ✅ Communicate with company_configurations table
 ✅ Support for tracker configuration sync
 ✅ Multi-tenant isolated
+✅ FIXED: working_days as JSONB instead of array
 """
 
 from flask import Blueprint, request, jsonify
@@ -46,7 +47,7 @@ def get_configuration():
             if not table_exists:
                 print(f"⚠️ company_configurations table does not exist, creating...")
                 
-                # Create the table
+                # Create the table with JSONB for working_days
                 cur.execute("""
                     CREATE TABLE IF NOT EXISTS company_configurations (
                         id SERIAL PRIMARY KEY,
@@ -55,7 +56,7 @@ def get_configuration():
                         idle_timeout_minutes INTEGER DEFAULT 5,
                         office_start_time TIME DEFAULT '09:00:00',
                         office_end_time TIME DEFAULT '18:00:00',
-                        working_days INTEGER[] DEFAULT ARRAY[1,2,3,4,5],
+                        working_days JSONB DEFAULT '[1,2,3,4,5]'::jsonb,
                         last_modified_by VARCHAR(255),
                         last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -88,6 +89,8 @@ def get_configuration():
                 print(f"⚠️ No configuration found for company {company_id}, creating default...")
                 
                 # Create default configuration
+                default_working_days = [1, 2, 3, 4, 5]  # Monday to Friday
+                
                 cur.execute("""
                     INSERT INTO company_configurations (
                         company_id,
@@ -96,15 +99,22 @@ def get_configuration():
                         office_start_time,
                         office_end_time,
                         working_days
-                    ) VALUES (%s, 10, 5, '09:00:00', '18:00:00', ARRAY[1,2,3,4,5])
+                    ) VALUES (%s, 10, 5, '09:00:00', '18:00:00', %s::jsonb)
                     RETURNING id, company_id, screenshot_interval_minutes, idle_timeout_minutes,
                               office_start_time, office_end_time, working_days,
                               last_modified_by, last_modified_at, created_at
-                """, (company_id,))
+                """, (company_id, json.dumps(default_working_days)))
                 
                 config = cur.fetchone()
                 conn.commit()
                 print(f"✅ Default configuration created for company {company_id}")
+            
+            # Parse working_days from JSONB
+            working_days = config['working_days']
+            if isinstance(working_days, str):
+                working_days = json.loads(working_days)
+            elif not isinstance(working_days, list):
+                working_days = [1, 2, 3, 4, 5]  # Fallback
             
             # Format response
             response_data = {
@@ -116,7 +126,7 @@ def get_configuration():
                     'idle_timeout_minutes': config['idle_timeout_minutes'],
                     'office_start_time': str(config['office_start_time']),
                     'office_end_time': str(config['office_end_time']),
-                    'working_days': config['working_days'],
+                    'working_days': working_days,
                     'last_modified_by': config['last_modified_by'],
                     'last_modified_at': config['last_modified_at'].isoformat() if config['last_modified_at'] else None,
                     'created_at': config['created_at'].isoformat() if config['created_at'] else None
@@ -124,6 +134,8 @@ def get_configuration():
             }
             
             print(f"✅ Configuration retrieved successfully")
+            print(f"   Screenshot: {config['screenshot_interval_minutes']}min, Idle: {config['idle_timeout_minutes']}min")
+            print(f"   Working days: {working_days}")
             return jsonify(response_data), 200
             
     except Exception as e:
@@ -171,6 +183,10 @@ def update_configuration():
         if not isinstance(working_days, list) or not working_days:
             return jsonify({'error': 'Working days must be a non-empty array'}), 400
         
+        # Validate working_days values (0-6)
+        if not all(isinstance(day, int) and 0 <= day <= 6 for day in working_days):
+            return jsonify({'error': 'Working days must contain integers between 0 (Sunday) and 6 (Saturday)'}), 400
+        
         with get_db() as conn:
             cur = conn.cursor()
             
@@ -182,6 +198,9 @@ def update_configuration():
             
             existing = cur.fetchone()
             
+            # Convert working_days to JSON string for JSONB column
+            working_days_json = json.dumps(working_days)
+            
             if existing:
                 # Update existing configuration
                 print(f"✏️ Updating existing configuration (ID: {existing['id']})")
@@ -192,7 +211,7 @@ def update_configuration():
                         idle_timeout_minutes = %s,
                         office_start_time = %s,
                         office_end_time = %s,
-                        working_days = %s,
+                        working_days = %s::jsonb,
                         last_modified_by = %s,
                         last_modified_at = %s
                     WHERE company_id = %s
@@ -202,7 +221,7 @@ def update_configuration():
                     idle_timeout,
                     office_start,
                     office_end,
-                    working_days,
+                    working_days_json,
                     admin_email,
                     get_ist_now(),
                     company_id
@@ -221,7 +240,7 @@ def update_configuration():
                         working_days,
                         last_modified_by,
                         last_modified_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    ) VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s, %s)
                     RETURNING id, last_modified_at, created_at
                 """, (
                     company_id,
@@ -229,7 +248,7 @@ def update_configuration():
                     idle_timeout,
                     office_start,
                     office_end,
-                    working_days,
+                    working_days_json,
                     admin_email,
                     get_ist_now()
                 ))
@@ -238,6 +257,9 @@ def update_configuration():
             conn.commit()
             
             print(f"✅ Configuration saved successfully")
+            print(f"   Screenshot: {screenshot_interval}min, Idle: {idle_timeout}min")
+            print(f"   Office: {office_start} - {office_end}")
+            print(f"   Working days: {working_days}")
             
             return jsonify({
                 'success': True,
