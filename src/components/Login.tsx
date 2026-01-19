@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -17,20 +17,47 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    console.log('🔵 Login Component: Checking authentication status...', isAuthenticated);
+    if (isAuthenticated) {
+      console.log('✅ Login Component: User already authenticated, redirecting to dashboard');
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('\n🚀 ========== LOGIN ATTEMPT STARTED ==========');
+    console.log('📧 Email:', email);
+    console.log('🔑 Password length:', password.length);
+    
     setError('');
     setLoading(true);
 
     try {
+      console.log('📡 Calling login function from AuthContext...');
       const result = await login(email, password);
       
+      console.log('💬 Login function returned:', JSON.stringify(result, null, 2));
+      console.log('❓ Result.success:', result.success);
+      console.log('❓ Result.error:', result.error);
+      
       if (result.success) {
-        // SUCCESS: Navigate to dashboard
-        navigate('/dashboard', { replace: true });
+        console.log('✅ ========== LOGIN SUCCESSFUL! ==========');
+        console.log('🎯 Navigating to /dashboard...');
+        
+        // Small delay to ensure state updates
+        setTimeout(() => {
+          console.log('📍 Executing navigation...');
+          navigate('/dashboard', { replace: true });
+          console.log('✅ Navigation completed');
+        }, 100);
       } else {
+        console.log('❌ ========== LOGIN FAILED ==========');
         // FAILED: Show error message
         const errorMsg = result.error || 'Login failed';
+        console.error('❌ Error message:', errorMsg);
         
         if (errorMsg.includes('not found') || errorMsg.includes('endpoint')) {
           setError('⚠️ Backend service is currently unavailable. Please try again in a few moments.');
@@ -43,9 +70,13 @@ const Login: React.FC = () => {
         }
       }
     } catch (err: any) {
-      console.error('Login error:', err);
+      console.error('❌ ========== LOGIN EXCEPTION ==========');
+      console.error('❌ Exception:', err);
+      console.error('❌ Exception message:', err?.message);
+      console.error('❌ Exception stack:', err?.stack);
       setError('Unable to connect to the server. Please check your internet connection and try again.');
     } finally {
+      console.log('🏁 Login attempt finished, setting loading=false');
       setLoading(false);
     }
   };
