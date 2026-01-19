@@ -108,10 +108,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Store admin data for other components
       localStorage.setItem('adminData', JSON.stringify(fullUser));
 
-      // Connect to WebSocket for real-time updates
-      if (companyData?.id) {
-        wsClient.connect(companyData.id);
-      }
+      // Connect to WebSocket for real-time updates (DISABLED - causing connection issues)
+      // if (companyData?.id) {
+      //   wsClient.connect(companyData.id);
+      // }
 
       console.log('✅ Login successful:', { user: fullUser, company: companyData });
 
@@ -171,10 +171,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Store admin data
       localStorage.setItem('adminData', JSON.stringify(fullUser));
 
-      // Connect to WebSocket for real-time updates
-      if (companyData?.id) {
-        wsClient.connect(companyData.id);
-      }
+      // Connect to WebSocket for real-time updates (DISABLED - causing connection issues)
+      // if (companyData?.id) {
+      //   wsClient.connect(companyData.id);
+      // }
 
       console.log('✅ Signup successful:', { user: fullUser, company: companyData });
 
@@ -245,10 +245,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Store admin data
         localStorage.setItem('adminData', JSON.stringify(fullUser));
 
-        // Connect to WebSocket for real-time updates
-        if (response.company?.id) {
-          wsClient.connect(response.company.id);
-        }
+        // Connect to WebSocket for real-time updates (DISABLED - causing connection issues)
+        // if (response.company?.id) {
+        //   wsClient.connect(response.company.id);
+        // }
       } catch (error: any) {
         console.error('❌ Token validation failed:', error);
         localStorage.removeItem('authToken');
