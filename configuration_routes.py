@@ -1,359 +1,325 @@
 """
-CONFIGURATION_ROUTES.PY - Advanced JSONB-Based Configuration Management
-=========================================================================
-✅ Flexible JSONB storage for company configuration
-✅ GET /configuration?company_id=<id> - Get configuration
-✅ POST /configuration - Save configuration (replaces, not merges)
-✅ IST timezone support for all timestamps
-✅ Uses psycopg2 only (no SQLAlchemy)
-✅ Proper audit trail with updated_at timestamps
+CONFIGURATION_ROUTES.PY - Company Configuration Management
+===========================================================
+✅ Manage screenshot intervals, idle timeouts, office hours
+✅ Communicate with company_configurations table
+✅ Support for tracker configuration sync
+✅ Multi-tenant isolated
 """
 
 from flask import Blueprint, request, jsonify
 from admin_auth_routes import require_admin_auth
-from db import get_db, get_ist_now, IST
+from db import get_db, get_ist_now
 from datetime import datetime
 import json
 
 configuration_bp = Blueprint('configuration', __name__)
 
 # ============================================================================
-# GET COMPANY CONFIGURATION
+# GET CONFIGURATION
 # ============================================================================
 
 @configuration_bp.route('/api/configuration', methods=['GET'])
 @require_admin_auth
 def get_configuration():
     """
-    Get current configuration for the company
-    
-    Query params:
-        company_id (optional): Company ID - defaults to authenticated user's company
-    
-    Returns:
-        {
-            "success": true,
-            "config": {...},
-            "updated_at": "2025-01-16T10:30:00+05:30"
-        }
+    Get company configuration settings
+    Returns current screenshot interval, idle timeout, office hours, etc.
     """
     try:
-        # Get company_id from query param or auth context
-        company_id = request.args.get('company_id') or request.company_id
+        company_id = request.company_id
         
-        if not company_id:
-            return jsonify({'error': 'Company ID required'}), 400
+        print(f"\n📋 GET CONFIGURATION: Company ID = {company_id}")
         
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Get configuration from JSONB table
+            # Check if company_configurations table exists
             cur.execute("""
-                SELECT config_data, updated_at, created_at
-                FROM configuration
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'company_configurations'
+                )
+            """)
+            table_exists = cur.fetchone()['exists']
+            
+            if not table_exists:
+                print(f"⚠️ company_configurations table does not exist, creating...")
+                
+                # Create the table
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS company_configurations (
+                        id SERIAL PRIMARY KEY,
+                        company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+                        screenshot_interval_minutes INTEGER DEFAULT 10,
+                        idle_timeout_minutes INTEGER DEFAULT 5,
+                        office_start_time TIME DEFAULT '09:00:00',
+                        office_end_time TIME DEFAULT '18:00:00',
+                        working_days INTEGER[] DEFAULT ARRAY[1,2,3,4,5],
+                        last_modified_by VARCHAR(255),
+                        last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(company_id)
+                    )
+                """)
+                conn.commit()
+                print(f"✅ company_configurations table created")
+            
+            # Get configuration for this company
+            cur.execute("""
+                SELECT 
+                    id,
+                    company_id,
+                    screenshot_interval_minutes,
+                    idle_timeout_minutes,
+                    office_start_time,
+                    office_end_time,
+                    working_days,
+                    last_modified_by,
+                    last_modified_at,
+                    created_at
+                FROM company_configurations
                 WHERE company_id = %s
             """, (company_id,))
             
-            config_row = cur.fetchone()
+            config = cur.fetchone()
             
-            if not config_row:
-                # Return default configuration if not exists
-                default_config = {
-                    'screenshot_interval_minutes': 10,
-                    'idle_timeout_minutes': 5,
-                    'office_start_time': '09:00:00',
-                    'office_end_time': '18:00:00',
-                    'working_days': [1, 2, 3, 4, 5]  # Monday to Friday
-                }
+            if not config:
+                print(f"⚠️ No configuration found for company {company_id}, creating default...")
                 
-                return jsonify({
-                    'success': True,
-                    'config': default_config,
-                    'updated_at': None,
-                    'message': 'Using default configuration'
-                }), 200
+                # Create default configuration
+                cur.execute("""
+                    INSERT INTO company_configurations (
+                        company_id,
+                        screenshot_interval_minutes,
+                        idle_timeout_minutes,
+                        office_start_time,
+                        office_end_time,
+                        working_days
+                    ) VALUES (%s, 10, 5, '09:00:00', '18:00:00', ARRAY[1,2,3,4,5])
+                    RETURNING id, company_id, screenshot_interval_minutes, idle_timeout_minutes,
+                              office_start_time, office_end_time, working_days,
+                              last_modified_by, last_modified_at, created_at
+                """, (company_id,))
+                
+                config = cur.fetchone()
+                conn.commit()
+                print(f"✅ Default configuration created for company {company_id}")
             
-            # Convert timestamps to IST
-            updated_at_ist = config_row['updated_at'].astimezone(IST) if config_row['updated_at'] else None
-            created_at_ist = config_row['created_at'].astimezone(IST) if config_row.get('created_at') else None
-            
-            # Return stored configuration
-            result = {
+            # Format response
+            response_data = {
                 'success': True,
-                'config': config_row['config_data'],
-                'updated_at': updated_at_ist.isoformat() if updated_at_ist else None,
-                'created_at': created_at_ist.isoformat() if created_at_ist else None
+                'config': {
+                    'id': config['id'],
+                    'company_id': config['company_id'],
+                    'screenshot_interval_minutes': config['screenshot_interval_minutes'],
+                    'idle_timeout_minutes': config['idle_timeout_minutes'],
+                    'office_start_time': str(config['office_start_time']),
+                    'office_end_time': str(config['office_end_time']),
+                    'working_days': config['working_days'],
+                    'last_modified_by': config['last_modified_by'],
+                    'last_modified_at': config['last_modified_at'].isoformat() if config['last_modified_at'] else None,
+                    'created_at': config['created_at'].isoformat() if config['created_at'] else None
+                }
             }
             
-            print(f"✅ Retrieved configuration for company {company_id}")
-            
-            return jsonify(result), 200
+            print(f"✅ Configuration retrieved successfully")
+            return jsonify(response_data), 200
             
     except Exception as e:
-        print(f"❌ Get configuration error: {e}")
+        print(f"❌ GET Configuration Error: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': 'Failed to fetch configuration'}), 500
+        return jsonify({'error': 'Failed to retrieve configuration'}), 500
 
 
 # ============================================================================
-# SAVE COMPANY CONFIGURATION
+# UPDATE CONFIGURATION
 # ============================================================================
 
-@configuration_bp.route('/api/configuration', methods=['POST'])
+@configuration_bp.route('/api/configuration', methods=['POST', 'PUT'])
 @require_admin_auth
-def save_configuration():
+def update_configuration():
     """
-    Save/update company configuration (REPLACES existing config, does not merge)
-    
-    Expected JSON:
-    {
-        "company_id": 1,  // Optional - defaults to auth context
-        "config": {
-            "screenshot_interval_minutes": 10,
-            "idle_timeout_minutes": 5,
-            "office_start_time": "09:00:00",
-            "office_end_time": "18:00:00",
-            "working_days": [1, 2, 3, 4, 5],
-            // ... any other custom settings
-        }
-    }
-    
-    Returns:
-        {
-            "success": true,
-            "config": {...},
-            "updated_at": "2025-01-16T10:30:00+05:30"
-        }
+    Update company configuration settings
+    Updates screenshot interval, idle timeout, office hours, working days
     """
     try:
-        data = request.get_json()
+        company_id = request.company_id
+        admin_email = request.admin_email
         
-        if not data:
-            return jsonify({'error': 'Request body required'}), 400
+        data = request.get_json() or {}
+        config_data = data.get('config', {})
         
-        # Get company_id from request or auth context
-        company_id = data.get('company_id') or request.company_id
-        config_data = data.get('config')
+        print(f"\n💾 UPDATE CONFIGURATION: Company ID = {company_id}")
+        print(f"📝 Data: {json.dumps(config_data, indent=2)}")
         
-        if not company_id:
-            return jsonify({'error': 'Company ID required'}), 400
+        # Extract configuration values
+        screenshot_interval = config_data.get('screenshot_interval_minutes', 10)
+        idle_timeout = config_data.get('idle_timeout_minutes', 5)
+        office_start = config_data.get('office_start_time', '09:00:00')
+        office_end = config_data.get('office_end_time', '18:00:00')
+        working_days = config_data.get('working_days', [1, 2, 3, 4, 5])
         
-        if not config_data or not isinstance(config_data, dict):
-            return jsonify({'error': 'Config object required'}), 400
+        # Validation
+        if not (1 <= screenshot_interval <= 60):
+            return jsonify({'error': 'Screenshot interval must be between 1 and 60 minutes'}), 400
         
-        # Validate basic configuration fields
-        if 'screenshot_interval_minutes' in config_data:
-            interval = config_data['screenshot_interval_minutes']
-            if interval not in [5, 10, 15, 30, 60]:
-                return jsonify({'error': 'Invalid screenshot interval. Must be 5, 10, 15, 30, or 60 minutes'}), 400
+        if not (1 <= idle_timeout <= 30):
+            return jsonify({'error': 'Idle timeout must be between 1 and 30 minutes'}), 400
         
-        if 'idle_timeout_minutes' in config_data:
-            timeout = config_data['idle_timeout_minutes']
-            if timeout < 1 or timeout > 15:
-                return jsonify({'error': 'Invalid idle timeout. Must be between 1 and 15 minutes'}), 400
-        
-        if 'working_days' in config_data:
-            days = config_data['working_days']
-            if not isinstance(days, list) or not all(isinstance(d, int) and 0 <= d <= 6 for d in days):
-                return jsonify({'error': 'Invalid working days. Must be array of integers 0-6'}), 400
-        
-        # Validate time format
-        if 'office_start_time' in config_data:
-            try:
-                datetime.strptime(config_data['office_start_time'], '%H:%M:%S')
-            except ValueError:
-                return jsonify({'error': 'Invalid office start time format. Use HH:MM:SS'}), 400
-        
-        if 'office_end_time' in config_data:
-            try:
-                datetime.strptime(config_data['office_end_time'], '%H:%M:%S')
-            except ValueError:
-                return jsonify({'error': 'Invalid office end time format. Use HH:MM:SS'}), 400
+        if not isinstance(working_days, list) or not working_days:
+            return jsonify({'error': 'Working days must be a non-empty array'}), 400
         
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Get current IST time
-            now_ist = get_ist_now()
-            
-            # Upsert configuration (insert or update) - REPLACES entire config
+            # Check if configuration exists
             cur.execute("""
-                INSERT INTO configuration (company_id, config_data, updated_at, created_at)
-                VALUES (%s, %s::jsonb, %s, %s)
-                ON CONFLICT (company_id) 
-                DO UPDATE SET 
-                    config_data = EXCLUDED.config_data,
-                    updated_at = EXCLUDED.updated_at
-                RETURNING config_data, updated_at, created_at
-            """, (company_id, json.dumps(config_data), now_ist, now_ist))
+                SELECT id FROM company_configurations
+                WHERE company_id = %s
+            """, (company_id,))
             
-            result_row = cur.fetchone()
+            existing = cur.fetchone()
+            
+            if existing:
+                # Update existing configuration
+                print(f"✏️ Updating existing configuration (ID: {existing['id']})")
+                
+                cur.execute("""
+                    UPDATE company_configurations
+                    SET screenshot_interval_minutes = %s,
+                        idle_timeout_minutes = %s,
+                        office_start_time = %s,
+                        office_end_time = %s,
+                        working_days = %s,
+                        last_modified_by = %s,
+                        last_modified_at = %s
+                    WHERE company_id = %s
+                    RETURNING id, last_modified_at, created_at
+                """, (
+                    screenshot_interval,
+                    idle_timeout,
+                    office_start,
+                    office_end,
+                    working_days,
+                    admin_email,
+                    get_ist_now(),
+                    company_id
+                ))
+            else:
+                # Insert new configuration
+                print(f"➕ Creating new configuration")
+                
+                cur.execute("""
+                    INSERT INTO company_configurations (
+                        company_id,
+                        screenshot_interval_minutes,
+                        idle_timeout_minutes,
+                        office_start_time,
+                        office_end_time,
+                        working_days,
+                        last_modified_by,
+                        last_modified_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id, last_modified_at, created_at
+                """, (
+                    company_id,
+                    screenshot_interval,
+                    idle_timeout,
+                    office_start,
+                    office_end,
+                    working_days,
+                    admin_email,
+                    get_ist_now()
+                ))
+            
+            result = cur.fetchone()
             conn.commit()
             
-            # Convert to IST for response
-            updated_at_ist = result_row['updated_at'].astimezone(IST) if result_row['updated_at'] else None
+            print(f"✅ Configuration saved successfully")
             
-            print(f"✅ Saved configuration for company {company_id} at {updated_at_ist}")
-            
-            # Broadcast to connected trackers (if WebSocket is available)
-            try:
-                broadcast_config_update(company_id, config_data)
-            except Exception as broadcast_error:
-                print(f"⚠️ Broadcast warning: {broadcast_error}")
-            
-            result = {
+            return jsonify({
                 'success': True,
-                'message': 'Configuration saved successfully',
-                'config': result_row['config_data'],
-                'updated_at': updated_at_ist.isoformat() if updated_at_ist else None
-            }
-            
-            return jsonify(result), 200
+                'message': 'Configuration updated successfully',
+                'config_id': result['id'],
+                'updated_at': result['last_modified_at'].isoformat() if result['last_modified_at'] else None,
+                'created_at': result['created_at'].isoformat() if result['created_at'] else None
+            }), 200
             
     except Exception as e:
-        print(f"❌ Save configuration error: {e}")
+        print(f"❌ UPDATE Configuration Error: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': 'Failed to save configuration'}), 500
+        return jsonify({'error': 'Failed to update configuration'}), 500
 
 
 # ============================================================================
-# TRACKER CONFIGURATION SYNC (For tracker to get company settings)
+# GET TRACKER CONFIGURATION (For Trackers)
 # ============================================================================
 
-@configuration_bp.route('/tracker/configuration', methods=['POST'])
+@configuration_bp.route('/api/tracker/configuration', methods=['GET'])
 def get_tracker_configuration():
     """
-    Get configuration for tracker client based on company
-    Used by tracker to sync settings dynamically
-    
-    Expected JSON:
-    {
-        "tracker_token": "base64_token",
-        "member_email": "user@company.com"
-    }
-    
-    Returns:
-        {
-            "success": true,
-            "company_id": 1,
-            "company_name": "Acme Corp",
-            "configuration": {...}
-        }
+    Get configuration for tracker clients
+    Returns screenshot interval and idle timeout based on company_id from tracker token
+    No authentication required - uses tracker token
     """
     try:
-        data = request.get_json()
-        tracker_token = data.get('tracker_token')
-        member_email = data.get('member_email')
+        # Get tracker token from header or query
+        tracker_token = request.headers.get('X-Tracker-Token') or request.args.get('tracker_token')
         
         if not tracker_token:
             return jsonify({'error': 'Tracker token required'}), 401
         
-        # Verify tracker token and get company_id
-        from tracker_routes import verify_tracker_token
-        company_id = verify_tracker_token(tracker_token)
-        
-        if not company_id:
+        # Extract company_id from tracker token
+        import base64
+        try:
+            decoded = base64.b64decode(tracker_token.encode()).decode()
+            parts = decoded.split(':', 1)
+            company_id = int(parts[0])
+        except Exception as e:
+            print(f"❌ Invalid tracker token: {e}")
             return jsonify({'error': 'Invalid tracker token'}), 401
+        
+        print(f"\n🔧 TRACKER CONFIG REQUEST: Company ID = {company_id}")
         
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Verify company exists and is active
+            # Get configuration
             cur.execute("""
-                SELECT id, name as company_name, is_active 
-                FROM companies 
-                WHERE id = %s
-            """, (company_id,))
-            
-            company = cur.fetchone()
-            
-            if not company or not company['is_active']:
-                return jsonify({'error': 'Company not found or inactive'}), 404
-            
-            # Verify member exists if email provided
-            if member_email:
-                cur.execute("""
-                    SELECT id, name as full_name, is_active 
-                    FROM members 
-                    WHERE company_id = %s AND email = %s
-                """, (company_id, member_email))
-                
-                member = cur.fetchone()
-                
-                if not member:
-                    return jsonify({'error': 'Member not found'}), 404
-                
-                if not member['is_active']:
-                    return jsonify({'error': 'Member account is inactive'}), 403
-            
-            # Get company configuration
-            cur.execute("""
-                SELECT config_data, updated_at
-                FROM configuration
+                SELECT 
+                    screenshot_interval_minutes,
+                    idle_timeout_minutes
+                FROM company_configurations
                 WHERE company_id = %s
             """, (company_id,))
             
-            config_row = cur.fetchone()
+            config = cur.fetchone()
             
-            if not config_row:
-                # Return default configuration
-                config_data = {
+            if not config:
+                # Return defaults if no configuration exists
+                print(f"⚠️ No configuration found, returning defaults")
+                return jsonify({
+                    'success': True,
                     'screenshot_interval_minutes': 10,
-                    'idle_timeout_minutes': 5,
-                    'office_start_time': '09:00:00',
-                    'office_end_time': '18:00:00',
-                    'working_days': [1, 2, 3, 4, 5],
-                    'last_modified_at': None
-                }
-            else:
-                config_data = config_row['config_data']
-                updated_at_ist = config_row['updated_at'].astimezone(IST) if config_row.get('updated_at') else None
-                config_data['last_modified_at'] = updated_at_ist.isoformat() if updated_at_ist else None
+                    'idle_timeout_minutes': 5
+                }), 200
             
-            print(f"✅ Configuration synced for company {company_id}")
+            print(f"✅ Configuration sent to tracker: screenshot={config['screenshot_interval_minutes']}min, idle={config['idle_timeout_minutes']}min")
             
             return jsonify({
                 'success': True,
-                'company_id': company_id,
-                'company_name': company['company_name'],
-                'configuration': config_data,
-                'message': 'Configuration synced successfully'
+                'screenshot_interval_minutes': config['screenshot_interval_minutes'],
+                'idle_timeout_minutes': config['idle_timeout_minutes']
             }), 200
             
     except Exception as e:
-        print(f"❌ Tracker configuration sync error: {e}")
+        print(f"❌ TRACKER Configuration Error: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': 'Failed to sync configuration'}), 500
+        return jsonify({'error': 'Failed to retrieve tracker configuration'}), 500
 
-
-# ============================================================================
-# BROADCAST CONFIG UPDATE (WebSocket Support)
-# ============================================================================
-
-def broadcast_config_update(company_id, config_data):
-    """
-    Broadcast configuration update to all connected trackers for this company
-    This is a placeholder - implement WebSocket broadcasting if needed
-    """
-    try:
-        print(f"📡 Broadcasting config update to company {company_id} trackers")
-        # TODO: Implement WebSocket broadcast if you have WebSocket support
-        # Example:
-        # from your_websocket_module import broadcast_to_company
-        # broadcast_to_company(company_id, {
-        #     'type': 'config_update',
-        #     'config': config_data
-        # })
-        pass
-    except Exception as e:
-        print(f"⚠️ Broadcast error: {e}")
-
-
-# ============================================================================
-# EXPORTS
-# ============================================================================
 
 __all__ = ['configuration_bp']
