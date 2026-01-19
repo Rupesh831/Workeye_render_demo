@@ -48,10 +48,43 @@ export function Configuration() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
     fetchConfiguration();
   }, [company?.id]);
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (!currentConfig) {
+      setHasUnsavedChanges(false);
+      return;
+    }
+
+    const hasChanges = (
+      config.screenshot_interval_minutes !== currentConfig.screenshot_interval_minutes ||
+      config.idle_timeout_minutes !== currentConfig.idle_timeout_minutes ||
+      config.office_start_time !== currentConfig.office_start_time ||
+      config.office_end_time !== currentConfig.office_end_time ||
+      JSON.stringify(config.working_days.sort()) !== JSON.stringify(currentConfig.working_days.sort())
+    );
+
+    setHasUnsavedChanges(hasChanges);
+  }, [config, currentConfig]);
+
+  // Warn about unsaved changes on page leave
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && !saving) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges, saving]);
 
   const fetchConfiguration = async () => {
     try {
@@ -82,6 +115,7 @@ export function Configuration() {
         };
         setConfig(loadedConfig);
         setCurrentConfig(loadedConfig);
+        setHasUnsavedChanges(false); // Reset unsaved changes flag
       }
     } catch (err: any) {
       console.error('Error fetching configuration:', err);
@@ -127,7 +161,14 @@ export function Configuration() {
 
       if (data.success) {
         setSuccess(true);
-        await fetchConfiguration(); // Refresh to get latest data
+        
+        // Update current config to match saved config
+        setCurrentConfig({ ...config });
+        setHasUnsavedChanges(false); // Clear unsaved changes flag
+        
+        // Refresh from server to get updated metadata
+        await fetchConfiguration();
+        
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err: any) {
@@ -145,6 +186,13 @@ export function Configuration() {
         ? prev.working_days.filter(d => d !== day)
         : [...prev.working_days, day].sort()
     }));
+  };
+
+  const handleReset = () => {
+    if (currentConfig) {
+      setConfig({ ...currentConfig });
+      setHasUnsavedChanges(false);
+    }
   };
 
   const formatDateTime = (isoString?: string) => {
@@ -175,7 +223,15 @@ export function Configuration() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => {
+                  if (hasUnsavedChanges) {
+                    if (window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
+                      navigate('/dashboard');
+                    }
+                  } else {
+                    navigate('/dashboard');
+                  }
+                }}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-slate-600" />
@@ -188,14 +244,21 @@ export function Configuration() {
                 <p className="text-sm text-slate-500">{company?.company_name}</p>
               </div>
             </div>
-            <button
-              onClick={fetchConfiguration}
-              disabled={loading || saving}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-              title="Refresh"
-            >
-              <RefreshCw className={`w-5 h-5 text-slate-600 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            <div className="flex items-center space-x-2">
+              {hasUnsavedChanges && (
+                <span className="text-xs text-orange-600 font-medium px-3 py-1 bg-orange-50 rounded-full">
+                  Unsaved changes
+                </span>
+              )}
+              <button
+                onClick={fetchConfiguration}
+                disabled={loading || saving}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                title="Refresh"
+              >
+                <RefreshCw className={`w-5 h-5 text-slate-600 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -220,7 +283,7 @@ export function Configuration() {
             <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-medium text-green-800">Success</p>
-              <p className="text-sm text-green-600 mt-1">Configuration updated successfully</p>
+              <p className="text-sm text-green-600 mt-1">Configuration saved successfully</p>
             </div>
           </div>
         )}
@@ -381,6 +444,7 @@ export function Configuration() {
                 {DAYS_OF_WEEK.map(day => (
                   <button
                     key={day.value}
+                    type="button"
                     onClick={() => handleWorkingDayToggle(day.value)}
                     className={`px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                       config.working_days.includes(day.value)
@@ -399,8 +463,9 @@ export function Configuration() {
           {/* Action Buttons */}
           <div className="mt-8 flex items-center space-x-4">
             <button
+              type="button"
               onClick={saveConfiguration}
-              disabled={saving}
+              disabled={saving || !hasUnsavedChanges}
               className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
@@ -417,8 +482,9 @@ export function Configuration() {
             </button>
             
             <button
-              onClick={() => setConfig(currentConfig || config)}
-              disabled={saving}
+              type="button"
+              onClick={handleReset}
+              disabled={saving || !hasUnsavedChanges}
               className="px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Reset
