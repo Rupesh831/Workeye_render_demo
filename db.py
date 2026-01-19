@@ -39,21 +39,34 @@ def convert_to_ist(utc_dt):
 # DATABASE CONFIGURATION
 # ============================================================================
 
+# HARDCODED EXTERNAL DATABASE URL - This ensures we ALWAYS have a valid connection
+EXTERNAL_DB_URL = 'postgresql://work_eye_db_user:DeXsKDcQNO6rpdQypAjDECEjqRXVa8hr@dpg-d52ij3ali9vc73f8tn40-a.singapore-postgres.render.com/work_eye_db'
+
 # Use the external PostgreSQL database URL with COMPLETE hostname
-# Try INTERNAL_DATABASE_URL first (Render internal), then DATABASE_URL, then fallback
+# Priority: INTERNAL_DATABASE_URL > DATABASE_URL > Hardcoded fallback
 DATABASE_URL = os.environ.get(
     'INTERNAL_DATABASE_URL',
     os.environ.get(
         'DATABASE_URL',
-        'postgresql://work_eye_db_user:DeXsKDcQNO6rpdQypAjDECEjqRXVa8hr@dpg-d52ij3ali9vc73f8tn40-a.singapore-postgres.render.com/work_eye_db'
+        EXTERNAL_DB_URL
     )
 )
+
+print(f"🔍 DEBUG: Environment DATABASE_URL exists: {bool(os.environ.get('DATABASE_URL'))}")
+print(f"🔍 DEBUG: Environment INTERNAL_DATABASE_URL exists: {bool(os.environ.get('INTERNAL_DATABASE_URL'))}")
+print(f"🔍 DEBUG: Using DATABASE_URL: {DATABASE_URL[:60] if DATABASE_URL else 'NONE'}...")
 
 # Render uses postgres://, PostgreSQL requires postgresql://
 if DATABASE_URL.startswith('postgres://'):
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    print(f"🔄 Converted postgres:// to postgresql://")
 
-print(f"🔗 Connecting to: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'database'}")
+# Log connection info (hide password)
+if '@' in DATABASE_URL:
+    connection_info = DATABASE_URL.split('@')[1].split('/')[0]
+    print(f"🔗 Connecting to: {connection_info}")
+else:
+    print(f"🔗 Connecting to: database")
 
 # ============================================================================
 # CONNECTION POOL (for better performance)
@@ -64,10 +77,19 @@ connection_pool = None
 def initialize_connection_pool():
     """Initialize the connection pool with SSL required"""
     global connection_pool
+    
+    # Debug: Print what we're trying to connect to
+    print(f"🔍 DATABASE_URL length: {len(DATABASE_URL)}")
+    print(f"🔍 DATABASE_URL starts with: {DATABASE_URL[:50] if len(DATABASE_URL) > 50 else DATABASE_URL}")
+    
+    # Verify DATABASE_URL is set
+    if not DATABASE_URL or 'postgresql://' not in DATABASE_URL:
+        print(f"❌ CRITICAL: DATABASE_URL is not properly set!")
+        print(f"❌ DATABASE_URL value: {DATABASE_URL}")
+        return False
+    
     try:
-        # Parse DATABASE_URL to ensure all components are present
         print(f"📡 Initializing connection pool...")
-        print(f"📡 Database URL starts with: {DATABASE_URL[:30]}...")
         
         connection_pool = psycopg2.pool.SimpleConnectionPool(
             1,  # minimum connections
