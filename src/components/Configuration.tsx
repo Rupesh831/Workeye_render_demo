@@ -3,7 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
   Settings, Save, RefreshCw, Clock, Camera, Calendar,
-  Info, Check, X, ArrowLeft, Loader2, AlertCircle
+  Info, Check, X, ArrowLeft, Loader2, AlertCircle, Building,
+  Hash, User, CalendarClock
 } from 'lucide-react';
 
 interface Configuration {
@@ -20,29 +21,13 @@ interface Configuration {
 }
 
 const DAYS_OF_WEEK = [
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' },
-  { value: 0, label: 'Sunday' }
-];
-
-const SCREENSHOT_INTERVALS = [
-  { value: 5, label: '5 minutes' },
-  { value: 10, label: '10 minutes' },
-  { value: 15, label: '15 minutes' },
-  { value: 30, label: '30 minutes' },
-  { value: 60, label: '60 minutes' }
-];
-
-const IDLE_TIMEOUTS = [
-  { value: 1, label: '1 minute' },
-  { value: 3, label: '3 minutes' },
-  { value: 5, label: '5 minutes' },
-  { value: 10, label: '10 minutes' },
-  { value: 15, label: '15 minutes' }
+  { value: 1, label: 'Mon', fullLabel: 'Monday' },
+  { value: 2, label: 'Tue', fullLabel: 'Tuesday' },
+  { value: 3, label: 'Wed', fullLabel: 'Wednesday' },
+  { value: 4, label: 'Thu', fullLabel: 'Thursday' },
+  { value: 5, label: 'Fri', fullLabel: 'Friday' },
+  { value: 6, label: 'Sat', fullLabel: 'Saturday' },
+  { value: 0, label: 'Sun', fullLabel: 'Sunday' }
 ];
 
 export function Configuration() {
@@ -75,7 +60,7 @@ export function Configuration() {
       
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'https://workeye-render-demo-backend.onrender.com'}/api/configuration?company_id=${company?.id}`,
+        `${import.meta.env.VITE_API_URL || 'https://workeye-render-demo-backend.onrender.com'}/api/configuration`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -92,10 +77,8 @@ export function Configuration() {
       
       if (data.success && data.config) {
         const loadedConfig = {
-          company_id: company?.id || 0,
           ...data.config,
-          last_modified_at: data.updated_at,
-          created_at: data.created_at
+          company_id: company?.id || 0,
         };
         setConfig(loadedConfig);
         setCurrentConfig(loadedConfig);
@@ -144,13 +127,7 @@ export function Configuration() {
 
       if (data.success) {
         setSuccess(true);
-        const updatedConfig = {
-          ...config,
-          last_modified_at: data.updated_at
-        };
-        setConfig(updatedConfig);
-        setCurrentConfig(updatedConfig);
-        
+        await fetchConfiguration(); // Refresh to get latest data
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err: any) {
@@ -171,7 +148,7 @@ export function Configuration() {
   };
 
   const formatDateTime = (isoString?: string) => {
-    if (!isoString) return 'Never';
+    if (!isoString) return 'Not set';
     return new Date(isoString).toLocaleString('en-IN', {
       dateStyle: 'medium',
       timeStyle: 'short',
@@ -192,8 +169,9 @@ export function Configuration() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <header className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <button
@@ -206,118 +184,173 @@ export function Configuration() {
                 <Settings className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-800">Configuration</h1>
+                <h1 className="text-xl font-bold text-slate-800">System Configuration</h1>
                 <p className="text-sm text-slate-500">{company?.company_name}</p>
               </div>
             </div>
+            <button
+              onClick={fetchConfiguration}
+              disabled={loading || saving}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+              title="Refresh"
+            >
+              <RefreshCw className={`w-5 h-5 text-slate-600 ${loading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        {/* Alert Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-red-800">Error</p>
               <p className="text-sm text-red-600 mt-1">{error}</p>
             </div>
+            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+              <X className="w-5 h-5" />
+            </button>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start space-x-3">
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start space-x-3">
             <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-green-800">Success</p>
-              <p className="text-sm text-green-600 mt-1">Configuration saved successfully</p>
+              <p className="text-sm text-green-600 mt-1">Configuration updated successfully</p>
             </div>
           </div>
         )}
 
+        {/* Current Configuration Display */}
         {currentConfig && (
-          <div className="bg-white rounded-xl shadow-md border border-slate-100 p-6 mb-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <Info className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-slate-800">Current Configuration</h2>
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-800">Current Settings</h2>
+              <div className="text-xs text-slate-500">
+                ID: #{currentConfig.id}
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Screenshot Interval</p>
-                <p className="text-lg font-bold text-slate-800">{currentConfig.screenshot_interval_minutes} minutes</p>
+            {/* Configuration Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Hash className="w-4 h-4 text-blue-600" />
+                  <p className="text-xs text-slate-600 font-medium">Company ID</p>
+                </div>
+                <p className="text-lg font-bold text-slate-800">{currentConfig.company_id}</p>
               </div>
               
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Idle Timeout</p>
-                <p className="text-lg font-bold text-slate-800">{currentConfig.idle_timeout_minutes} minutes</p>
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Camera className="w-4 h-4 text-purple-600" />
+                  <p className="text-xs text-slate-600 font-medium">Screenshot Interval</p>
+                </div>
+                <p className="text-lg font-bold text-slate-800">{currentConfig.screenshot_interval_minutes} min</p>
               </div>
               
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Office Hours</p>
-                <p className="text-lg font-bold text-slate-800">
+              <div className="p-3 bg-yellow-50 rounded-lg">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Clock className="w-4 h-4 text-yellow-600" />
+                  <p className="text-xs text-slate-600 font-medium">Idle Timeout</p>
+                </div>
+                <p className="text-lg font-bold text-slate-800">{currentConfig.idle_timeout_minutes} min</p>
+              </div>
+              
+              <div className="p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center space-x-2 mb-1">
+                  <CalendarClock className="w-4 h-4 text-green-600" />
+                  <p className="text-xs text-slate-600 font-medium">Office Hours</p>
+                </div>
+                <p className="text-sm font-bold text-slate-800">
                   {currentConfig.office_start_time?.slice(0, 5)} - {currentConfig.office_end_time?.slice(0, 5)}
                 </p>
               </div>
               
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Working Days</p>
-                <p className="text-sm font-medium text-slate-800">
-                  {DAYS_OF_WEEK.filter(d => currentConfig.working_days.includes(d.value)).map(d => d.label).join(', ')}
+              <div className="p-3 bg-indigo-50 rounded-lg md:col-span-2">
+                <div className="flex items-center space-x-2 mb-1">
+                  <Calendar className="w-4 h-4 text-indigo-600" />
+                  <p className="text-xs text-slate-600 font-medium">Working Days</p>
+                </div>
+                <p className="text-sm font-semibold text-slate-800">
+                  {DAYS_OF_WEEK.filter(d => currentConfig.working_days.includes(d.value))
+                    .map(d => d.fullLabel).join(', ')}
                 </p>
               </div>
             </div>
 
-            {currentConfig.last_modified_at && (
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <p className="text-xs text-slate-500">
-                  Last modified: {formatDateTime(currentConfig.last_modified_at)}
-                  {currentConfig.last_modified_by && ` by ${currentConfig.last_modified_by}`}
-                </p>
-              </div>
-            )}
+            {/* Metadata */}
+            <div className="pt-4 border-t border-slate-200 space-y-2">
+              {currentConfig.last_modified_by && (
+                <div className="flex items-center space-x-2 text-sm">
+                  <User className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-600">Last modified by:</span>
+                  <span className="font-medium text-slate-800">{currentConfig.last_modified_by}</span>
+                </div>
+              )}
+              {currentConfig.last_modified_at && (
+                <div className="flex items-center space-x-2 text-sm">
+                  <Clock className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-600">Last modified:</span>
+                  <span className="font-medium text-slate-800">{formatDateTime(currentConfig.last_modified_at)}</span>
+                </div>
+              )}
+              {currentConfig.created_at && (
+                <div className="flex items-center space-x-2 text-sm">
+                  <CalendarClock className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-600">Created:</span>
+                  <span className="font-medium text-slate-800">{formatDateTime(currentConfig.created_at)}</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-md border border-slate-100 p-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-6">Update Settings</h2>
+        {/* Edit Form */}
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+          <h2 className="text-lg font-semibold text-slate-800 mb-6">Update Configuration</h2>
           
           <div className="space-y-6">
+            {/* Screenshot Interval */}
             <div>
               <label className="flex items-center space-x-2 text-sm font-medium text-slate-700 mb-2">
                 <Camera className="w-4 h-4 text-blue-600" />
-                <span>Screenshot Interval</span>
+                <span>Screenshot Interval (minutes)</span>
               </label>
-              <select
+              <input
+                type="number"
+                min="1"
+                max="60"
                 value={config.screenshot_interval_minutes}
-                onChange={(e) => setConfig({ ...config, screenshot_interval_minutes: parseInt(e.target.value) })}
+                onChange={(e) => setConfig({ ...config, screenshot_interval_minutes: parseInt(e.target.value) || 10 })}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {SCREENSHOT_INTERVALS.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-slate-500">How often screenshots are captured</p>
+              />
+              <p className="mt-1 text-xs text-slate-500">How often screenshots are captured (1-60 minutes)</p>
             </div>
 
+            {/* Idle Timeout */}
             <div>
               <label className="flex items-center space-x-2 text-sm font-medium text-slate-700 mb-2">
                 <Clock className="w-4 h-4 text-yellow-600" />
-                <span>Idle Timeout</span>
+                <span>Idle Timeout (minutes)</span>
               </label>
-              <select
+              <input
+                type="number"
+                min="1"
+                max="30"
                 value={config.idle_timeout_minutes}
-                onChange={(e) => setConfig({ ...config, idle_timeout_minutes: parseInt(e.target.value) })}
+                onChange={(e) => setConfig({ ...config, idle_timeout_minutes: parseInt(e.target.value) || 5 })}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {IDLE_TIMEOUTS.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-slate-500">Time before marking user as idle</p>
+              />
+              <p className="mt-1 text-xs text-slate-500">Time before marking user as idle (1-30 minutes)</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Office Hours */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Office Start Time</label>
                 <input
@@ -338,34 +371,37 @@ export function Configuration() {
               </div>
             </div>
 
+            {/* Working Days */}
             <div>
               <label className="flex items-center space-x-2 text-sm font-medium text-slate-700 mb-3">
                 <Calendar className="w-4 h-4 text-purple-600" />
                 <span>Working Days</span>
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
                 {DAYS_OF_WEEK.map(day => (
                   <button
                     key={day.value}
                     onClick={() => handleWorkingDayToggle(day.value)}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                    className={`px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                       config.working_days.includes(day.value)
                         ? 'bg-blue-600 text-white shadow-md'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    {day.label}
+                    <span className="hidden sm:inline">{day.label}</span>
+                    <span className="sm:hidden">{day.label.charAt(0)}</span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="mt-8 flex items-center space-x-4">
             <button
               onClick={saveConfiguration}
               disabled={saving}
-              className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <>
@@ -375,29 +411,29 @@ export function Configuration() {
               ) : (
                 <>
                   <Save className="w-5 h-5" />
-                  <span>Save Configuration</span>
+                  <span>Save Changes</span>
                 </>
               )}
             </button>
             
             <button
-              onClick={fetchConfiguration}
-              disabled={loading || saving}
+              onClick={() => setConfig(currentConfig || config)}
+              disabled={saving}
               className="px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              Reset
             </button>
           </div>
         </div>
 
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+        {/* Info Box */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start space-x-3">
             <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800">
-              <p className="font-medium mb-1">Configuration Changes</p>
+              <p className="font-medium mb-1">Tracker Synchronization</p>
               <p className="text-blue-700">
-                Changes to screenshot interval and idle timeout will be applied to all active trackers within 5 minutes.
-                Trackers automatically sync configuration from the server.
+                Active trackers will automatically fetch these settings from the server. Changes take effect immediately for new sessions and within 5 minutes for active trackers.
               </p>
             </div>
           </div>
