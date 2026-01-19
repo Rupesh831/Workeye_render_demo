@@ -52,19 +52,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     email: string,
     password: string
   ): Promise<AuthResult> => {
+    console.log('\n🔑 AuthContext.login() called');
+    console.log('📧 Email:', email);
+    
     try {
+      console.log('📡 Calling authAPI.login()...');
       const response = await authAPI.login(email, password);
+      
+      console.log('📦 authAPI.login() response:', JSON.stringify(response, null, 2));
+      console.log('❓ Response type:', typeof response);
+      console.log('❓ Response keys:', Object.keys(response || {}));
 
       const { token, admin, company: companyData } = response;
+      
+      console.log('🎯 Extracted from response:');
+      console.log('  - token:', token ? '✅ exists' : '❌ missing');
+      console.log('  - admin:', admin ? JSON.stringify(admin, null, 2) : '❌ missing');
+      console.log('  - company:', companyData ? JSON.stringify(companyData, null, 2) : '❌ missing');
 
       if (!admin || !companyData) {
+        console.error('❌ Missing admin or company data in response');
         return {
           success: false,
           error: 'Invalid server response. Please try again.',
         };
       }
 
+      console.log('💾 Storing token in localStorage...');
       localStorage.setItem('authToken', token);
+      console.log('✅ Token stored');
       
       const fullUser: User = {
         id: admin.id,
@@ -76,17 +92,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         company_username: companyData.company_username
       };
       
+      console.log('👤 Setting user state:', JSON.stringify(fullUser, null, 2));
       setUser(fullUser);
-      setCompany({
+      
+      const companyObj = {
         id: companyData.id,
         company_name: companyData.company_name,
         company_username: companyData.company_username
-      });
+      };
+      
+      console.log('🏛️ Setting company state:', JSON.stringify(companyObj, null, 2));
+      setCompany(companyObj);
 
+      console.log('💾 Storing adminData in localStorage...');
       localStorage.setItem('adminData', JSON.stringify(fullUser));
+      console.log('✅ adminData stored');
 
+      console.log('✅ ===== AuthContext.login() SUCCESS =====');
       return { success: true };
     } catch (err: any) {
+      console.error('❌ ===== AuthContext.login() FAILED =====');
+      console.error('❌ Error type:', typeof err);
+      console.error('❌ Error message:', err?.message);
+      console.error('❌ Error object:', err);
+      console.error('❌ Error stack:', err?.stack);
+      
       return {
         success: false,
         error: err?.message || 'Login failed. Please check your credentials.',
@@ -138,20 +168,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    console.log('🚪 Logging out...');
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('adminData');
     setUser(null);
     setCompany(null);
+    console.log('✅ Logged out successfully');
   };
 
   useEffect(() => {
     const validateToken = async () => {
       const token = localStorage.getItem('authToken');
       if (!token) {
+        console.log('🔑 No token found in localStorage');
         setIsLoading(false);
         return;
       }
 
+      console.log('🔑 Token found, validating...');
       try {
         const response = await authAPI.validateToken();
 
@@ -177,8 +212,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
 
         localStorage.setItem('adminData', JSON.stringify(fullUser));
+        console.log('✅ Token validated successfully');
       } catch (err) {
+        console.error('❌ Token validation failed:', err);
         localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('adminData');
       } finally {
         setIsLoading(false);
