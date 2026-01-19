@@ -40,9 +40,13 @@ def convert_to_ist(utc_dt):
 # ============================================================================
 
 # Use the external PostgreSQL database URL with COMPLETE hostname
+# Try INTERNAL_DATABASE_URL first (Render internal), then DATABASE_URL, then fallback
 DATABASE_URL = os.environ.get(
-    'DATABASE_URL',
-    'postgresql://work_eye_db_user:DeXsKDcQNO6rpdQypAjDECEjqRXVa8hr@dpg-d52ij3ali9vc73f8tn40-a.singapore-postgres.render.com/work_eye_db'
+    'INTERNAL_DATABASE_URL',
+    os.environ.get(
+        'DATABASE_URL',
+        'postgresql://work_eye_db_user:DeXsKDcQNO6rpdQypAjDECEjqRXVa8hr@dpg-d52ij3ali9vc73f8tn40-a.singapore-postgres.render.com/work_eye_db'
+    )
 )
 
 # Render uses postgres://, PostgreSQL requires postgresql://
