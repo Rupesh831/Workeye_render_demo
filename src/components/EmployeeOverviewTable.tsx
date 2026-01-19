@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Clock, TrendingUp, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { formatLastActivity } from '../utils/timeUtils';
 
@@ -37,6 +38,7 @@ type SortField = 'name' | 'status' | 'screenTime' | 'activeTime' | 'idleTime' | 
 type SortOrder = 'asc' | 'desc' | null;
 
 export function EmployeeOverviewTable({ employees, onEmployeeClick }: EmployeeOverviewTableProps) {
+  const navigate = useNavigate();
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
 
@@ -89,20 +91,22 @@ export function EmployeeOverviewTable({ employees, onEmployeeClick }: EmployeeOv
           bValue = b.productivity;
           break;
         case 'screenshots':
-          aValue = a.screenshotsCount ?? a.screenshots?.length ?? 0;
-          bValue = b.screenshotsCount ?? b.screenshots?.length ?? 0;
+          aValue = a.screenshotsCount || a.screenshots.length || 0;
+          bValue = b.screenshotsCount || b.screenshots.length || 0;
           break;
         case 'lastActivity':
-          aValue = new Date(a.lastActivity || 0).getTime();
-          bValue = new Date(b.lastActivity || 0).getTime();
+          aValue = a.lastActivity;
+          bValue = b.lastActivity;
           break;
         default:
           return 0;
       }
 
-      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
     });
   };
 
@@ -118,201 +122,170 @@ export function EmployeeOverviewTable({ employees, onEmployeeClick }: EmployeeOv
 
   const sortedEmployees = getSortedEmployees();
 
-  const getStatusColor = (status: string) => {
-    const normalizedStatus = status.toLowerCase();
-    switch (normalizedStatus) {
-      case 'active':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'idle':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'offline':
-        return 'bg-slate-100 text-slate-700 border-slate-200';
-      default:
-        return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
+  const getStatusBadge = (status: string) => {
+    const badges = {
+      active: 'bg-green-100 text-green-700 border-green-200',
+      idle: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      offline: 'bg-slate-200 text-slate-700 border-slate-300'
+    };
+    return badges[status as keyof typeof badges] || badges.offline;
   };
 
-  const getStatusDotColor = (status: string) => {
-    const normalizedStatus = status.toLowerCase();
-    switch (normalizedStatus) {
-      case 'active':
-        return 'bg-green-500';
-      case 'idle':
-        return 'bg-yellow-500';
-      case 'offline':
-        return 'bg-slate-400';
-      default:
-        return 'bg-slate-400';
-    }
-  };
-
-  const getProductivityColor = (productivity: number) => {
-    if (productivity >= 90) return 'text-emerald-600';
-    if (productivity >= 75) return 'text-green-600';
-    if (productivity >= 60) return 'text-yellow-600';
-    return 'text-orange-600';
+  const handleViewDetails = (employee: Employee) => {
+    navigate(`/analytics?memberId=${employee.id}`);
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-        <h2 className="text-slate-900 text-xl font-semibold">All Employees</h2>
-        <p className="text-slate-500 mt-1">Comprehensive view of team activity and performance</p>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
-              <th 
-                className="px-6 py-4 text-left text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
-                onClick={() => handleSort('name')}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Employee</span>
+    <div className="overflow-x-auto">
+      <div className="inline-block min-w-full align-middle">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="px-6 py-4 text-left">
+                <button
+                  onClick={() => handleSort('name')}
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                >
+                  Employee
                   <SortIcon field="name" />
-                </div>
+                </button>
               </th>
-              <th 
-                className="px-6 py-4 text-left text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
-                onClick={() => handleSort('status')}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Status</span>
+              <th className="px-6 py-4 text-left">
+                <button
+                  onClick={() => handleSort('status')}
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                >
+                  Status
                   <SortIcon field="status" />
-                </div>
+                </button>
               </th>
-              <th 
-                className="px-6 py-4 text-left text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
-                onClick={() => handleSort('screenTime')}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Screen Time</span>
+              <th className="px-6 py-4 text-left">
+                <button
+                  onClick={() => handleSort('screenTime')}
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                >
+                  Screen Time
                   <SortIcon field="screenTime" />
-                </div>
+                </button>
               </th>
-              <th 
-                className="px-6 py-4 text-left text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
-                onClick={() => handleSort('activeTime')}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Active Time</span>
+              <th className="px-6 py-4 text-left">
+                <button
+                  onClick={() => handleSort('activeTime')}
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                >
+                  Active Time
                   <SortIcon field="activeTime" />
-                </div>
+                </button>
               </th>
-              <th 
-                className="px-6 py-4 text-left text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
-                onClick={() => handleSort('idleTime')}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Idle Time</span>
+              <th className="px-6 py-4 text-left">
+                <button
+                  onClick={() => handleSort('idleTime')}
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                >
+                  Idle Time
                   <SortIcon field="idleTime" />
-                </div>
+                </button>
               </th>
-              <th 
-                className="px-6 py-4 text-left text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
-                onClick={() => handleSort('productivity')}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Productivity</span>
+              <th className="px-6 py-4 text-left">
+                <button
+                  onClick={() => handleSort('productivity')}
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                >
+                  Productivity
                   <SortIcon field="productivity" />
-                </div>
+                </button>
               </th>
-              <th 
-                className="px-6 py-4 text-left text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
-                onClick={() => handleSort('screenshots')}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Screenshots</span>
+              <th className="px-6 py-4 text-left">
+                <button
+                  onClick={() => handleSort('screenshots')}
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                >
+                  Screenshots
                   <SortIcon field="screenshots" />
-                </div>
+                </button>
               </th>
-              <th 
-                className="px-6 py-4 text-left text-sm font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
-                onClick={() => handleSort('lastActivity')}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Last Activity</span>
+              <th className="px-6 py-4 text-left">
+                <button
+                  onClick={() => handleSort('lastActivity')}
+                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
+                >
+                  Last Activity
                   <SortIcon field="lastActivity" />
-                </div>
+                </button>
               </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Actions</th>
+              <th className="px-6 py-4 text-left">
+                <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Actions
+                </span>
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-slate-200">
             {sortedEmployees.map((employee) => {
-              // Get screenshots count from either screenshotsCount or screenshots array
-              const screenshotsCount = employee.screenshotsCount ?? employee.screenshots?.length ?? 0;
-              
+              const productivity = Math.round(employee.productivity);
+              const screenshotCount = employee.screenshotsCount || employee.screenshots?.length || 0;
+
               return (
-                <tr 
-                  key={employee.id}
-                  className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                >
+                <tr key={employee.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold">
-                          {employee.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${getStatusDotColor(employee.status)}`}></div>
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold shadow-md">
+                        {employee.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-slate-900 font-medium">{employee.name}</p>
-                        <p className="text-sm text-slate-500">{employee.role}</p>
+                        <div className="font-semibold text-slate-900">{employee.name}</div>
+                        <div className="text-sm text-slate-500">{employee.role}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium border capitalize ${getStatusColor(employee.status)}`}>
-                      {employee.status}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadge(employee.status)}`}>
+                      <span className="w-2 h-2 rounded-full mr-2 animate-pulse" style={{
+                        backgroundColor: employee.status === 'active' ? '#10b981' : employee.status === 'idle' ? '#f59e0b' : '#6b7280'
+                      }}></span>
+                      {employee.status.charAt(0).toUpperCase() + employee.status.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-slate-700">
+                    <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-slate-400" />
-                      <span className="font-medium">{formatTime(employee.screenTime)}</span>
+                      <span className="font-semibold text-slate-900">{formatTime(employee.screenTime)}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-slate-100 rounded-full h-2 w-20">
-                        <div 
-                          className="bg-green-500 h-2 rounded-full transition-all"
-                          style={{ width: `${employee.screenTime > 0 ? Math.min((employee.activeTime / employee.screenTime) * 100, 100) : 0}%` }}
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <span className="font-semibold text-green-600">{formatTime(employee.activeTime)}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                      <span className="font-semibold text-yellow-600">{formatTime(employee.idleTime)}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-full max-w-[100px] bg-slate-200 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${productivity}%` }}
                         ></div>
                       </div>
-                      <span className="text-slate-700 font-medium">{formatTime(employee.activeTime)}</span>
+                      <span className="text-sm font-semibold text-slate-700 min-w-[40px]">{productivity}%</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-slate-100 rounded-full h-2 w-20">
-                        <div 
-                          className="bg-orange-500 h-2 rounded-full transition-all"
-                          style={{ width: `${employee.screenTime > 0 ? Math.min((employee.idleTime / employee.screenTime) * 100, 100) : 0}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-slate-700 font-medium">{formatTime(employee.idleTime)}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className={`w-4 h-4 ${getProductivityColor(employee.productivity)}`} />
-                      <span className={`font-semibold ${getProductivityColor(employee.productivity)}`}>
-                        {employee.productivity}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-slate-700 font-medium">{screenshotsCount}</span>
+                    <span className="inline-flex items-center px-3 py-1 rounded-lg bg-purple-50 text-purple-700 text-sm font-medium">
+                      {screenshotCount}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-slate-500">{formatLastActivity(employee.lastActivity)}</span>
                   </td>
                   <td className="px-6 py-4">
                     <button
-                      onClick={() => onEmployeeClick(employee)}
+                      onClick={() => handleViewDetails(employee)}
                       className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium"
                     >
                       <Eye className="w-4 h-4" />
