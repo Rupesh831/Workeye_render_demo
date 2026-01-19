@@ -1,433 +1,267 @@
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EmployeeOverviewTable } from './EmployeeOverviewTable';
-import { EmployeeDetailView } from './EmployeeDetailView';
-import { MembersManagement } from './MembersManagement';
-import { 
-  Activity, 
-  Users, 
-  UserCircle, 
-  Clock, 
-  AlertCircle, 
-  BarChart3, 
-  TrendingUp,
-  TrendingDown,
-  Eye, 
-  Settings,
-  Calendar,
-  Zap,
-  Target,
-  Award,
-  Search,
-  Filter
-} from 'lucide-react';
-import { dashboard, members as membersAPI, wsClient, tracker } from '../config/api';
-import { useAuth } from '../contexts/AuthContext';
+import { Users, Clock, TrendingUp, Activity, Eye } from 'lucide-react';
+import { dashboard } from '../config/api';
 
-// Employee interface
-interface Employee {
+interface Member {
   id: number;
   name: string;
   email: string;
-  avatar: string;
-  role: string;
+  position: string;
   status: 'active' | 'idle' | 'offline';
-  screenTime: number;
-  activeTime: number;
-  idleTime: number;
-  lastActivity: string;
+  last_activity: string;
+  screen_time: string;
   productivity: number;
-  screenshots: any[];
-  screenshotsCount?: number;
+  active_time: string;
+  idle_time: string;
 }
 
-export function Dashboard() {
+interface Stats {
+  total_employees: number;
+  active_now: number;
+  idle_now: number;
+  offline_now: number;
+  avg_productivity: number;
+  total_screen_time: string;
+}
+
+export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, company, logout } = useAuth();
-  const [members, setMembers] = useState<Employee[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [view, setView] = useState<'overview' | 'detail' | 'members'>('overview');
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [filter, setFilter] = useState<string>('all');
 
-  // NEW: Filter states
-  const [nameFilter, setNameFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'idle' | 'offline'>('');
+  useEffect(() => {
+    fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, [filter]);
 
-  // Normalize API response
-  const normalizeEmployee = (member: any): Employee => {
-    // Use screen_time (seconds) or screen_time_seconds from API
-    const screenTimeSeconds = member.screen_time || 0;
-    const activeTimeSeconds = member.active_time || 0;
-    const idleTimeSeconds = member.idle_time || 0;
-    
-    const screenTime = screenTimeSeconds / 3600;
-    const activeTime = activeTimeSeconds / 3600;
-    const idleTime = idleTimeSeconds / 3600;
-    
-    let status: 'active' | 'idle' | 'offline' = 'offline';
-    const rawStatus = (member.status || '').toLowerCase();
-    if (rawStatus === 'active') status = 'active';
-    else if (rawStatus === 'idle') status = 'idle';
-    
-    // Use last_activity from API (already formatted as human-readable)
-    const lastActivity = member.last_activity || 'Never';
-    
-    return {
-      id: member.id,
-      name: member.name || 'Unknown',
-      email: member.email || 'no-email@example.com',
-      avatar: member.avatar || '',
-      role: member.position || 'Member',
-      status: status,
-      screenTime: screenTime,
-      activeTime: activeTime,
-      idleTime: idleTime,
-      lastActivity: lastActivity,
-      productivity: member.productivity || 0,
-      screenshots: member.screenshots || [],
-      screenshotsCount: member.screenshots_count || 0
-    };
-  };
-
-  // Fetch dashboard data with filters
   const fetchDashboardData = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      
-      // Build query params for filters
-      const params = new URLSearchParams();
-      if (nameFilter.trim()) {
-        params.append('name', nameFilter.trim());
-      }
-      if (statusFilter) {
-        params.append('status', statusFilter);
-      }
-      
-      // Call API with filters
-      const url = `/api/dashboard/stats${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'https://backend-35m2.onrender.com'}${url}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
+      const params: any = {};
+      if (filter !== 'all') {
+        params.status = filter;
       }
 
-      const data = await response.json();
+      const data = await dashboard.getStats(params);
       
-      if (data?.members) {
-        const normalized = data.members.map(normalizeEmployee);
-        setMembers(normalized);
+      if (data.members) {
+        setMembers(data.members);
       }
       
-      setLastRefresh(new Date());
-    } catch (err: any) {
-      console.error('Dashboard fetch error:', err);
-      setError(err?.message || 'Failed to load dashboard data');
+      if (data.stats) {
+        setStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch on mount and when filters change
-  useEffect(() => {
-    fetchDashboardData();
-  }, [nameFilter, statusFilter]);
-
-  // WebSocket and auto-refresh
-  useEffect(() => {
-    if (company?.id) {
-      wsClient.connect(company.id);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'idle':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'offline':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-    
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchDashboardData, 30000);
-    
-    return () => {
-      clearInterval(interval);
-      wsClient.disconnect();
-    };
-  }, [company?.id, nameFilter, statusFilter]);
-
-  // Stats calculations
-  const stats = useMemo(() => {
-    const total = members.length;
-    const active = members.filter(m => m.status === 'active').length;
-    const idle = members.filter(m => m.status === 'idle').length;
-    const offline = members.filter(m => m.status === 'offline').length;
-    const avgProductivity = total > 0 
-      ? Math.round(members.reduce((sum, m) => sum + m.productivity, 0) / total) 
-      : 0;
-    const totalScreenTime = members.reduce((sum, m) => sum + m.screenTime, 0);
-    const totalActiveTime = members.reduce((sum, m) => sum + m.activeTime, 0);
-
-    return { 
-      total, 
-      active, 
-      idle, 
-      offline, 
-      avgProductivity,
-      totalScreenTime,
-      totalActiveTime
-    };
-  }, [members]);
-
-  // Clear filters
-  const handleClearFilters = () => {
-    setNameFilter('');
-    setStatusFilter('');
   };
 
-  const hasFilters = nameFilter || statusFilter;
+  const handleViewDetails = (memberId: number) => {
+    navigate(`/analytics?memberId=${memberId}`);
+  };
 
-  const companyName = company?.company_name || 'Dashboard';
-  const companyId = company?.id || 0;
-  const companyUsername = company?.company_username || '';
-  const userName = user?.full_name || 'User';
-  const userRole = user?.role || 'Admin';
-
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              filter === 'all'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilter('active')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              filter === 'active'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Active
+          </button>
+          <button
+            onClick={() => setFilter('idle')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              filter === 'idle'
+                ? 'bg-yellow-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Idle
+          </button>
+          <button
+            onClick={() => setFilter('offline')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              filter === 'offline'
+                ? 'bg-gray-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Offline
+          </button>
+        </div>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-red-800">Error loading dashboard</p>
-              <p className="text-sm text-red-600 mt-1">{error}</p>
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Total Employees</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total_employees}</p>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Stats Grid - Modern Cards */}
-        {view === 'overview' && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {/* Total Members */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-slate-100">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <Users className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">
-                    Total
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-3xl font-bold text-slate-800">{stats.total}</h3>
-                  <p className="text-sm text-slate-500">Team Members</p>
-                </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <Activity className="w-6 h-6 text-green-600" />
               </div>
-
-              {/* Active Now */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-slate-100">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-green-600" />
-                  </div>
-                  <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold">
-                    Live
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-3xl font-bold text-green-600">{stats.active}</h3>
-                  <p className="text-sm text-slate-500">Active Now</p>
-                </div>
-              </div>
-
-              {/* Productivity */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-slate-100">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                    <Target className="w-6 h-6 text-purple-600" />
-                  </div>
-                  {stats.avgProductivity >= 70 ? (
-                    <TrendingUp className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <TrendingDown className="w-5 h-5 text-orange-500" />
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-3xl font-bold text-purple-600">{stats.avgProductivity}%</h3>
-                  <p className="text-sm text-slate-500">Avg Productivity</p>
-                </div>
-              </div>
-
-              {/* Screen Time */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-slate-100">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                    <Clock className="w-6 h-6 text-orange-600" />
-                  </div>
-                  <span className="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-xs font-semibold">
-                    Today
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-3xl font-bold text-orange-600">
-                    {stats.totalScreenTime.toFixed(1)}h
-                  </h3>
-                  <p className="text-sm text-slate-500">Total Screen Time</p>
-                </div>
+              <div>
+                <p className="text-sm text-gray-600">Active Now</p>
+                <p className="text-2xl font-bold text-green-900">{stats.active_now}</p>
               </div>
             </div>
+          </div>
 
-            {/* Mini Stats Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 uppercase font-semibold">Idle</span>
-                  <span className="text-lg font-bold text-yellow-600">{stats.idle}</span>
-                </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <Clock className="w-6 h-6 text-yellow-600" />
               </div>
-              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 uppercase font-semibold">Offline</span>
-                  <span className="text-lg font-bold text-slate-400">{stats.offline}</span>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 uppercase font-semibold">Active Time</span>
-                  <span className="text-lg font-bold text-blue-600">{stats.totalActiveTime.toFixed(1)}h</span>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 uppercase font-semibold">Last Update</span>
-                  <span className="text-sm font-medium text-slate-600">
-                    {lastRefresh.toLocaleTimeString()}
-                  </span>
-                </div>
+              <div>
+                <p className="text-sm text-gray-600">Idle Now</p>
+                <p className="text-2xl font-bold text-yellow-900">{stats.idle_now}</p>
               </div>
             </div>
+          </div>
 
-            {/* NEW: Filters Section */}
-            <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <Filter className="w-5 h-5 text-slate-600" />
-                  <h3 className="text-lg font-semibold text-slate-800">Filters</h3>
-                </div>
-                {hasFilters && (
-                  <button
-                    onClick={handleClearFilters}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Clear All
-                  </button>
-                )}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gray-100 rounded-lg">
+                <Users className="w-6 h-6 text-gray-600" />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Name Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Search by Name
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Enter employee name..."
-                      value={nameFilter}
-                      onChange={(e) => setNameFilter(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Status Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Filter by Status
-                  </label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  >
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="idle">Idle</option>
-                    <option value="offline">Offline</option>
-                  </select>
-                </div>
+              <div>
+                <p className="text-sm text-gray-600">Offline</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.offline_now}</p>
               </div>
+            </div>
+          </div>
 
-              {hasFilters && (
-                <div className="mt-4 flex items-center space-x-2 text-sm text-slate-600">
-                  <span className="font-medium">Active filters:</span>
-                  {nameFilter && (
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full">
-                      Name: {nameFilter}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <TrendingUp className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Avg Productivity</p>
+                <p className="text-2xl font-bold text-purple-900">{stats.avg_productivity}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Team Members</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Member</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Position</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Last Activity</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Screen Time</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Active Time</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Idle Time</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Productivity</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {members.map((member) => (
+                <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div>
+                      <p className="font-medium text-gray-900">{member.name}</p>
+                      <p className="text-sm text-gray-500">{member.email}</p>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700">{member.position}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(member.status)}`}>
+                      {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                     </span>
-                  )}
-                  {statusFilter && (
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full capitalize">
-                      Status: {statusFilter}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Employee Table */}
-            <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100">
-                <h2 className="text-lg font-semibold text-slate-800">Team Activity</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Real-time employee monitoring
-                  {hasFilters && ` (${members.length} result${members.length !== 1 ? 's' : ''})`}
-                </p>
-              </div>
-              <EmployeeOverviewTable
-                employees={members}
-                onEmployeeClick={(employee: Employee) => {
-                  setSelectedEmployee(employee);
-                  setView('detail');
-                }}
-              />
-            </div>
-          </>
-        )}
-
-        {/* Detail View */}
-        {view === 'detail' && selectedEmployee && (
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
-            <EmployeeDetailView
-              employee={selectedEmployee}
-              onBack={() => {
-                setSelectedEmployee(null);
-                setView('overview');
-              }}
-            />
-          </div>
-        )}
-
-        {/* Members Management */}
-        {view === 'members' && (
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
-            <MembersManagement 
-              companyUsername={companyUsername}
-              companyId={companyId}
-              onMembersUpdate={fetchDashboardData}
-            />
-          </div>
-        )}
-      </main>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700">{member.last_activity}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{member.screen_time}</td>
+                  <td className="px-6 py-4 text-sm text-green-600 font-medium">{member.active_time}</td>
+                  <td className="px-6 py-4 text-sm text-yellow-600 font-medium">{member.idle_time}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${member.productivity}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">{member.productivity}%</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => handleViewDetails(member.id)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
+                    >
+                      <Eye className="w-4 h-4" />
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
-}
+};
