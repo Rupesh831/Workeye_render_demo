@@ -68,7 +68,11 @@ const SignupPage: React.FC = () => {
         full_name: formData.fullName
       });
 
-      if (!result.success) {
+      if (result.success) {
+        // Signup successful - redirect to dashboard
+        console.log('✅ Signup successful, redirecting to dashboard...');
+        navigate('/dashboard');
+      } else {
         const errorMsg = result.error || 'Signup failed';
         
         if (errorMsg.includes('not found') || errorMsg.includes('endpoint')) {
@@ -79,7 +83,6 @@ const SignupPage: React.FC = () => {
           setError(errorMsg);
         }
       }
-      // If successful, navigation happens automatically via AuthContext
     } catch (err: any) {
       console.error('Signup error:', err);
       setError('Unable to connect to the server. Please check your internet connection and try again.');
