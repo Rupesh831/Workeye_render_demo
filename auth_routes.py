@@ -139,19 +139,27 @@ def signup():
             cur = conn.cursor()
             
             # Check if company username already exists
-            cur.execute(
-                "SELECT id FROM companies WHERE username = %s",
-                (company_username,)
-            )
+            # Try both column names for compatibility
+            try:
+                cur.execute(
+                    "SELECT id FROM companies WHERE company_username = %s",
+                    (company_username,)
+                )
+            except:
+                cur.execute(
+                    "SELECT id FROM companies WHERE username = %s",
+                    (company_username,)
+                )
+            
             if cur.fetchone():
                 return jsonify({
                     'success': False,
                     'error': 'Company username already exists'
                 }), 409
             
-            # Check if email already exists
+            # Check if email already exists in admin_users only
             cur.execute(
-                "SELECT id FROM users WHERE email = %s",
+                "SELECT id FROM admin_users WHERE email = %s",
                 (email,)
             )
             if cur.fetchone():
@@ -160,48 +168,58 @@ def signup():
                     'error': 'Email already registered'
                 }), 409
             
-            # Create new company
-            cur.execute(
-                """
-                INSERT INTO companies (username, name, is_active)
-                VALUES (%s, %s, TRUE)
-                RETURNING id, username, name
-                """,
-                (company_username, company_name)
-            )
+            # Create new company - try both column name schemas
+            try:
+                cur.execute(
+                    """
+                    INSERT INTO companies (company_username, company_name, is_active)
+                    VALUES (%s, %s, TRUE)
+                    RETURNING id, company_username, company_name
+                    """,
+                    (company_username, company_name)
+                )
+            except:
+                cur.execute(
+                    """
+                    INSERT INTO companies (username, name, is_active)
+                    VALUES (%s, %s, TRUE)
+                    RETURNING id, username as company_username, name as company_name
+                    """,
+                    (company_username, company_name)
+                )
             company = cur.fetchone()
             
             # Hash password
             password_hash = hash_password(password)
             
-            # Create admin user
+            # Create admin user in admin_users table only
             cur.execute(
                 """
-                INSERT INTO users (company_id, email, password_hash, full_name, role, is_active)
+                INSERT INTO admin_users (company_id, email, password_hash, full_name, role, is_active)
                 VALUES (%s, %s, %s, %s, 'admin', TRUE)
                 RETURNING id, email, full_name, role, company_id
                 """,
                 (company['id'], email, password_hash, full_name)
             )
-            user = cur.fetchone()
+            admin = cur.fetchone()
             
             # Generate JWT token
-            token = generate_token(user['id'], company['id'], email)
+            token = generate_token(admin['id'], company['id'], email)
             
             return jsonify({
                 'success': True,
                 'token': token,
-                'user': {
-                    'id': user['id'],
-                    'email': user['email'],
-                    'full_name': user['full_name'],
-                    'role': user['role'],
+                'admin': {
+                    'id': admin['id'],
+                    'email': admin['email'],
+                    'full_name': admin['full_name'],
+                    'role': admin['role'],
                     'company_id': company['id']
                 },
                 'company': {
                     'id': company['id'],
-                    'name': company['name'],
-                    'username': company['username']
+                    'company_name': company['company_name'],
+                    'company_username': company['company_username']
                 }
             }), 201
     
@@ -237,38 +255,44 @@ def login():
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Find user by email
+            # Find user by email in admin_users table only
             cur.execute(
-                "SELECT id, company_id, email, password_hash, full_name, role, is_active FROM users WHERE email = %s",
+                "SELECT id, company_id, email, password_hash, full_name, role, is_active FROM admin_users WHERE email = %s",
                 (email,)
             )
-            user = cur.fetchone()
+            admin = cur.fetchone()
             
-            if not user:
+            if not admin:
                 return jsonify({
                     'success': False,
                     'error': 'Invalid credentials'
                 }), 401
             
             # Verify password
-            if not verify_password(password, user['password_hash']):
+            if not verify_password(password, admin['password_hash']):
                 return jsonify({
                     'success': False,
                     'error': 'Invalid credentials'
                 }), 401
             
             # Check if user is active
-            if not user['is_active']:
+            if not admin['is_active']:
                 return jsonify({
                     'success': False,
                     'error': 'Account is disabled'
                 }), 403
             
-            # Get company details
-            cur.execute(
-                "SELECT id, name, username, is_active FROM companies WHERE id = %s",
-                (user['company_id'],)
-            )
+            # Get company details - handle both column name schemas
+            try:
+                cur.execute(
+                    "SELECT id, company_name, company_username, is_active FROM companies WHERE id = %s",
+                    (admin['company_id'],)
+                )
+            except:
+                cur.execute(
+                    "SELECT id, name as company_name, username as company_username, is_active FROM companies WHERE id = %s",
+                    (admin['company_id'],)
+                )
             company = cur.fetchone()
             
             if not company or not company['is_active']:
@@ -277,29 +301,29 @@ def login():
                     'error': 'Company account is inactive'
                 }), 403
             
-            # Update last login
+            # Update last login in admin_users table
             cur.execute(
-                "UPDATE users SET last_login = %s WHERE id = %s",
-                (datetime.utcnow(), user['id'])
+                "UPDATE admin_users SET last_login = %s WHERE id = %s",
+                (datetime.utcnow(), admin['id'])
             )
             
             # Generate JWT token
-            token = generate_token(user['id'], company['id'], email)
+            token = generate_token(admin['id'], company['id'], email)
             
             return jsonify({
                 'success': True,
                 'token': token,
-                'user': {
-                    'id': user['id'],
-                    'email': user['email'],
-                    'full_name': user['full_name'],
-                    'role': user['role'],
+                'admin': {
+                    'id': admin['id'],
+                    'email': admin['email'],
+                    'full_name': admin['full_name'],
+                    'role': admin['role'],
                     'company_id': company['id']
                 },
                 'company': {
                     'id': company['id'],
-                    'name': company['name'],
-                    'username': company['username']
+                    'company_name': company['company_name'],
+                    'company_username': company['company_username']
                 }
             }), 200
     
@@ -344,24 +368,30 @@ def validate_token_route():
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Get user
+            # Get admin user from admin_users table only
             cur.execute(
-                "SELECT id, email, full_name, role, is_active FROM users WHERE id = %s",
+                "SELECT id, email, full_name, role, is_active FROM admin_users WHERE id = %s",
                 (user_id,)
             )
-            user = cur.fetchone()
+            admin = cur.fetchone()
             
-            if not user or not user['is_active']:
+            if not admin or not admin['is_active']:
                 return jsonify({
                     'success': False,
                     'error': 'User not found or inactive'
                 }), 401
             
-            # Get company
-            cur.execute(
-                "SELECT id, name, username, is_active FROM companies WHERE id = %s",
-                (company_id,)
-            )
+            # Get company - handle both column name schemas
+            try:
+                cur.execute(
+                    "SELECT id, company_name, company_username, is_active FROM companies WHERE id = %s",
+                    (company_id,)
+                )
+            except:
+                cur.execute(
+                    "SELECT id, name as company_name, username as company_username, is_active FROM companies WHERE id = %s",
+                    (company_id,)
+                )
             company = cur.fetchone()
             
             if not company or not company['is_active']:
@@ -372,17 +402,17 @@ def validate_token_route():
             
             return jsonify({
                 'success': True,
-                'user': {
-                    'id': user['id'],
-                    'email': user['email'],
-                    'full_name': user['full_name'],
-                    'role': user['role'],
+                'admin': {
+                    'id': admin['id'],
+                    'email': admin['email'],
+                    'full_name': admin['full_name'],
+                    'role': admin['role'],
                     'company_id': company['id']
                 },
                 'company': {
                     'id': company['id'],
-                    'name': company['name'],
-                    'username': company['username']
+                    'company_name': company['company_name'],
+                    'company_username': company['company_username']
                 }
             }), 200
     
