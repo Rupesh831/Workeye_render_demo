@@ -7,6 +7,7 @@ DASHBOARD_ROUTES - ENHANCED WITH ACCURATE DATA AND FILTERS
 ✅ Human-readable "Last Activity" in IST
 ✅ Filters: Employee Name (searchable) and Status
 ✅ All timestamps in IST (Indian Standard Time)
+✅ FIXED: Improved idle status detection with detailed logging
 """
 
 from flask import Blueprint, request, jsonify
@@ -20,18 +21,19 @@ dashboard_bp = Blueprint('dashboard', __name__)
 # REAL-TIME STATUS CALCULATION
 # ============================================================================
 
-def calculate_member_status(last_heartbeat_at):
+def calculate_member_status(last_heartbeat_at, last_activity_at=None):
     """
     Calculate real-time member status based on heartbeat
     
     Rules:
-    - Active: heartbeat within last 60 seconds
-    - Idle: heartbeat between 60-300 seconds ago
-    - Offline: heartbeat > 300 seconds ago or no heartbeat
+    - Active: heartbeat within last 120 seconds (2 minutes)
+    - Idle: heartbeat between 120-600 seconds (2-10 minutes)
+    - Offline: heartbeat > 600 seconds (10+ minutes) or no heartbeat
     
     Returns: (status, seconds_ago)
     """
     if not last_heartbeat_at:
+        print(f"⚪ No heartbeat data - Status: offline")
         return 'offline', None
     
     now_ist = get_ist_now()
@@ -44,12 +46,20 @@ def calculate_member_status(last_heartbeat_at):
     
     seconds_ago = int((now_ist - last_heartbeat_ist).total_seconds())
     
-    if seconds_ago < 60:
-        return 'active', seconds_ago
-    elif seconds_ago < 300:
-        return 'idle', seconds_ago
-    else:
-        return 'offline', seconds_ago
+    # Determine status
+    if seconds_ago < 120:  # Less than 2 minutes
+        status = 'active'
+        color = '🟢'
+    elif seconds_ago < 600:  # Between 2-10 minutes
+        status = 'idle'
+        color = '🟡'
+    else:  # More than 10 minutes
+        status = 'offline'
+        color = '⚪'
+    
+    print(f"{color} Last heartbeat: {seconds_ago}s ago -> Status: {status}")
+    
+    return status, seconds_ago
 
 
 def format_last_activity(seconds_ago):
@@ -100,9 +110,9 @@ def get_dashboard_stats():
     
     Returns:
     - Total members count (for this company)
-    - Active now count (heartbeat < 60s)
-    - Idle count (heartbeat 60-300s)
-    - Offline count (heartbeat > 300s or no heartbeat)
+    - Active now count (heartbeat < 120s)
+    - Idle count (heartbeat 120-600s)
+    - Offline count (heartbeat > 600s or no heartbeat)
     - Average productivity (active_time / screen_time * 100)
     - Per-member live data with accurate calculations
     """
@@ -113,6 +123,11 @@ def get_dashboard_stats():
         # Get filter parameters
         name_filter = request.args.get('name', '').strip()
         status_filter = request.args.get('status', '').strip().lower()
+        
+        print(f"\n📊 ========== DASHBOARD STATS REQUEST ==========")
+        print(f"Company ID: {company_id}")
+        print(f"Date: {today}")
+        print(f"Filters: name='{name_filter}', status='{status_filter}'")
         
         with get_db() as conn:
             cur = conn.cursor()
@@ -154,6 +169,8 @@ def get_dashboard_stats():
             )
             members = cur.fetchall()
             
+            print(f"📊 Found {len(members)} members for company {company_id}")
+            
             # Process members and calculate stats
             result = []
             total_members = 0
@@ -164,15 +181,27 @@ def get_dashboard_stats():
             productive_members = 0  # Members with screen_time > 0
             
             for member in members:
+                print(f"\n👤 Processing member: {member['name']} (ID: {member['id']})")
+                print(f"   Last heartbeat: {member['last_heartbeat_at']}")
+                print(f"   Last activity: {member['last_activity_at']}")
+                print(f"   Punched in: {member['is_punched_in']}")
+                
                 # Calculate real-time status
-                status, seconds_ago = calculate_member_status(member['last_heartbeat_at'])
+                status, seconds_ago = calculate_member_status(
+                    member['last_heartbeat_at'], 
+                    member['last_activity_at']
+                )
+                
+                print(f"   ➡️ Calculated status: {status}")
                 
                 # Apply status filter
                 if status_filter and status != status_filter:
+                    print(f"   ⏭️ Skipped due to status filter: {status} != {status_filter}")
                     continue
                 
                 # Apply name filter
                 if name_filter and name_filter.lower() not in member['name'].lower():
+                    print(f"   ⏭️ Skipped due to name filter")
                     continue
                 
                 # Calculate productivity: (active_time / screen_time) * 100
@@ -180,12 +209,16 @@ def get_dashboard_stats():
                 active_time = float(member['active_time_seconds'] or 0)
                 idle_time = float(member['idle_time_seconds'] or 0)
                 
+                print(f"   Screen time: {screen_time}s, Active: {active_time}s, Idle: {idle_time}s")
+                
                 if screen_time > 0:
                     productivity = int((active_time / screen_time) * 100)
                     total_productivity += productivity
                     productive_members += 1
                 else:
                     productivity = 0
+                
+                print(f"   Productivity: {productivity}%")
                 
                 # Format last activity
                 last_activity_str = format_last_activity(seconds_ago)
@@ -201,7 +234,7 @@ def get_dashboard_stats():
                     'name': member['name'],
                     'email': member['email'],
                     'position': member['position'] or '',
-                    'status': status,
+                    'status': status,  # This is the key field!
                     'is_punched_in': member['is_punched_in'],
                     'seconds_since_activity': seconds_ago,
                     'screen_time': int(screen_time),
@@ -227,6 +260,14 @@ def get_dashboard_stats():
             
             # Calculate average productivity
             avg_productivity = int(total_productivity / productive_members) if productive_members > 0 else 0
+            
+            print(f"\n📈 SUMMARY:")
+            print(f"   Total: {total_members}")
+            print(f"   🟢 Active: {active_now}")
+            print(f"   🟡 Idle: {idle_now}")
+            print(f"   ⚪ Offline: {offline_now}")
+            print(f"   📊 Avg Productivity: {avg_productivity}%")
+            print(f"========================================\n")
             
             return jsonify({
                 'success': True,
@@ -310,7 +351,10 @@ def get_member_live_counters(member_id):
             data = cur.fetchone()
             
             # Calculate real-time status
-            status, seconds_ago = calculate_member_status(member['last_heartbeat_at'])
+            status, seconds_ago = calculate_member_status(
+                member['last_heartbeat_at'],
+                member['last_activity_at']
+            )
             
             # Calculate productivity
             screen_time = float(data['screen_time_seconds'] or 0)
