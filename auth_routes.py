@@ -203,6 +203,11 @@ def signup():
             )
             admin = cur.fetchone()
             
+            # COMMIT the transaction to save to database
+            conn.commit()
+            
+            print(f"✅ Signup successful - Company: {company['id']}, Admin: {admin['id']}")
+            
             # Generate JWT token
             token = generate_token(admin['id'], company['id'], email)
             
@@ -306,6 +311,11 @@ def login():
                 "UPDATE admin_users SET last_login = %s WHERE id = %s",
                 (datetime.utcnow(), admin['id'])
             )
+            
+            # COMMIT the transaction
+            conn.commit()
+            
+            print(f"✅ Login successful - Admin: {admin['id']}, Company: {company['id']}")
             
             # Generate JWT token
             token = generate_token(admin['id'], company['id'], email)
