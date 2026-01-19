@@ -6,6 +6,7 @@ APP.PY - Secure Multi-Tenant Flask Application with SPA Support
 ✅ No auto-registration
 ✅ SPA fallback for client-side routing
 ✅ FIXED: API routes take priority over SPA fallback
+✅ Configuration management routes added
 """
 
 import os
@@ -70,9 +71,10 @@ from members_routes import members_bp
 from dashboard_routes import dashboard_bp
 from analytics_routes import analytics_bp
 
-# NEW: Screenshots, Activity, Tracker Download
+# NEW: Screenshots, Activity, Tracker Download, Configuration
 from screenshots_routes import screenshots_bp
 from activity_routes import activity_bp
+from configuration_routes import configuration_bp  # NEW!
 
 # Tracker routes (token-based, member email verification)
 from tracker_routes import tracker_bp
@@ -81,8 +83,9 @@ load_blueprint(admin_auth_bp, "Admin Auth")
 load_blueprint(members_bp, "Members Management")
 load_blueprint(dashboard_bp, "Dashboard")
 load_blueprint(analytics_bp, "Analytics")
-load_blueprint(screenshots_bp, "Screenshots")  # NEW
-load_blueprint(activity_bp, "Activity")  # NEW
+load_blueprint(screenshots_bp, "Screenshots")
+load_blueprint(activity_bp, "Activity")
+load_blueprint(configuration_bp, "Configuration")  # NEW!
 load_blueprint(tracker_bp, "Tracker")
 load_blueprint(attendance_bp, "Attendance")
 
@@ -107,7 +110,7 @@ def api_root():
     """API root - returns API information"""
     return jsonify({
         "service": "Work-Eye Secure Backend",
-        "version": "4.2",  # Incremented version
+        "version": "4.3",  # Incremented version
         "status": "online",
         "architecture": "multi-tenant",
         "admin_endpoints": [
@@ -123,14 +126,17 @@ def api_root():
             "GET /api/screenshots/image/<screenshot_id>",
             "GET /api/activity-logs/<member_id>",
             "GET /api/website-visits/<member_id>",
-            "GET /api/app-usage/<member_id>"
+            "GET /api/app-usage/<member_id>",
+            "GET /api/configuration",
+            "POST /api/configuration"
         ],
         "tracker_endpoints": [
             "POST /tracker/verify-member",
             "POST /tracker/punch-in",
             "POST /tracker/punch-out",
             "POST /tracker/upload",
-            "POST /tracker/heartbeat"
+            "POST /tracker/heartbeat",
+            "GET /api/tracker/configuration"
         ]
     })
 
