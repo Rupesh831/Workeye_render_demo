@@ -194,3 +194,310 @@ def get_app_usage():
     except Exception as e:
         print(f"❌ App usage error: {e}")
         return jsonify({'error': 'Failed to fetch app usage'}), 500
+
+
+# ============================================================================
+# ATTENDANCE ANALYTICS
+# ============================================================================
+
+@analytics_bp.route('/analytics/attendance', methods=['GET'])
+@require_auth
+def get_attendance_analytics():
+    """Get attendance analytics for a member with raw data"""
+    try:
+        company_id = request.company_id
+        member_id = request.args.get('member_id')
+        start_date = request.args.get('start_date', (datetime.utcnow() - timedelta(days=30)).isoformat())
+        end_date = request.args.get('end_date', datetime.utcnow().isoformat())
+        
+        with get_db() as conn:
+            cur = conn.cursor()
+            
+            # Get raw attendance records
+            query = """
+                SELECT 
+                    pl.id,
+                    pl.member_id,
+                    m.name as member_name,
+                    pl.punch_date as date,
+                    pl.punch_in_time,
+                    pl.punch_out_time,
+                    pl.duration_minutes,
+                    pl.status
+                FROM punch_logs pl
+                JOIN members m ON pl.member_id = m.id
+                WHERE pl.company_id = %s 
+                  AND pl.punch_date >= %s 
+                  AND pl.punch_date <= %s
+            """
+            params = [company_id, start_date, end_date]
+            
+            if member_id:
+                query += " AND pl.member_id = %s"
+                params.append(member_id)
+            
+            query += " ORDER BY pl.punch_date DESC, pl.punch_in_time DESC"
+            
+            cur.execute(query, params)
+            attendance_records = cur.fetchall()
+            
+            return jsonify({
+                'success': True,
+                'records': attendance_records
+            }), 200
+    
+    except Exception as e:
+        print(f"❌ Attendance analytics error: {e}")
+        return jsonify({'error': 'Failed to fetch attendance analytics'}), 500
+
+
+# ============================================================================
+# ACTIVITY ANALYTICS  
+# ============================================================================
+
+@analytics_bp.route('/analytics/activity', methods=['GET'])
+@require_auth
+def get_activity_analytics():
+    """Get activity analytics (active/idle time) for a member"""
+    try:
+        company_id = request.company_id
+        member_id = request.args.get('member_id')
+        start_date = request.args.get('start_date', (datetime.utcnow() - timedelta(days=7)).isoformat())
+        end_date = request.args.get('end_date', datetime.utcnow().isoformat())
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 50))
+        offset = (page - 1) * limit
+        
+        if not member_id:
+            return jsonify({'error': 'member_id is required'}), 400
+        
+        with get_db() as conn:
+            cur = conn.cursor()
+            
+            # Get activity logs with pagination
+            cur.execute(
+                """
+                SELECT 
+                    id,
+                    timestamp,
+                    window_title,
+                    process_name,
+                    app_name,
+                    url,
+                    domain,
+                    is_idle,
+                    is_locked,
+                    duration_seconds,
+                    tracking_date,
+                    created_at
+                FROM activity_logs
+                WHERE company_id = %s 
+                  AND member_id = %s
+                  AND timestamp >= %s 
+                  AND timestamp <= %s
+                ORDER BY timestamp DESC
+                LIMIT %s OFFSET %s
+                """,
+                (company_id, member_id, start_date, end_date, limit, offset)
+            )
+            logs = cur.fetchall()
+            
+            # Get total count for pagination
+            cur.execute(
+                """
+                SELECT COUNT(*) as total
+                FROM activity_logs
+                WHERE company_id = %s 
+                  AND member_id = %s
+                  AND timestamp >= %s 
+                  AND timestamp <= %s
+                """,
+                (company_id, member_id, start_date, end_date)
+            )
+            total = cur.fetchone()['total']
+            
+            return jsonify({
+                'success': True,
+                'logs': logs,
+                'pagination': {
+                    'page': page,
+                    'limit': limit,
+                    'total': total,
+                    'pages': (total + limit - 1) // limit
+                }
+            }), 200
+    
+    except Exception as e:
+        print(f"❌ Activity analytics error: {e}")
+        return jsonify({'error': 'Failed to fetch activity analytics'}), 500
+
+
+# ============================================================================
+# APPLICATION ANALYTICS
+# ============================================================================
+
+@analytics_bp.route('/analytics/apps', methods=['GET'])
+@require_auth
+def get_apps_analytics():
+    """Get detailed application usage analytics"""
+    try:
+        company_id = request.company_id
+        member_id = request.args.get('member_id')
+        start_date = request.args.get('start_date', (datetime.utcnow() - timedelta(days=7)).isoformat())
+        end_date = request.args.get('end_date', datetime.utcnow().isoformat())
+        
+        if not member_id:
+            return jsonify({'error': 'member_id is required'}), 400
+        
+        with get_db() as conn:
+            cur = conn.cursor()
+            
+            # Get raw application logs
+            cur.execute(
+                """
+                SELECT 
+                    app_name,
+                    process_name,
+                    timestamp,
+                    duration_seconds,
+                    tracking_date
+                FROM activity_logs
+                WHERE company_id = %s 
+                  AND member_id = %s
+                  AND timestamp >= %s 
+                  AND timestamp <= %s
+                  AND app_name IS NOT NULL
+                ORDER BY timestamp
+                """,
+                (company_id, member_id, start_date, end_date)
+            )
+            app_logs = cur.fetchall()
+            
+            return jsonify({
+                'success': True,
+                'logs': app_logs
+            }), 200
+    
+    except Exception as e:
+        print(f"❌ Apps analytics error: {e}")
+        return jsonify({'error': 'Failed to fetch app analytics'}), 500
+
+
+# ============================================================================
+# WEBSITE ANALYTICS
+# ============================================================================
+
+@analytics_bp.route('/analytics/websites', methods=['GET'])
+@require_auth
+def get_websites_analytics():
+    """Get detailed website usage analytics"""
+    try:
+        company_id = request.company_id
+        member_id = request.args.get('member_id')
+        start_date = request.args.get('start_date', (datetime.utcnow() - timedelta(days=7)).isoformat())
+        end_date = request.args.get('end_date', datetime.utcnow().isoformat())
+        
+        if not member_id:
+            return jsonify({'error': 'member_id is required'}), 400
+        
+        with get_db() as conn:
+            cur = conn.cursor()
+            
+            # Get raw website logs
+            cur.execute(
+                """
+                SELECT 
+                    url,
+                    domain,
+                    timestamp,
+                    duration_seconds,
+                    tracking_date
+                FROM activity_logs
+                WHERE company_id = %s 
+                  AND member_id = %s
+                  AND timestamp >= %s 
+                  AND timestamp <= %s
+                  AND url IS NOT NULL
+                ORDER BY timestamp
+                """,
+                (company_id, member_id, start_date, end_date)
+            )
+            website_logs = cur.fetchall()
+            
+            return jsonify({
+                'success': True,
+                'logs': website_logs
+            }), 200
+    
+    except Exception as e:
+        print(f"❌ Websites analytics error: {e}")
+        return jsonify({'error': 'Failed to fetch website analytics'}), 500
+
+
+# ============================================================================
+# WORK BEHAVIOR ANALYTICS
+# ============================================================================
+
+@analytics_bp.route('/analytics/work-behavior', methods=['GET'])
+@require_auth
+def get_work_behavior_analytics():
+    """Get work behavior analytics combining attendance and activity data"""
+    try:
+        company_id = request.company_id
+        member_id = request.args.get('member_id')
+        date = request.args.get('date', datetime.utcnow().date().isoformat())
+        
+        if not member_id:
+            return jsonify({'error': 'member_id is required'}), 400
+        
+        with get_db() as conn:
+            cur = conn.cursor()
+            
+            # Get attendance for the day
+            cur.execute(
+                """
+                SELECT 
+                    punch_in_time,
+                    punch_out_time,
+                    duration_minutes,
+                    status
+                FROM punch_logs
+                WHERE company_id = %s 
+                  AND member_id = %s
+                  AND punch_date = %s
+                ORDER BY punch_in_time DESC
+                LIMIT 1
+                """,
+                (company_id, member_id, date)
+            )
+            attendance = cur.fetchone()
+            
+            # Get activity logs for the day
+            cur.execute(
+                """
+                SELECT 
+                    timestamp,
+                    app_name,
+                    is_idle,
+                    is_locked,
+                    duration_seconds
+                FROM activity_logs
+                WHERE company_id = %s 
+                  AND member_id = %s
+                  AND DATE(timestamp) = %s
+                ORDER BY timestamp
+                """,
+                (company_id, member_id, date)
+            )
+            activities = cur.fetchall()
+            
+            return jsonify({
+                'success': True,
+                'attendance': attendance,
+                'activities': activities,
+                'date': date
+            }), 200
+    
+    except Exception as e:
+        print(f"❌ Work behavior analytics error: {e}")
+        return jsonify({'error': 'Failed to fetch work behavior analytics'}), 500
