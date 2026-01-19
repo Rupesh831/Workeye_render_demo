@@ -593,8 +593,9 @@ export const auth = {
 // ============================================================================
 
 export const dashboard = {
-  getStats: async () => {
-    return fetchAPI('/api/dashboard/stats', { method: 'GET' });
+  getStats: async (params?: Record<string, string>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return fetchAPI(`/api/dashboard/stats${queryString}`, { method: 'GET' });
   },
 
   getMemberLiveCounters: async (memberId: number) => {
