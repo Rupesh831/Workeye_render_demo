@@ -9,6 +9,7 @@ import { AttendanceDetailPage } from './components/AttendanceDetailPage';
 import { ProfilePage } from './components/ProfilePage';
 import { MembersPage } from './components/MembersPage';
 import { AttendancePage } from './components/AttendancePage';
+import AnalyticsPage from './components/AnalyticsPage';
 import { Layout } from './components/Layout';
 
 const App: React.FC = () => {
@@ -118,6 +119,20 @@ const App: React.FC = () => {
             isAuthenticated ? (
               <Layout>
                 <AttendancePage />
+              </Layout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        
+        {/* Analytics Route - NEW */}
+        <Route
+          path="/analytics"
+          element={
+            isAuthenticated ? (
+              <Layout>
+                <AnalyticsPage />
               </Layout>
             ) : (
               <Navigate to="/login" replace />
