@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Clock, Activity, Moon, Camera, History, 
   BarChart3, Globe, RefreshCw, ChevronLeft, ChevronRight,
@@ -118,6 +119,7 @@ export function EmployeeDetailView({ employee, onBack }: EmployeeDetailViewProps
   // Changed: Removed 'overview' from tabs, added 'analytics', default to 'screenshots'
   const [currentTab, setCurrentTab] = useState<'screenshots' | 'activity' | 'websites' | 'analytics'>('screenshots');
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+  const navigate = useNavigate();
 
   // ============================================================================
   // LIVE COUNTERS STATE - REAL DATA, TICKING EVERY SECOND
@@ -366,25 +368,46 @@ export function EmployeeDetailView({ employee, onBack }: EmployeeDetailViewProps
           className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back to Dashboard</span>
+          <span>Back to Overview</span>
         </button>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{employee.name}</h1>
-            <p className="text-gray-600 mt-1">
-              {employee.email} {employee.position && `• ${employee.position}`}
-            </p>
-          </div>
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-semibold shadow-md">
+                {employee.name?.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{employee.name}</h1>
+                <p className="text-gray-600 mt-1">
+                  {employee.position || 'Frontend Developer'} • {employee.email}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(employee.status)}`}>
+                    {getStatusIcon(employee.status)} Status: {employee.status.charAt(0).toUpperCase() + employee.status.slice(1)}
+                  </span>
+                  <span className="text-xs text-gray-500">• Last seen: 2 mins ago</span>
+                </div>
+              </div>
+            </div>
 
-          <div className={`px-4 py-2 rounded-full border-2 ${getStatusColor(employee.status)}`}>
-            <span className="font-semibold text-sm">
-              {getStatusIcon(employee.status)} {employee.status.toUpperCase()}
-            </span>
+            <div className="flex items-center gap-3">
+              <div className="text-right mr-4">
+                <p className="text-3xl font-bold text-blue-600">{liveCounters.productivityPercentage}%</p>
+                <p className="text-sm text-gray-500">Productivity</p>
+              </div>
+              <button
+                onClick={() => navigate(`/analytics?memberId=${employee.id}`)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+              >
+                <BarChart3 className="w-4 h-4" />
+                View Analytics
+              </button>
+            </div>
           </div>
         </div>
       </div>
-
+      
       {/* Date Selector */}
       <div className="bg-white border border-gray-200 rounded-md p-4 mb-6">
         <div className="flex items-center justify-between">
