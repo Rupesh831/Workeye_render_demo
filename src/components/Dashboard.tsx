@@ -19,7 +19,8 @@ import {
   LayoutDashboard,
   UsersIcon,
   BarChart3,
-  ChevronDown
+  ChevronDown,
+  Pause
 } from 'lucide-react';
 import { dashboard, members as membersAPI, wsClient, tracker } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -382,10 +383,10 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Stats Grid - 5 cards */}
+        {/* Stats Grid - 6 cards with IDLE NOW */}
         {view === 'overview' && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
               {/* Total Employees */}
               <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
                 <div className="flex items-center justify-between mb-2">
@@ -411,6 +412,20 @@ export function Dashboard() {
                   <p className="text-xs text-slate-500 uppercase font-semibold">Active Now</p>
                   <h3 className="text-2xl font-bold text-green-600">{stats.active}</h3>
                   <p className="text-xs text-slate-400">{Math.round((stats.active / (stats.total || 1)) * 100)}% of team</p>
+                </div>
+              </div>
+
+              {/* Idle Now - NEW CARD */}
+              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <Pause className="w-5 h-5 text-yellow-600" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Idle Now</p>
+                  <h3 className="text-2xl font-bold text-yellow-600">{stats.idle}</h3>
+                  <p className="text-xs text-slate-400">{Math.round((stats.idle / (stats.total || 1)) * 100)}% of team</p>
                 </div>
               </div>
 
