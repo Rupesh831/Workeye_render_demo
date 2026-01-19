@@ -25,7 +25,11 @@ const LoginPage: React.FC = () => {
     try {
       const result = await login(email, password);
       
-      if (!result.success) {
+      if (result.success) {
+        // Login successful - redirect to dashboard
+        console.log('✅ Login successful, redirecting to dashboard...');
+        navigate('/dashboard');
+      } else {
         const errorMsg = result.error || 'Login failed';
         
         if (errorMsg.includes('not found') || errorMsg.includes('endpoint')) {
@@ -38,7 +42,6 @@ const LoginPage: React.FC = () => {
           setError(errorMsg);
         }
       }
-      // If successful, navigation happens automatically via AuthContext
     } catch (err: any) {
       console.error('Login error:', err);
       setError('Unable to connect to the server. Please check your internet connection and try again.');
