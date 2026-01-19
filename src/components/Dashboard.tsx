@@ -19,7 +19,8 @@ import {
   Target,
   Award,
   Search,
-  Filter
+  Filter,
+  Camera
 } from 'lucide-react';
 import { dashboard, members as membersAPI, wsClient, tracker } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
