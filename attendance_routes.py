@@ -7,6 +7,7 @@ ATTENDANCE_ROUTES.PY - Complete Attendance Management System
 ✅ Proper duration calculations from exact timestamps
 ✅ Configuration-based attendance calculation (office timings + working days)
 ✅ All timestamps in IST (Indian Standard Time)
+✅ FIXED: Compatible with existing punch_logs schema
 """
 
 from flask import Blueprint, request, jsonify
@@ -37,7 +38,6 @@ def punch_in():
             return jsonify({'error': 'Member email and company ID required'}), 400
         
         punch_time_ist = get_ist_now()
-        punch_date = punch_time_ist.date()
         
         with get_db() as conn:
             cur = conn.cursor()
@@ -54,12 +54,20 @@ def punch_in():
             
             member_id = member['id']
             
-            # Check if already punched in today
+            # Check if already punched in today (no punch-out yet)
             cur.execute("""
                 SELECT id FROM punch_logs
                 WHERE company_id = %s AND member_id = %s 
-                  AND punch_date = %s AND punch_out_time IS NULL
-            """, (company_id, member_id, punch_date))
+                  AND DATE(timestamp) = CURRENT_DATE 
+                  AND action = 'punch_in'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM punch_logs pl2 
+                      WHERE pl2.member_id = punch_logs.member_id 
+                        AND pl2.action = 'punch_out'
+                        AND pl2.timestamp > punch_logs.timestamp
+                        AND DATE(pl2.timestamp) = CURRENT_DATE
+                  )
+            """, (company_id, member_id))
             
             existing_punch = cur.fetchone()
             
@@ -68,10 +76,10 @@ def punch_in():
             
             # Create new punch log
             cur.execute("""
-                INSERT INTO punch_logs (company_id, member_id, punch_date, punch_in_time, status)
-                VALUES (%s, %s, %s, %s, 'punched_in')
-                RETURNING id, punch_in_time
-            """, (company_id, member_id, punch_date, punch_time_ist))
+                INSERT INTO punch_logs (company_id, member_id, email, action, timestamp)
+                VALUES (%s, %s, %s, 'punch_in', %s)
+                RETURNING id, timestamp
+            """, (company_id, member_id, member_email, punch_time_ist))
             
             punch_log = cur.fetchone()
             
@@ -88,7 +96,7 @@ def punch_in():
                 'success': True,
                 'message': 'Punched in successfully',
                 'punch_id': punch_log['id'],
-                'punch_in_time': punch_log['punch_in_time'].isoformat(),
+                'punch_in_time': punch_log['timestamp'].isoformat(),
                 'member_name': member['name']
             }), 200
             
@@ -114,7 +122,6 @@ def punch_out():
             return jsonify({'error': 'Member email and company ID required'}), 400
         
         punch_out_time_ist = get_ist_now()
-        punch_date = punch_out_time_ist.date()
         
         with get_db() as conn:
             cur = conn.cursor()
@@ -131,38 +138,46 @@ def punch_out():
             
             member_id = member['id']
             
-            # Find open punch log
+            # Find active punch-in (no corresponding punch-out yet)
             cur.execute("""
-                SELECT id, punch_in_time FROM punch_logs
+                SELECT id, timestamp FROM punch_logs
                 WHERE company_id = %s AND member_id = %s 
-                  AND punch_date = %s AND punch_out_time IS NULL
-                ORDER BY punch_in_time DESC
+                  AND action = 'punch_in'
+                  AND DATE(timestamp) = CURRENT_DATE
+                  AND NOT EXISTS (
+                      SELECT 1 FROM punch_logs pl2 
+                      WHERE pl2.member_id = punch_logs.member_id 
+                        AND pl2.action = 'punch_out'
+                        AND pl2.timestamp > punch_logs.timestamp
+                        AND DATE(pl2.timestamp) = CURRENT_DATE
+                  )
+                ORDER BY timestamp DESC
                 LIMIT 1
-            """, (company_id, member_id, punch_date))
+            """, (company_id, member_id))
             
             punch_log = cur.fetchone()
             
             if not punch_log:
                 return jsonify({'error': 'No active punch-in found for today'}), 400
             
-            # Calculate duration in seconds
-            punch_in_time = punch_log['punch_in_time']
+            # Calculate duration in minutes
+            punch_in_time = punch_log['timestamp']
             if punch_in_time.tzinfo is None:
                 import pytz
                 punch_in_time = pytz.UTC.localize(punch_in_time)
             punch_in_ist = punch_in_time.astimezone(IST)
             
             duration_seconds = int((punch_out_time_ist - punch_in_ist).total_seconds())
+            duration_minutes = duration_seconds // 60
             
-            # Update punch log
+            # Insert punch-out record
             cur.execute("""
-                UPDATE punch_logs
-                SET punch_out_time = %s, duration_seconds = %s, status = 'punched_out', updated_at = %s
-                WHERE id = %s
-                RETURNING id, punch_in_time, punch_out_time, duration_seconds
-            """, (punch_out_time_ist, duration_seconds, punch_out_time_ist, punch_log['id']))
+                INSERT INTO punch_logs (company_id, member_id, email, action, timestamp, duration_minutes)
+                VALUES (%s, %s, %s, 'punch_out', %s, %s)
+                RETURNING id, timestamp
+            """, (company_id, member_id, member_email, punch_out_time_ist, duration_minutes))
             
-            updated_punch = cur.fetchone()
+            punch_out_log = cur.fetchone()
             
             # Update member status
             cur.execute("""
@@ -174,16 +189,17 @@ def punch_out():
             conn.commit()
             
             # Format duration
-            hours = duration_seconds // 3600
-            minutes = (duration_seconds % 3600) // 60
+            hours = duration_minutes // 60
+            minutes = duration_minutes % 60
             duration_str = f"{hours}h {minutes}m"
             
             return jsonify({
                 'success': True,
                 'message': 'Punched out successfully',
-                'punch_id': updated_punch['id'],
-                'punch_in_time': updated_punch['punch_in_time'].isoformat(),
-                'punch_out_time': updated_punch['punch_out_time'].isoformat(),
+                'punch_out_id': punch_out_log['id'],
+                'punch_in_time': punch_in_time.isoformat(),
+                'punch_out_time': punch_out_log['timestamp'].isoformat(),
+                'duration_minutes': duration_minutes,
                 'duration_seconds': duration_seconds,
                 'duration_formatted': duration_str,
                 'member_name': member['name']
@@ -205,17 +221,27 @@ def punch_out():
 def get_members_attendance():
     """
     Get current attendance status for all members
-    Shows: Name, Status, Current Punch In, Last Punch Out
+    Returns: list of members with their punch status and today's hours
     """
     try:
         company_id = request.company_id
-        today = datetime.now(IST).date()
         
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Get all members with today's punch status
+            # Get all active members with their today's attendance
             cur.execute("""
+                WITH today_punch_data AS (
+                    SELECT 
+                        member_id,
+                        MAX(CASE WHEN action = 'punch_in' THEN timestamp END) as last_punch_in,
+                        MAX(CASE WHEN action = 'punch_out' THEN timestamp END) as last_punch_out,
+                        SUM(CASE WHEN action = 'punch_out' THEN duration_minutes ELSE 0 END) as total_minutes
+                    FROM punch_logs
+                    WHERE company_id = %s 
+                      AND DATE(timestamp) = CURRENT_DATE
+                    GROUP BY member_id
+                )
                 SELECT 
                     m.id,
                     m.name,
@@ -226,59 +252,49 @@ def get_members_attendance():
                     m.is_punched_in,
                     m.last_punch_in_at,
                     m.last_punch_out_at,
-                    m.last_heartbeat_at,
-                    -- Today's total time from punch logs
-                    COALESCE(SUM(
-                        EXTRACT(EPOCH FROM (
-                            COALESCE(pl.punch_out_time, NOW()) - pl.punch_in_time
-                        ))
-                    ), 0) as today_seconds
+                    COALESCE(tpd.last_punch_in, m.last_punch_in_at) as punch_in_time,
+                    COALESCE(tpd.last_punch_out, m.last_punch_out_at) as punch_out_time,
+                    COALESCE(tpd.total_minutes, 0) as today_minutes
                 FROM members m
-                LEFT JOIN punch_logs pl 
-                    ON pl.member_id = m.id 
-                    AND pl.punch_date = %s
-                    AND pl.company_id = %s
-                WHERE m.company_id = %s 
-                    AND m.is_active = TRUE
-                GROUP BY m.id, m.name, m.email, m.position, m.department, 
-                         m.status, m.is_punched_in, m.last_punch_in_at, 
-                         m.last_punch_out_at, m.last_heartbeat_at
-                ORDER BY m.name ASC
-            """, (today, company_id, company_id))
+                LEFT JOIN today_punch_data tpd ON m.id = tpd.member_id
+                WHERE m.company_id = %s AND m.is_active = TRUE
+                ORDER BY m.name
+            """, (company_id, company_id))
             
             members = cur.fetchall()
             
-            result = []
+            members_list = []
             for member in members:
-                # Calculate status based on heartbeat
-                status = member['status'] or 'offline'
-                if member['last_heartbeat_at']:
-                    last_heartbeat_ist = convert_to_ist(member['last_heartbeat_at'])
-                    seconds_ago = (get_ist_now() - last_heartbeat_ist).total_seconds()
-                    if seconds_ago < 60:
-                        status = 'active'
-                    elif seconds_ago < 300:
-                        status = 'idle'
-                    else:
-                        status = 'offline'
+                # Calculate today's hours
+                today_hours = float(member['today_minutes']) / 60.0 if member['today_minutes'] else 0.0
                 
-                result.append({
+                # If currently punched in, add time from last punch-in to now
+                if member['is_punched_in'] and member['punch_in_time']:
+                    now = get_ist_now()
+                    punch_in = member['punch_in_time']
+                    if punch_in.tzinfo is None:
+                        import pytz
+                        punch_in = pytz.UTC.localize(punch_in)
+                    punch_in_ist = punch_in.astimezone(IST)
+                    current_session_seconds = (now - punch_in_ist).total_seconds()
+                    today_hours += current_session_seconds / 3600.0
+                
+                members_list.append({
                     'id': member['id'],
                     'name': member['name'],
                     'email': member['email'],
-                    'position': member['position'] or '',
-                    'department': member['department'] or '',
-                    'status': status,
+                    'position': member['position'],
+                    'department': member['department'],
+                    'status': member['status'],
                     'is_punched_in': member['is_punched_in'],
-                    'punch_in_time': convert_to_ist(member['last_punch_in_at']).isoformat() if member['last_punch_in_at'] else None,
-                    'punch_out_time': convert_to_ist(member['last_punch_out_at']).isoformat() if member['last_punch_out_at'] else None,
-                    'today_hours': round(member['today_seconds'] / 3600, 2) if member['today_seconds'] else 0
+                    'punch_in_time': member['punch_in_time'].isoformat() if member['punch_in_time'] else None,
+                    'punch_out_time': member['punch_out_time'].isoformat() if member['punch_out_time'] else None,
+                    'today_hours': round(today_hours, 2)
                 })
             
             return jsonify({
                 'success': True,
-                'members': result,
-                'date': today.isoformat()
+                'members': members_list
             }), 200
             
     except Exception as e:
@@ -289,19 +305,19 @@ def get_members_attendance():
 
 
 # ============================================================================
-# GET MEMBER ATTENDANCE HISTORY WITH DAILY BREAKDOWN
+# GET MEMBER ATTENDANCE HISTORY (DATE RANGE)
 # ============================================================================
 
 @attendance_bp.route('/api/attendance/member/<int:member_id>', methods=['GET'])
 @require_admin_auth
-def get_member_attendance_history(member_id):
+def get_member_attendance(member_id):
     """
-    Get detailed attendance history for a member with date-wise breakdown
-    Query params:
-    - start_date: Start date (YYYY-MM-DD), defaults to 30 days ago
-    - end_date: End date (YYYY-MM-DD), defaults to today
+    Get detailed attendance history for a specific member
+    Returns daily breakdown with punch in/out times
     
-    Returns daily summary table including absent days
+    Query params:
+    - start_date: Start date (YYYY-MM-DD)
+    - end_date: End date (YYYY-MM-DD)
     """
     try:
         company_id = request.company_id
@@ -323,10 +339,9 @@ def get_member_attendance_history(member_id):
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Verify member belongs to company
+            # Verify member
             cur.execute("""
-                SELECT id, name, email, position, department
-                FROM members
+                SELECT name, email, position, department FROM members
                 WHERE id = %s AND company_id = %s
             """, (member_id, company_id))
             
@@ -334,88 +349,81 @@ def get_member_attendance_history(member_id):
             if not member:
                 return jsonify({'error': 'Member not found'}), 404
             
-            # Get company configuration for working days
+            # Get configuration for working days
             cur.execute("""
-                SELECT config_data FROM configuration WHERE company_id = %s
+                SELECT working_days, office_start_time, office_end_time
+                FROM company_configurations
+                WHERE company_id = %s
             """, (company_id,))
             
-            config_row = cur.fetchone()
-            working_days = [1, 2, 3, 4, 5]  # Default: Monday to Friday
-            if config_row and 'working_days' in config_row['config_data']:
-                working_days = config_row['config_data']['working_days']
+            config = cur.fetchone()
+            working_days = config['working_days'] if config and config['working_days'] else [1, 2, 3, 4, 5]
             
             # Get punch logs for date range
             cur.execute("""
                 SELECT 
-                    punch_date,
-                    MIN(punch_in_time) as first_punch_in,
-                    MAX(punch_out_time) as last_punch_out,
-                    SUM(duration_seconds) as total_duration_seconds,
-                    status
+                    DATE(timestamp) as date,
+                    action,
+                    timestamp,
+                    duration_minutes
                 FROM punch_logs
                 WHERE company_id = %s 
-                    AND member_id = %s
-                    AND punch_date BETWEEN %s AND %s
-                GROUP BY punch_date, status
-                ORDER BY punch_date DESC
+                  AND member_id = %s
+                  AND DATE(timestamp) BETWEEN %s AND %s
+                ORDER BY timestamp
             """, (company_id, member_id, start_date, end_date))
             
             punch_logs = cur.fetchall()
             
-            # Create lookup for punch data by date
-            punch_data = {}
-            for log in punch_logs:
-                punch_data[log['punch_date']] = log
+            # Group by date
+            daily_data = defaultdict(lambda: {'punch_ins': [], 'punch_outs': [], 'total_minutes': 0})
             
-            # Generate daily breakdown for entire date range
+            for log in punch_logs:
+                date_key = log['date']
+                if log['action'] == 'punch_in':
+                    daily_data[date_key]['punch_ins'].append(log['timestamp'])
+                elif log['action'] == 'punch_out':
+                    daily_data[date_key]['punch_outs'].append(log['timestamp'])
+                    if log['duration_minutes']:
+                        daily_data[date_key]['total_minutes'] += log['duration_minutes']
+            
+            # Build daily records
             daily_records = []
-            current_date = start_date
             total_hours = 0
             days_present = 0
             
+            current_date = start_date
             while current_date <= end_date:
-                day_of_week = current_date.weekday()  # 0 = Monday, 6 = Sunday
-                day_name = calendar.day_name[day_of_week]
+                is_working_day = current_date.weekday() in working_days
                 
-                # Check if this is a working day
-                # Note: Python weekday() returns 0-6 (Mon-Sun), but our config uses 0=Sunday
-                config_day = (day_of_week + 1) % 7
-                is_working_day = config_day in working_days
-                
-                if current_date in punch_data:
-                    log = punch_data[current_date]
+                if current_date in daily_data:
+                    data = daily_data[current_date]
+                    first_punch_in = min(data['punch_ins']) if data['punch_ins'] else None
+                    last_punch_out = max(data['punch_outs']) if data['punch_outs'] else None
                     
-                    # Format punch times in IST
-                    punch_in_ist = convert_to_ist(log['first_punch_in']) if log['first_punch_in'] else None
-                    punch_out_ist = convert_to_ist(log['last_punch_out']) if log['last_punch_out'] else None
+                    hours = data['total_minutes'] / 60.0
+                    total_hours += hours
                     
-                    # Calculate duration
-                    duration_seconds = log['total_duration_seconds'] or 0
-                    hours = int(duration_seconds // 3600)
-                    minutes = int((duration_seconds % 3600) // 60)
-                    duration_str = f"{hours}h {minutes}m"
-                    
-                    total_hours += duration_seconds / 3600
-                    days_present += 1
+                    if first_punch_in:
+                        days_present += 1
                     
                     daily_records.append({
                         'date': current_date.isoformat(),
-                        'day': day_name,
-                        'punch_in': punch_in_ist.strftime('%I:%M %p') if punch_in_ist else 'NA',
-                        'punch_out': punch_out_ist.strftime('%I:%M %p') if punch_out_ist else 'NA',
-                        'duration': duration_str,
-                        'duration_seconds': int(duration_seconds),
+                        'day': calendar.day_name[current_date.weekday()],
+                        'punch_in': first_punch_in.strftime('%H:%M:%S') if first_punch_in else 'N/A',
+                        'punch_out': last_punch_out.strftime('%H:%M:%S') if last_punch_out else 'N/A',
+                        'duration': f"{int(hours)}h {int((hours % 1) * 60)}m",
+                        'duration_seconds': data['total_minutes'] * 60,
                         'is_working_day': is_working_day,
-                        'status': 'Present'
+                        'status': 'Present' if first_punch_in else ('Absent' if is_working_day else 'Holiday/Weekend')
                     })
                 else:
-                    # No punch record for this day
                     daily_records.append({
                         'date': current_date.isoformat(),
-                        'day': day_name,
-                        'punch_in': 'NA',
-                        'punch_out': 'NA',
-                        'duration': 'Unavailable',
+                        'day': calendar.day_name[current_date.weekday()],
+                        'punch_in': 'N/A',
+                        'punch_out': 'N/A',
+                        'duration': '0h 0m',
                         'duration_seconds': 0,
                         'is_working_day': is_working_day,
                         'status': 'Absent' if is_working_day else 'Holiday/Weekend'
@@ -432,7 +440,7 @@ def get_member_attendance_history(member_id):
             return jsonify({
                 'success': True,
                 'member': {
-                    'id': member['id'],
+                    'id': member_id,
                     'name': member['name'],
                     'email': member['email'],
                     'position': member['position'],
@@ -517,15 +525,14 @@ def get_attendance_analytics(member_id):
             # Get daily punch data
             cur.execute("""
                 SELECT 
-                    punch_date,
-                    COUNT(*) as punch_count,
-                    SUM(duration_seconds) / 3600.0 as total_hours
+                    DATE(timestamp) as punch_date,
+                    SUM(CASE WHEN action = 'punch_out' THEN duration_minutes ELSE 0 END) as total_minutes
                 FROM punch_logs
                 WHERE company_id = %s 
                     AND member_id = %s
-                    AND punch_date BETWEEN %s AND %s
-                GROUP BY punch_date
-                ORDER BY punch_date ASC
+                    AND DATE(timestamp) BETWEEN %s AND %s
+                GROUP BY DATE(timestamp)
+                ORDER BY DATE(timestamp) ASC
             """, (company_id, member_id, start_date, end_date))
             
             daily_data = cur.fetchall()
@@ -535,7 +542,7 @@ def get_attendance_analytics(member_id):
                 result = []
                 for record in daily_data:
                     date = record['punch_date']
-                    hours = float(record['total_hours']) if record['total_hours'] else 0
+                    hours = float(record['total_minutes']) / 60.0 if record['total_minutes'] else 0
                     
                     result.append({
                         'date': date.isoformat(),
@@ -551,23 +558,23 @@ def get_attendance_analytics(member_id):
                 }), 200
             
             elif view_type == 'weekly':
-                weekly_chart = defaultdict(lambda: {'hours': 0, 'days': 0})
+                weekly_chart = defaultdict(lambda: {'minutes': 0, 'days': 0})
                 
                 for record in daily_data:
                     date = record['punch_date']
-                    hours = float(record['total_hours']) if record['total_hours'] else 0
+                    minutes = float(record['total_minutes']) if record['total_minutes'] else 0
                     
                     # ISO week
                     week_key = f"{date.year}-W{date.isocalendar()[1]:02d}"
-                    weekly_chart[week_key]['hours'] += hours
+                    weekly_chart[week_key]['minutes'] += minutes
                     weekly_chart[week_key]['days'] += 1
                 
                 result = [
                     {
                         'week': week,
-                        'total_hours': round(data['hours'], 2),
+                        'total_hours': round(data['minutes'] / 60.0, 2),
                         'days_present': data['days'],
-                        'avg_hours_per_day': round(data['hours'] / data['days'], 2) if data['days'] > 0 else 0
+                        'avg_hours_per_day': round((data['minutes'] / 60.0) / data['days'], 2) if data['days'] > 0 else 0
                     }
                     for week, data in sorted(weekly_chart.items())
                 ]
@@ -580,22 +587,22 @@ def get_attendance_analytics(member_id):
                 }), 200
             
             elif view_type == 'monthly':
-                monthly_chart = defaultdict(lambda: {'hours': 0, 'days': 0})
+                monthly_chart = defaultdict(lambda: {'minutes': 0, 'days': 0})
                 
                 for record in daily_data:
                     date = record['punch_date']
-                    hours = float(record['total_hours']) if record['total_hours'] else 0
+                    minutes = float(record['total_minutes']) if record['total_minutes'] else 0
                     
                     month_key = date.strftime('%Y-%m')
-                    monthly_chart[month_key]['hours'] += hours
+                    monthly_chart[month_key]['minutes'] += minutes
                     monthly_chart[month_key]['days'] += 1
                 
                 result = [
                     {
                         'month': month,
-                        'total_hours': round(data['hours'], 2),
+                        'total_hours': round(data['minutes'] / 60.0, 2),
                         'days_present': data['days'],
-                        'avg_hours_per_day': round(data['hours'] / data['days'], 2) if data['days'] > 0 else 0
+                        'avg_hours_per_day': round((data['minutes'] / 60.0) / data['days'], 2) if data['days'] > 0 else 0
                     }
                     for month, data in sorted(monthly_chart.items())
                 ]
