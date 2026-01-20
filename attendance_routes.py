@@ -1,31 +1,42 @@
 """
-ATTENDANCE_ROUTES.PY - Optimized for Production
-================================================
-✅ Based on actual schema: punch_in_time, punch_out_time, duration_minutes, punch_date
-✅ Fast startup, minimal imports
+ATTENDANCE_ROUTES.PY - Based on ACTUAL Database Schema
+=======================================================
+✅ Uses exact schema: punch_in_time, punch_out_time, duration_minutes, punch_date, status
+✅ Members table: current_punch_in_time, is_punched_in, last_punch_in_at, last_punch_out_at
+✅ Today's hours = sum(duration_minutes) + current session if punched in
 """
 
 from flask import Blueprint, request, jsonify
 from admin_auth_routes import require_admin_auth
-from db import get_db, get_ist_now, IST
-from datetime import datetime, timedelta
+from db import get_db, get_ist_now, convert_to_ist, IST
+from datetime import datetime, timedelta, time
 from collections import defaultdict
 import calendar
+import traceback
 
 attendance_bp = Blueprint('attendance', __name__)
+
+# ============================================================================
+# GET ALL MEMBERS ATTENDANCE STATUS
+# ============================================================================
 
 @attendance_bp.route('/api/attendance/members', methods=['GET'])
 @require_admin_auth
 def get_members_attendance():
-    """Get current attendance status for all members"""
+    """
+    Get current attendance status for all members
+    Schema: punch_logs(punch_in_time, punch_out_time, duration_minutes, punch_date, status)
+    """
     try:
         company_id = request.company_id
+        
+        print(f"📊 GET MEMBERS ATTENDANCE: company_id={company_id}")
         
         with get_db() as conn:
             cur = conn.cursor()
             
             # Get today's punch data
-            cur.execute("""
+            today_query = """
                 WITH today_punches AS (
                     SELECT 
                         member_id,
@@ -54,15 +65,19 @@ def get_members_attendance():
                 LEFT JOIN today_punches tp ON m.id = tp.member_id
                 WHERE m.company_id = %s AND m.is_active = TRUE
                 ORDER BY m.name
-            """, (company_id, company_id))
+            """
             
+            cur.execute(today_query, (company_id, company_id))
             members = cur.fetchall()
+            
+            print(f"✅ Found {len(members)} members")
             
             members_list = []
             for member in members:
+                # Calculate today's hours
                 today_hours = float(member['today_minutes']) / 60.0 if member['today_minutes'] else 0.0
                 
-                # Add current session if punched in
+                # If currently punched in, add time from last punch-in to now
                 if member['is_punched_in'] and member['punch_in_time']:
                     now = get_ist_now()
                     punch_in = member['punch_in_time']
@@ -88,47 +103,77 @@ def get_members_attendance():
                     'today_hours': round(today_hours, 2)
                 })
             
-            return jsonify({'success': True, 'members': members_list}), 200
+            return jsonify({
+                'success': True,
+                'members': members_list
+            }), 200
             
     except Exception as e:
-        print(f"❌ Attendance error: {e}")
-        import traceback
+        print(f"❌ Get members attendance error: {e}")
         traceback.print_exc()
-        return jsonify({'error': 'Failed to fetch attendance data'}), 500
+        return jsonify({'error': 'Failed to fetch attendance data', 'details': str(e)}), 500
 
+
+# ============================================================================
+# GET MEMBER ATTENDANCE HISTORY
+# ============================================================================
 
 @attendance_bp.route('/api/attendance/member/<int:member_id>', methods=['GET'])
 @require_admin_auth
 def get_member_attendance(member_id):
-    """Get detailed attendance history"""
+    """
+    Get detailed attendance history for a specific member
+    """
     try:
         company_id = request.company_id
         
         end_date_str = request.args.get('end_date')
         start_date_str = request.args.get('start_date')
         
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date() if end_date_str else datetime.now(IST).date()
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date() if start_date_str else end_date - timedelta(days=30)
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        else:
+            end_date = datetime.now(IST).date()
+        
+        if start_date_str:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        else:
+            start_date = end_date - timedelta(days=30)
+        
+        print(f"📅 GET MEMBER ATTENDANCE: member_id={member_id}, range={start_date} to {end_date}")
         
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Get member
-            cur.execute("SELECT name, email, position, department FROM members WHERE id = %s AND company_id = %s", (member_id, company_id))
+            # Verify member
+            cur.execute("""
+                SELECT name, email, position, department FROM members
+                WHERE id = %s AND company_id = %s
+            """, (member_id, company_id))
+            
             member = cur.fetchone()
             if not member:
                 return jsonify({'error': 'Member not found'}), 404
             
-            # Get working days config
-            cur.execute("SELECT working_days FROM company_configurations WHERE company_id = %s", (company_id,))
+            # Get configuration
+            cur.execute("""
+                SELECT working_days FROM company_configurations WHERE company_id = %s
+            """, (company_id,))
+            
             config = cur.fetchone()
             working_days = config['working_days'] if config and config['working_days'] else [1, 2, 3, 4, 5]
             
             # Get punch logs
             cur.execute("""
-                SELECT punch_date, punch_in_time, punch_out_time, COALESCE(duration_minutes, 0) as duration_minutes
+                SELECT 
+                    punch_date,
+                    punch_in_time,
+                    punch_out_time,
+                    COALESCE(duration_minutes, 0) as duration_minutes
                 FROM punch_logs
-                WHERE company_id = %s AND member_id = %s AND punch_date BETWEEN %s AND %s
+                WHERE company_id = %s 
+                  AND member_id = %s
+                  AND punch_date BETWEEN %s AND %s
                 ORDER BY punch_in_time
             """, (company_id, member_id, start_date, end_date))
             
@@ -136,6 +181,7 @@ def get_member_attendance(member_id):
             
             # Group by date
             daily_data = defaultdict(lambda: {'punch_ins': [], 'punch_outs': [], 'total_minutes': 0})
+            
             for log in punch_logs:
                 date_key = log['punch_date']
                 if log['punch_in_time']:
@@ -144,7 +190,7 @@ def get_member_attendance(member_id):
                     daily_data[date_key]['punch_outs'].append(log['punch_out_time'])
                 daily_data[date_key]['total_minutes'] += log['duration_minutes']
             
-            # Build records
+            # Build daily records
             daily_records = []
             total_hours = 0
             days_present = 0
@@ -157,8 +203,10 @@ def get_member_attendance(member_id):
                     data = daily_data[current_date]
                     first_punch_in = min(data['punch_ins']) if data['punch_ins'] else None
                     last_punch_out = max(data['punch_outs']) if data['punch_outs'] else None
+                    
                     hours = data['total_minutes'] / 60.0
                     total_hours += hours
+                    
                     if first_punch_in:
                         days_present += 1
                     
@@ -188,6 +236,8 @@ def get_member_attendance(member_id):
             
             total_days = (end_date - start_date).days + 1
             working_days_count = sum(1 for r in daily_records if r['is_working_day'])
+            avg_hours_per_day = total_hours / days_present if days_present > 0 else 0
+            attendance_percentage = (days_present / working_days_count * 100) if working_days_count > 0 else 0
             
             return jsonify({
                 'success': True,
@@ -198,30 +248,38 @@ def get_member_attendance(member_id):
                     'position': member['position'],
                     'department': member['department']
                 },
-                'date_range': {'start': start_date.isoformat(), 'end': end_date.isoformat()},
+                'date_range': {
+                    'start': start_date.isoformat(),
+                    'end': end_date.isoformat()
+                },
                 'statistics': {
                     'total_days': total_days,
                     'working_days': working_days_count,
                     'days_present': days_present,
                     'days_absent': working_days_count - days_present,
-                    'attendance_percentage': round((days_present / working_days_count * 100) if working_days_count > 0 else 0, 2),
+                    'attendance_percentage': round(attendance_percentage, 2),
                     'total_hours': round(total_hours, 2),
-                    'average_hours_per_day': round(total_hours / days_present if days_present > 0 else 0, 2)
+                    'average_hours_per_day': round(avg_hours_per_day, 2)
                 },
                 'daily_records': daily_records
             }), 200
             
     except Exception as e:
-        print(f"❌ Member attendance error: {e}")
-        import traceback
+        print(f"❌ Get member attendance history error: {e}")
         traceback.print_exc()
-        return jsonify({'error': 'Failed to fetch attendance history'}), 500
+        return jsonify({'error': 'Failed to fetch attendance history', 'details': str(e)}), 500
 
+
+# ============================================================================
+# GET ATTENDANCE ANALYTICS
+# ============================================================================
 
 @attendance_bp.route('/api/attendance/analytics/<int:member_id>', methods=['GET'])
 @require_admin_auth
 def get_attendance_analytics(member_id):
-    """Get attendance analytics"""
+    """
+    Get attendance analytics for charts
+    """
     try:
         company_id = request.company_id
         view_type = request.args.get('view', 'daily').lower()
@@ -229,7 +287,10 @@ def get_attendance_analytics(member_id):
         end_date_str = request.args.get('end_date')
         start_date_str = request.args.get('start_date')
         
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date() if end_date_str else datetime.now(IST).date()
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        else:
+            end_date = datetime.now(IST).date()
         
         if start_date_str:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -241,18 +302,27 @@ def get_attendance_analytics(member_id):
             else:
                 start_date = end_date - timedelta(days=30)
         
+        print(f"📈 GET ANALYTICS: member_id={member_id}, view={view_type}")
+        
         with get_db() as conn:
             cur = conn.cursor()
             
-            cur.execute("SELECT name FROM members WHERE id = %s AND company_id = %s", (member_id, company_id))
+            cur.execute("""
+                SELECT name FROM members WHERE id = %s AND company_id = %s
+            """, (member_id, company_id))
+            
             member = cur.fetchone()
             if not member:
                 return jsonify({'error': 'Member not found'}), 404
             
             cur.execute("""
-                SELECT punch_date, SUM(COALESCE(duration_minutes, 0)) as total_minutes
+                SELECT 
+                    punch_date,
+                    SUM(COALESCE(duration_minutes, 0)) as total_minutes
                 FROM punch_logs
-                WHERE company_id = %s AND member_id = %s AND punch_date BETWEEN %s AND %s
+                WHERE company_id = %s 
+                    AND member_id = %s
+                    AND punch_date BETWEEN %s AND %s
                 GROUP BY punch_date
                 ORDER BY punch_date ASC
             """, (company_id, member_id, start_date, end_date))
@@ -268,10 +338,17 @@ def get_attendance_analytics(member_id):
                     }
                     for record in daily_data
                 ]
-                return jsonify({'success': True, 'view': 'daily', 'member_name': member['name'], 'data': result}), 200
+                
+                return jsonify({
+                    'success': True,
+                    'view': 'daily',
+                    'member_name': member['name'],
+                    'data': result
+                }), 200
             
             elif view_type == 'weekly':
                 weekly_chart = defaultdict(lambda: {'minutes': 0, 'days': 0})
+                
                 for record in daily_data:
                     date = record['punch_date']
                     minutes = float(record['total_minutes']) if record['total_minutes'] else 0
@@ -288,10 +365,17 @@ def get_attendance_analytics(member_id):
                     }
                     for week, data in sorted(weekly_chart.items())
                 ]
-                return jsonify({'success': True, 'view': 'weekly', 'member_name': member['name'], 'data': result}), 200
+                
+                return jsonify({
+                    'success': True,
+                    'view': 'weekly',
+                    'member_name': member['name'],
+                    'data': result
+                }), 200
             
             elif view_type == 'monthly':
                 monthly_chart = defaultdict(lambda: {'minutes': 0, 'days': 0})
+                
                 for record in daily_data:
                     date = record['punch_date']
                     minutes = float(record['total_minutes']) if record['total_minutes'] else 0
@@ -308,15 +392,21 @@ def get_attendance_analytics(member_id):
                     }
                     for month, data in sorted(monthly_chart.items())
                 ]
-                return jsonify({'success': True, 'view': 'monthly', 'member_name': member['name'], 'data': result}), 200
+                
+                return jsonify({
+                    'success': True,
+                    'view': 'monthly',
+                    'member_name': member['name'],
+                    'data': result
+                }), 200
             
-            return jsonify({'error': 'Invalid view type'}), 400
+            else:
+                return jsonify({'error': 'Invalid view type'}), 400
             
     except Exception as e:
-        print(f"❌ Analytics error: {e}")
-        import traceback
+        print(f"❌ Get attendance analytics error: {e}")
         traceback.print_exc()
-        return jsonify({'error': 'Failed to fetch analytics'}), 500
+        return jsonify({'error': 'Failed to fetch attendance analytics', 'details': str(e)}), 500
 
 
 __all__ = ['attendance_bp']
