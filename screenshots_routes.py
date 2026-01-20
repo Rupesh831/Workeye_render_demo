@@ -30,7 +30,7 @@ def get_member_screenshots(member_id):
     - No cross-company access
     
     Query params:
-    - date: Filter by date (YYYY-MM-DD), defaults to today
+    - date: Filter by date (YYYY-MM-DD), defaults to today IST
     - limit: Number of screenshots (default 20, max 100)
     - offset: Pagination offset (default 0)
     """
@@ -42,14 +42,18 @@ def get_member_screenshots(member_id):
         limit = min(int(request.args.get('limit', 20)), 100)
         offset = int(request.args.get('offset', 0))
         
-        # Default to today if no date specified
+        # Default to today IST if no date specified
         if date_str:
             try:
                 filter_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             except ValueError:
                 return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
         else:
-            filter_date = datetime.utcnow().date()
+            # Get current IST date
+            from datetime import timezone
+            ist_offset = timezone(timedelta(hours=5, minutes=30))
+            ist_now = datetime.now(ist_offset)
+            filter_date = ist_now.date()
         
         with get_db() as conn:
             cur = conn.cursor()
