@@ -4,7 +4,7 @@ import Login from './components/Login';
 import SignupPage from './components/auth/SignupPage';
 import { Dashboard } from './components/Dashboard';
 import { EmployeeDetailPage } from './components/EmployeeDetailPage';
-import { ConfigurationPage } from './components/ConfigurationPage';
+import { Configuration } from './components/Configuration';
 import { AttendanceDetailPage } from './components/AttendanceDetailPage';
 import { ProfilePage } from './components/ProfilePage';
 import { MembersPage } from './components/MembersPage';
@@ -79,7 +79,7 @@ const App: React.FC = () => {
           element={
             isAuthenticated ? (
               <Layout>
-                <ConfigurationPage />
+                <Configuration />
               </Layout>
             ) : (
               <Navigate to="/login" replace />
