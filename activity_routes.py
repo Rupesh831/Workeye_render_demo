@@ -28,7 +28,7 @@ def get_member_activity_logs(member_id):
     - Only activity logs for admin's company
     
     Query params:
-    - date: Filter by date (YYYY-MM-DD), defaults to today
+    - date: Filter by date (YYYY-MM-DD), defaults to today IST
     - limit: Number of logs (default 50, max 500)
     - offset: Pagination offset (default 0)
     """
@@ -40,14 +40,18 @@ def get_member_activity_logs(member_id):
         limit = min(int(request.args.get('limit', 50)), 500)
         offset = int(request.args.get('offset', 0))
         
-        # Default to today if no date specified
+        # Default to today IST if no date specified
         if date_str:
             try:
                 filter_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             except ValueError:
                 return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
         else:
-            filter_date = datetime.utcnow().date()
+            # Get current IST date
+            from datetime import timezone
+            ist_offset = timezone(timedelta(hours=5, minutes=30))
+            ist_now = datetime.now(ist_offset)
+            filter_date = ist_now.date()
         
         with get_db() as conn:
             cur = conn.cursor()
@@ -116,7 +120,8 @@ def get_member_activity_logs(member_id):
                     'limit': limit,
                     'offset': offset,
                     'has_more': (offset + limit) < total_count
-                }
+                },
+                'date': filter_date.isoformat()
             }), 200
     
     except Exception as e:
@@ -141,9 +146,9 @@ def get_member_website_visits(member_id):
     - Only website visits for admin's company
     
     Query params:
-    - start_date: Start date (YYYY-MM-DD)
-    - end_date: End date (YYYY-MM-DD)
-    - limit: Number of results (default 20, max 100)
+    - start_date: Start date (YYYY-MM-DD) - defaults to today IST
+    - end_date: End date (YYYY-MM-DD) - defaults to today IST
+    - limit: Number of results (default 50, max 100)
     """
     try:
         company_id = request.company_id
@@ -151,12 +156,18 @@ def get_member_website_visits(member_id):
         # Parse query parameters
         start_date_str = request.args.get('start_date')
         end_date_str = request.args.get('end_date')
-        limit = min(int(request.args.get('limit', 20)), 100)
+        limit = min(int(request.args.get('limit', 50)), 100)
         
-        # Default to last 7 days if no date range specified
+        # Get current IST date
+        from datetime import timezone
+        ist_offset = timezone(timedelta(hours=5, minutes=30))
+        ist_now = datetime.now(ist_offset)
+        today_ist = ist_now.date()
+        
+        # Default to today IST if no date range specified
         if not start_date_str or not end_date_str:
-            end_date = datetime.utcnow().date()
-            start_date = end_date - timedelta(days=7)
+            end_date = today_ist
+            start_date = today_ist
         else:
             try:
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -223,10 +234,12 @@ def get_member_website_visits(member_id):
                             if domain not in website_stats:
                                 website_stats[domain] = {
                                     'domain': domain,
+                                    'url': url,
                                     'visit_count': 0,
                                     'first_visit': timestamp,
                                     'last_visit': timestamp,
-                                    'urls': set()
+                                    'urls': set(),
+                                    'total_time_seconds': 0
                                 }
                             
                             website_stats[domain]['visit_count'] += 1
@@ -239,6 +252,8 @@ def get_member_website_visits(member_id):
                                 timestamp
                             )
                             website_stats[domain]['urls'].add(url)
+                            # Estimate 5 seconds per visit
+                            website_stats[domain]['total_time_seconds'] += 5
                         except Exception:
                             continue
                 except Exception:
@@ -253,10 +268,12 @@ def get_member_website_visits(member_id):
             )[:limit]:
                 websites.append({
                     'domain': stats['domain'],
+                    'url': stats['url'],
                     'visit_count': stats['visit_count'],
                     'first_visit': stats['first_visit'].isoformat(),
                     'last_visit': stats['last_visit'].isoformat(),
-                    'unique_urls': len(stats['urls'])
+                    'unique_urls': len(stats['urls']),
+                    'total_time_seconds': stats['total_time_seconds']
                 })
             
             return jsonify({
