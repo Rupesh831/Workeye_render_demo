@@ -367,6 +367,20 @@ export function Dashboard() {
                         <span className="text-sm text-slate-700 font-medium">Configuration</span>
                       </button>
 
+                      <button
+                        onClick={() => {
+                          handleDownloadTracker();
+                          setShowProfileDropdown(false);
+                        }}
+                        disabled={downloadingTracker}
+                        className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Download className="w-4 h-4 text-slate-600" />
+                        <span className="text-sm text-slate-700 font-medium">
+                          {downloadingTracker ? 'Downloading...' : 'Download Tracker'}
+                        </span>
+                      </button>
+
                       <div className="my-1 border-t border-slate-200"></div>
 
                       <button
