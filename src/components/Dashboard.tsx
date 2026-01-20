@@ -22,7 +22,8 @@ import {
   ChevronDown,
   Pause,
   UserCircle,
-  ClipboardList
+  ClipboardList,
+  ArrowLeft
 } from 'lucide-react';
 import { dashboard, members as membersAPI, wsClient, tracker } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -301,12 +302,25 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header - Simplified with only text and dropdown */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+      {/* Header - Fixed with back button support */}
+      <header className="bg-white border-b border-slate-200 fixed top-0 left-0 right-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Left: Title with Dropdown */}
+            {/* Left: Back button (conditional) + Title with Dropdown */}
             <div className="flex items-center space-x-4">
+              {/* Back button - shows when not on overview */}
+              {view !== 'overview' && (
+                <button
+                  onClick={() => {
+                    setSelectedEmployee(null);
+                    setView('overview');
+                  }}
+                  className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-slate-600" />
+                </button>
+              )}
+              
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
@@ -457,8 +471,8 @@ export function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Content - Added pt-16 for fixed header offset */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -472,7 +486,7 @@ export function Dashboard() {
         {/* Stats Grid - 6 cards in SINGLE ROW matching first screenshot */}
         {view === 'overview' && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 xl:gap-6 mb-8">
+            <div className="grid grid-cols-5 gap-6 mb-8">
               {/* Total Employees */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
                 <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
