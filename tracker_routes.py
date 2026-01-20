@@ -793,7 +793,10 @@ def tracker_punch_in():
 @tracker_bp.route('/tracker/punch-out', methods=['POST'])
 @require_tracker_token
 def tracker_punch_out():
-    """Record punch out"""
+    """
+    Record punch out - FIXED to work with actual punch_logs schema
+    Schema: action, timestamp, duration_minutes
+    """
     try:
         data = request.get_json(silent=True) or {}
         company_id = request.tracker_company_id
@@ -801,7 +804,7 @@ def tracker_punch_out():
         email = data.get('email', '').lower().strip()
         deviceid_str = data.get('deviceid', '')
         
-        print(f"👋 PUNCH-OUT: Email={email}, Company={company_id}")
+        print(f"👋 PUNCH-OUT: Email={email}, Company={company_id}, Device={deviceid_str}")
         
         if not email or not deviceid_str:
             return jsonify({"error": "Email and deviceid required"}), 400
@@ -809,87 +812,83 @@ def tracker_punch_out():
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Detect column names
-            cur.execute("""
-                SELECT column_name FROM information_schema.columns 
-                WHERE table_name = 'members' AND column_name IN ('name', 'full_name', 'fullname', 'company_id', 'companyid')
-            """)
-            cols = {row['column_name'] for row in cur.fetchall()}
-            
-            name_col = 'full_name' if 'full_name' in cols else ('name' if 'name' in cols else 'fullname')
-            company_col = 'company_id' if 'company_id' in cols else 'companyid'
-            
             # Get member
-            cur.execute(
-                f"SELECT id, {name_col} as membername FROM members WHERE {company_col} = %s AND email = %s",
-                (company_id, email)
-            )
+            cur.execute("""
+                SELECT id, name FROM members 
+                WHERE company_id = %s AND email = %s
+            """, (company_id, email))
+            
             member = cur.fetchone()
             
             if not member:
                 return jsonify({"error": "Member not found"}), 404
             
             member_id = member['id']
-            member_name = member['membername']
+            member_name = member['name']
             
             now = datetime.utcnow()
             
-            # Detect punchlogs column names
+            # Find latest punch_in without a matching punch_out for today
             cur.execute("""
-                SELECT column_name FROM information_schema.columns 
-                WHERE table_name = 'punch_logs' AND column_name IN ('company_id', 'companyid', 'member_id', 'memberid', 'punch_in_time', 'punchintime', 'punch_out_time', 'punchouttime', 'work_duration_seconds', 'workdurationseconds', 'status')
-            """)
-            punch_cols = {row['column_name'] for row in cur.fetchall()}
-            
-            punch_company_col = 'company_id' if 'company_id' in punch_cols else 'companyid'
-            punch_member_col = 'member_id' if 'member_id' in punch_cols else 'memberid'
-            punch_in_col = 'punch_in_time' if 'punch_in_time' in punch_cols else 'punchintime'
-            punch_out_col = 'punch_out_time' if 'punch_out_time' in punch_cols else 'punchouttime'
-            work_duration_col = 'work_duration_seconds' if 'work_duration_seconds' in punch_cols else 'workdurationseconds'
-            has_status_col = 'status' in punch_cols
-            
-            # Find latest active punch log (most recent punch-in without punch-out)
-            cur.execute(f"""
-                SELECT id, {punch_in_col} as punchintime
+                SELECT id, timestamp
                 FROM punch_logs 
-                WHERE {punch_company_col} = %s AND {punch_member_col} = %s AND {punch_out_col} IS NULL 
-                ORDER BY {punch_in_col} DESC LIMIT 1
+                WHERE company_id = %s 
+                  AND member_id = %s 
+                  AND action = 'punch_in'
+                  AND DATE(timestamp) = CURRENT_DATE
+                  AND NOT EXISTS (
+                      SELECT 1 FROM punch_logs pl2 
+                      WHERE pl2.member_id = punch_logs.member_id 
+                        AND pl2.action = 'punch_out'
+                        AND pl2.timestamp > punch_logs.timestamp
+                        AND DATE(pl2.timestamp) = CURRENT_DATE
+                  )
+                ORDER BY timestamp DESC 
+                LIMIT 1
             """, (company_id, member_id))
             
             punch_log = cur.fetchone()
             
             if not punch_log:
-                print(f"⚠️ PUNCH-OUT: No active punch in session")
+                print(f"⚠️ PUNCH-OUT: No active punch-in session found for {email}")
                 return jsonify({
                     "success": True,
-                    "message": "No active punch in session found"
+                    "message": "Tracking stopped. Failed to record punch out - no active session."
                 }), 200
             
             punchlog_id = punch_log['id']
-            punchin_time = punch_log['punchintime']
-            duration = (now - punchin_time).total_seconds()
+            punchin_time = punch_log['timestamp']
             
-            # Update punch log with proper status handling
+            # Calculate duration
+            duration_seconds = (now - punchin_time).total_seconds()
+            duration_minutes = int(duration_seconds // 60)
+            
+            # Insert punch_out record
             try:
-                if has_status_col:
-                    cur.execute(f"""
-                        UPDATE punch_logs 
-                        SET {punch_out_col} = %s, {work_duration_col} = %s, status = 'punched_out' 
-                        WHERE id = %s
-                    """, (now, duration, punchlog_id))
-                else:
-                    cur.execute(f"""
-                        UPDATE punch_logs 
-                        SET {punch_out_col} = %s, {work_duration_col} = %s
-                        WHERE id = %s
-                    """, (now, duration, punchlog_id))
-            except Exception as update_error:
-                print(f"❌ PUNCH-OUT Update Error: {update_error}")
-                raise
+                cur.execute("""
+                    INSERT INTO punch_logs (company_id, member_id, email, action, timestamp, duration_minutes, device_id)
+                    VALUES (%s, %s, %s, 'punch_out', %s, %s, %s)
+                    RETURNING id
+                """, (company_id, member_id, email, now, duration_minutes, deviceid_str))
+                
+                punch_out_log = cur.fetchone()
+                print(f"✅ PUNCH-OUT: Inserted punch_out record id={punch_out_log['id']}")
+                
+            except Exception as insert_error:
+                print(f"❌ PUNCH-OUT Insert Error: {insert_error}")
+                # Try without device_id if column doesn't exist
+                cur.execute("""
+                    INSERT INTO punch_logs (company_id, member_id, email, action, timestamp, duration_minutes)
+                    VALUES (%s, %s, %s, 'punch_out', %s, %s)
+                    RETURNING id
+                """, (company_id, member_id, email, now, duration_minutes))
+                
+                punch_out_log = cur.fetchone()
+                print(f"✅ PUNCH-OUT: Inserted punch_out record id={punch_out_log['id']} (without device_id)")
             
             # Update member status
             try:
-                cur.execute(f"""
+                cur.execute("""
                     UPDATE members 
                     SET last_punch_out_at = %s, status = 'offline', is_punched_in = FALSE 
                     WHERE id = %s
@@ -897,17 +896,19 @@ def tracker_punch_out():
             except Exception as e:
                 print(f"⚠️ PUNCH-OUT: Could not update member status: {e}")
             
-            hours = int(duration // 3600)
-            minutes = int((duration % 3600) // 60)
+            conn.commit()
+            
+            hours = int(duration_seconds // 3600)
+            minutes = int((duration_seconds % 3600) // 60)
             
             print(f"✅ PUNCH-OUT: Success for {member_name} - Duration: {hours}h {minutes}m")
             
             return jsonify({
                 "success": True,
                 "message": f"Punched out successfully. Work duration: {hours}h {minutes}m",
-                "punchlogid": punchlog_id,
+                "punchlogid": punch_out_log['id'],
                 "punchouttime": now.isoformat(),
-                "workdurationseconds": duration
+                "workdurationseconds": duration_seconds
             }), 200
             
     except Exception as e:
@@ -915,6 +916,8 @@ def tracker_punch_out():
         import traceback
         traceback.print_exc()
         return jsonify({"error": "Failed to record punch out"}), 500
+
+
 
 
 
