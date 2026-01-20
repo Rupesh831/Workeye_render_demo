@@ -52,7 +52,7 @@ export function Configuration() {
 
   useEffect(() => {
     fetchConfiguration();
-  }, [company?.id]);
+  }, []);
 
   // Track unsaved changes
   useEffect(() => {
@@ -72,26 +72,15 @@ export function Configuration() {
     setHasUnsavedChanges(hasChanges);
   }, [config, currentConfig]);
 
-  // Warn about unsaved changes on page leave
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges && !saving) {
-        e.preventDefault();
-        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-        return e.returnValue;
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasUnsavedChanges, saving]);
-
   const fetchConfiguration = async () => {
     try {
       setLoading(true);
       setError(null);
       
       const token = localStorage.getItem('authToken');
+      
+      console.log('🔍 Fetching configuration...');
+      
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'https://workeye-render-demo-backend.onrender.com'}/api/configuration`,
         {
@@ -102,23 +91,37 @@ export function Configuration() {
         }
       );
 
+      console.log('📡 Response status:', response.status);
+
       if (!response.ok) {
         throw new Error('Failed to fetch configuration');
       }
 
       const data = await response.json();
+      console.log('📦 Received data:', data);
       
       if (data.success && data.config) {
-        const loadedConfig = {
-          ...data.config,
-          company_id: company?.id || 0,
+        const loadedConfig: Configuration = {
+          id: data.config.id,
+          company_id: data.config.company_id,
+          screenshot_interval_minutes: data.config.screenshot_interval_minutes,
+          idle_timeout_minutes: data.config.idle_timeout_minutes,
+          office_start_time: data.config.office_start_time,
+          office_end_time: data.config.office_end_time,
+          working_days: data.config.working_days,
+          last_modified_by: data.config.last_modified_by,
+          last_modified_at: data.config.last_modified_at,
+          created_at: data.config.created_at
         };
+        
+        console.log('✅ Loaded config:', loadedConfig);
+        
         setConfig(loadedConfig);
         setCurrentConfig(loadedConfig);
         setHasUnsavedChanges(false);
       }
     } catch (err: any) {
-      console.error('Error fetching configuration:', err);
+      console.error('❌ Error fetching configuration:', err);
       setError(err.message || 'Failed to load configuration');
     } finally {
       setLoading(false);
@@ -132,6 +135,19 @@ export function Configuration() {
       setSuccess(false);
       
       const token = localStorage.getItem('authToken');
+      
+      const payload = {
+        config: {
+          screenshot_interval_minutes: config.screenshot_interval_minutes,
+          idle_timeout_minutes: config.idle_timeout_minutes,
+          office_start_time: config.office_start_time,
+          office_end_time: config.office_end_time,
+          working_days: config.working_days
+        }
+      };
+      
+      console.log('💾 Saving configuration:', payload);
+      
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'https://workeye-render-demo-backend.onrender.com'}/api/configuration`,
         {
@@ -140,33 +156,32 @@ export function Configuration() {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            config: {
-              screenshot_interval_minutes: config.screenshot_interval_minutes,
-              idle_timeout_minutes: config.idle_timeout_minutes,
-              office_start_time: config.office_start_time,
-              office_end_time: config.office_end_time,
-              working_days: config.working_days
-            }
-          })
+          body: JSON.stringify(payload)
         }
       );
 
+      console.log('📡 Save response status:', response.status);
+      
       const data = await response.json();
+      console.log('📦 Save response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to save configuration');
       }
 
       if (data.success) {
+        console.log('✅ Configuration saved successfully!');
         setSuccess(true);
         setCurrentConfig({ ...config });
         setHasUnsavedChanges(false);
+        
+        // Refresh to get updated metadata
         await fetchConfiguration();
+        
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err: any) {
-      console.error('Error saving configuration:', err);
+      console.error('❌ Error saving configuration:', err);
       setError(err.message || 'Failed to save configuration');
     } finally {
       setSaving(false);
@@ -191,10 +206,14 @@ export function Configuration() {
 
   const formatDateTime = (isoString?: string) => {
     if (!isoString) return 'Not set';
-    return new Date(isoString).toLocaleString('en-IN', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
+    try {
+      return new Date(isoString).toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      });
+    } catch {
+      return 'Invalid date';
+    }
   };
 
   if (loading) {
@@ -227,7 +246,7 @@ export function Configuration() {
                   <span>Tracker Configuration</span>
                 </h1>
                 <p className="text-sm text-slate-600 mt-1">
-                  Configure tracking settings for {company?.company_name || 'your organization'}
+                  Configure tracking settings for your organization
                 </p>
               </div>
             </div>
@@ -245,7 +264,7 @@ export function Configuration() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Status Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-3 animate-in fade-in slide-in-from-top-4">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-medium text-red-800">Error</p>
@@ -258,7 +277,7 @@ export function Configuration() {
         )}
 
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-3 animate-in fade-in slide-in-from-top-4">
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-3">
             <Check className="w-5 h-5 text-green-600" />
             <p className="text-sm font-medium text-green-800">Configuration saved successfully!</p>
           </div>
