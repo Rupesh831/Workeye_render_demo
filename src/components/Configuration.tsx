@@ -227,7 +227,7 @@ export function Configuration() {
                   <span>Tracker Configuration</span>
                 </h1>
                 <p className="text-sm text-slate-600 mt-1">
-                  Configure tracking settings for {company?.name || 'your organization'}
+                  Configure tracking settings for {company?.company_name || 'your organization'}
                 </p>
               </div>
             </div>
