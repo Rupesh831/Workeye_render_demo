@@ -20,7 +20,9 @@ import {
   UsersIcon,
   BarChart3,
   ChevronDown,
-  Pause
+  Pause,
+  UserCircle,
+  ClipboardList
 } from 'lucide-react';
 import { dashboard, members as membersAPI, wsClient, tracker } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -299,49 +301,18 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header - Single Line */}
+      {/* Header - Simplified with only text and dropdown */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Logo and Title - Clickable */}
-            <button 
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
-            >
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center cursor-pointer">
-                <Activity className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-800">{companyName}</h1>
-                <p className="text-xs text-slate-500">Real-time employee monitoring</p>
-              </div>
-            </button>
-
-            {/* Right Section: Tracker Download + Profile */}
+            {/* Left: Title with Dropdown */}
             <div className="flex items-center space-x-4">
-              {/* Tracker Download Button */}
-              <button
-                onClick={handleDownloadTracker}
-                disabled={downloadingTracker}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Download className="w-4 h-4" />
-                <span className="text-sm font-medium">
-                  {downloadingTracker ? 'Downloading...' : 'Download Tracker'}
-                </span>
-              </button>
-
-              {/* Profile Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  className="flex items-center space-x-2 p-1 rounded-full hover:bg-slate-100 transition-colors"
+                  className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
                 >
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">
-                      {userName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  <h1 className="text-lg font-semibold text-slate-700">Real-time employee monitoring</h1>
                   <ChevronDown className={`w-4 h-4 text-slate-600 transition-transform ${
                     showProfileDropdown ? 'rotate-180' : ''
                   }`} />
@@ -349,68 +320,51 @@ export function Dashboard() {
 
                 {/* Dropdown Menu */}
                 {showProfileDropdown && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                    {/* User Info Section */}
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 border-b border-slate-200">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">
-                            {userName.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-800 truncate">{userName}</p>
-                          <p className="text-xs text-slate-500 truncate">{userEmail}</p>
-                          <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
-                            {userRole}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
+                  <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* Menu Items */}
                     <div className="py-2">
                       <button
                         onClick={() => {
-                          setView('overview');
+                          navigate('/profile');
                           setShowProfileDropdown(false);
-                          navigate('/dashboard');
                         }}
                         className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
                       >
-                        <LayoutDashboard className="w-4 h-4 text-slate-600" />
-                        <span className="text-sm text-slate-700 font-medium">Dashboard</span>
+                        <UserCircle className="w-4 h-4 text-slate-600" />
+                        <span className="text-sm text-slate-700 font-medium">My Profile</span>
                       </button>
 
                       <button
                         onClick={() => {
-                          setView('members');
+                          navigate('/members');
                           setShowProfileDropdown(false);
                         }}
                         className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
                       >
                         <UsersIcon className="w-4 h-4 text-slate-600" />
-                        <span className="text-sm text-slate-700 font-medium">Manage Members</span>
+                        <span className="text-sm text-slate-700 font-medium">Add Members</span>
                       </button>
 
                       <button
                         onClick={() => {
+                          navigate('/attendance');
                           setShowProfileDropdown(false);
                         }}
                         className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
                       >
-                        <BarChart3 className="w-4 h-4 text-slate-600" />
-                        <span className="text-sm text-slate-700 font-medium">Analytics</span>
+                        <ClipboardList className="w-4 h-4 text-slate-600" />
+                        <span className="text-sm text-slate-700 font-medium">Attendance</span>
                       </button>
 
                       <button
                         onClick={() => {
+                          navigate('/configuration');
                           setShowProfileDropdown(false);
                         }}
                         className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
                       >
                         <Settings className="w-4 h-4 text-slate-600" />
-                        <span className="text-sm text-slate-700 font-medium">Settings</span>
+                        <span className="text-sm text-slate-700 font-medium">Configuration</span>
                       </button>
 
                       <div className="my-1 border-t border-slate-200"></div>
@@ -430,6 +384,15 @@ export function Dashboard() {
                 )}
               </div>
             </div>
+
+            {/* Right: User Avatar */}
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">
+                  {userName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -446,94 +409,69 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Stats Grid - 6 cards in SINGLE ROW */}
+        {/* Stats Grid - 6 cards in SINGLE ROW matching first screenshot */}
         {view === 'overview' && (
           <>
-            <div className="grid grid-cols-6 gap-4 mb-6">
+            <div className="grid grid-cols-6 gap-6 mb-8">
               {/* Total Employees */}
-              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-blue-600" />
-                  </div>
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                  <Users className="w-6 h-6 text-blue-600" />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Total Employees</p>
-                  <h3 className="text-2xl font-bold text-slate-800">{stats.total}</h3>
-                  <p className="text-xs text-slate-400">{stats.active} active, {stats.idle} idle, {stats.offline} offline</p>
-                </div>
+                <p className="text-sm text-slate-500 font-medium mb-1">Total Employees</p>
+                <h3 className="text-3xl font-bold text-slate-900 mb-2">{stats.total}</h3>
+                <p className="text-xs text-slate-400">{stats.active} active, {stats.idle} idle, {stats.offline} offline</p>
               </div>
 
               {/* Active Now */}
-              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Activity className="w-5 h-5 text-green-600" />
-                  </div>
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-4">
+                  <Activity className="w-6 h-6 text-green-600" />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Active Now</p>
-                  <h3 className="text-2xl font-bold text-green-600">{stats.active}</h3>
-                  <p className="text-xs text-slate-400">{Math.round((stats.active / (stats.total || 1)) * 100)}% of team</p>
-                </div>
-              </div>
-
-              {/* Idle Now */}
-              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <Pause className="w-5 h-5 text-yellow-600" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Idle Now</p>
-                  <h3 className="text-2xl font-bold text-yellow-600">{stats.idle}</h3>
-                  <p className="text-xs text-slate-400">{Math.round((stats.idle / (stats.total || 1)) * 100)}% of team</p>
-                </div>
+                <p className="text-sm text-slate-500 font-medium mb-1">Active Now</p>
+                <h3 className="text-3xl font-bold text-slate-900 mb-2">{stats.active}</h3>
+                <p className="text-xs text-slate-400">{Math.round((stats.active / (stats.total || 1)) * 100)}% of team</p>
               </div>
 
               {/* Avg Screen Time */}
-              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-purple-600" />
-                  </div>
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center mb-4">
+                  <Clock className="w-6 h-6 text-purple-600" />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Avg Screen Time</p>
-                  <h3 className="text-2xl font-bold text-slate-800">{stats.avgScreenTime}h</h3>
-                  <p className="text-xs text-slate-400">{(stats.totalActiveTime / (stats.total || 1)).toFixed(1)}h active time</p>
-                </div>
+                <p className="text-sm text-slate-500 font-medium mb-1">Avg Screen Time</p>
+                <h3 className="text-3xl font-bold text-slate-900 mb-2">{stats.avgScreenTime}h</h3>
+                <p className="text-xs text-slate-400">{(stats.totalActiveTime / (stats.total || 1)).toFixed(1)}h active time</p>
               </div>
 
               {/* Avg Productivity */}
-              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-teal-600" />
-                  </div>
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center mb-4">
+                  <TrendingUp className="w-6 h-6 text-teal-600" />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Avg Productivity</p>
-                  <h3 className="text-2xl font-bold text-teal-600">{stats.avgProductivity}%</h3>
-                  <p className="text-xs text-slate-400">+5% from yesterday</p>
-                </div>
+                <p className="text-sm text-slate-500 font-medium mb-1">Avg Productivity</p>
+                <h3 className="text-3xl font-bold text-slate-900 mb-2">{stats.avgProductivity}%</h3>
+                <p className="text-xs text-slate-400">+5% from yesterday</p>
               </div>
 
-              {/* Screenshots Today */}
-              <div className="bg-white rounded-xl p-4 shadow-md border border-slate-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Camera className="w-5 h-5 text-orange-600" />
-                  </div>
+              {/* Screenshots Today - Removed "Captured every 5 min" */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-4">
+                  <Camera className="w-6 h-6 text-orange-600" />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-500 uppercase font-semibold">Screenshots Today</p>
-                  <h3 className="text-2xl font-bold text-slate-800">
-                    {members.reduce((sum, m) => sum + (m.screenshotsCount || 0), 0)}
-                  </h3>
-                  <p className="text-xs text-slate-400">Captured every 5 min</p>
+                <p className="text-sm text-slate-500 font-medium mb-1">Screenshots Today</p>
+                <h3 className="text-3xl font-bold text-slate-900 mb-2">
+                  {members.reduce((sum, m) => sum + (m.screenshotsCount || 0), 0)}
+                </h3>
+              </div>
+
+              {/* Peak Hours */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center mb-4">
+                  <TrendingUp className="w-6 h-6 text-yellow-600" />
                 </div>
+                <p className="text-sm text-slate-500 font-medium mb-1">Peak Hours</p>
+                <h3 className="text-3xl font-bold text-slate-900 mb-2">2-5 PM</h3>
+                <p className="text-xs text-slate-400">Most productive time</p>
               </div>
             </div>
 
@@ -542,7 +480,7 @@ export function Dashboard() {
               <div className="flex items-center space-x-2 mb-3">
                 <Filter className="w-4 h-4 text-slate-600" />
                 <h3 className="text-sm font-semibold text-slate-800">Filter Employees</h3>
-                <p className="text-xs text-slate-500">Refine your search</p>
+                <p className="text-xs text-slate-500">Refine your search with multiple criteria</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -551,7 +489,7 @@ export function Dashboard() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search name..."
+                    placeholder="Type employee name..."
                     value={nameFilter}
                     onChange={(e) => setNameFilter(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
