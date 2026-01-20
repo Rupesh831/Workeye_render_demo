@@ -318,20 +318,41 @@ export function Dashboard() {
                   }`} />
                 </button>
 
-                {/* Dropdown Menu */}
+                {/* Dropdown Menu - Modern Designer UI */}
                 {showProfileDropdown && (
-                  <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="absolute left-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl">
+                    {/* User Info Header */}
+                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 px-6 py-5">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-4 ring-white/30">
+                          <span className="text-white font-bold text-xl">
+                            {userName.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-white font-semibold text-base leading-tight">{userName}</h3>
+                          <p className="text-blue-100 text-xs mt-0.5">{userRole}</p>
+                          <p className="text-blue-100/80 text-xs mt-0.5 truncate">{user?.email}</p>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Menu Items */}
-                    <div className="py-2">
+                    <div className="py-2 px-2">
                       <button
                         onClick={() => {
                           navigate('/profile');
                           setShowProfileDropdown(false);
                         }}
-                        className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
+                        className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-200 group"
                       >
-                        <UserCircle className="w-4 h-4 text-slate-600" />
-                        <span className="text-sm text-slate-700 font-medium">My Profile</span>
+                        <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                          <UserCircle className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <span className="text-sm text-slate-700 font-semibold block">My Profile</span>
+                          <span className="text-xs text-slate-500">View and edit profile</span>
+                        </div>
                       </button>
 
                       <button
@@ -339,10 +360,15 @@ export function Dashboard() {
                           navigate('/members');
                           setShowProfileDropdown(false);
                         }}
-                        className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
+                        className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 rounded-xl transition-all duration-200 group"
                       >
-                        <UsersIcon className="w-4 h-4 text-slate-600" />
-                        <span className="text-sm text-slate-700 font-medium">Add Members</span>
+                        <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                          <UsersIcon className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <span className="text-sm text-slate-700 font-semibold block">Add Members</span>
+                          <span className="text-xs text-slate-500">Invite team members</span>
+                        </div>
                       </button>
 
                       <button
@@ -350,10 +376,15 @@ export function Dashboard() {
                           navigate('/attendance');
                           setShowProfileDropdown(false);
                         }}
-                        className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
+                        className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 rounded-xl transition-all duration-200 group"
                       >
-                        <ClipboardList className="w-4 h-4 text-slate-600" />
-                        <span className="text-sm text-slate-700 font-medium">Attendance</span>
+                        <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center group-hover:bg-green-100 transition-colors">
+                          <ClipboardList className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <span className="text-sm text-slate-700 font-semibold block">Attendance</span>
+                          <span className="text-xs text-slate-500">Track attendance logs</span>
+                        </div>
                       </button>
 
                       <button
@@ -361,10 +392,15 @@ export function Dashboard() {
                           navigate('/configuration');
                           setShowProfileDropdown(false);
                         }}
-                        className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
+                        className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 rounded-xl transition-all duration-200 group"
                       >
-                        <Settings className="w-4 h-4 text-slate-600" />
-                        <span className="text-sm text-slate-700 font-medium">Configuration</span>
+                        <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+                          <Settings className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <span className="text-sm text-slate-700 font-semibold block">Configuration</span>
+                          <span className="text-xs text-slate-500">Manage settings</span>
+                        </div>
                       </button>
 
                       <button
@@ -373,25 +409,35 @@ export function Dashboard() {
                           setShowProfileDropdown(false);
                         }}
                         disabled={downloadingTracker}
-                        className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
                       >
-                        <Download className="w-4 h-4 text-slate-600" />
-                        <span className="text-sm text-slate-700 font-medium">
-                          {downloadingTracker ? 'Downloading...' : 'Download Tracker'}
-                        </span>
+                        <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center group-hover:bg-teal-100 transition-colors">
+                          <Download className="w-5 h-5 text-teal-600" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <span className="text-sm text-slate-700 font-semibold block">
+                            {downloadingTracker ? 'Downloading...' : 'Download Tracker'}
+                          </span>
+                          <span className="text-xs text-slate-500">Get desktop app</span>
+                        </div>
                       </button>
 
-                      <div className="my-1 border-t border-slate-200"></div>
+                      <div className="my-2 border-t border-slate-200"></div>
 
                       <button
                         onClick={() => {
                           logout();
                           navigate('/login');
                         }}
-                        className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-red-50 transition-colors text-red-600"
+                        className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 rounded-xl transition-all duration-200 group"
                       >
-                        <LogOut className="w-4 h-4" />
-                        <span className="text-sm font-medium">Logout</span>
+                        <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                          <LogOut className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <span className="text-sm text-red-600 font-semibold block">Logout</span>
+                          <span className="text-xs text-red-400">Sign out of account</span>
+                        </div>
                       </button>
                     </div>
                   </div>
@@ -426,7 +472,7 @@ export function Dashboard() {
         {/* Stats Grid - 6 cards in SINGLE ROW matching first screenshot */}
         {view === 'overview' && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 xl:gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 xl:gap-6 mb-8">
               {/* Total Employees */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
                 <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
@@ -467,7 +513,7 @@ export function Dashboard() {
                 <p className="text-xs text-slate-400">+5% from yesterday</p>
               </div>
 
-              {/* Screenshots Today - Removed "Captured every 5 min" */}
+              {/* Screenshots Today */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
                 <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-4">
                   <Camera className="w-6 h-6 text-orange-600" />
@@ -476,16 +522,6 @@ export function Dashboard() {
                 <h3 className="text-3xl font-bold text-slate-900 mb-2">
                   {members.reduce((sum, m) => sum + (m.screenshotsCount || 0), 0)}
                 </h3>
-              </div>
-
-              {/* Peak Hours */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center mb-4">
-                  <TrendingUp className="w-6 h-6 text-yellow-600" />
-                </div>
-                <p className="text-sm text-slate-500 font-medium mb-1">Peak Hours</p>
-                <h3 className="text-3xl font-bold text-slate-900 mb-2">2-5 PM</h3>
-                <p className="text-xs text-slate-400">Most productive time</p>
               </div>
             </div>
 
