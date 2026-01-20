@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, TrendingUp, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Clock, TrendingUp, Eye, ArrowUpDown, ArrowUp, ArrowDown, BarChart3 } from 'lucide-react';
 import { formatLastActivity } from '../utils/timeUtils';
 
 // Format time: show hours + minutes (e.g. "2h 30m" or "45m")
@@ -133,6 +133,10 @@ export function EmployeeOverviewTable({ employees, onEmployeeClick }: EmployeeOv
 
   const handleViewDetails = (employee: Employee) => {
     onEmployeeClick(employee);
+  };
+
+  const handleViewAnalytics = (employee: Employee) => {
+    navigate(`/analytics?memberId=${employee.id}`);
   };
 
   return (
@@ -284,13 +288,22 @@ export function EmployeeOverviewTable({ employees, onEmployeeClick }: EmployeeOv
                     <span className="text-sm text-slate-500">{formatLastActivity(employee.lastActivity)}</span>
                   </td>
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => handleViewDetails(employee)}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span>View Details</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleViewDetails(employee)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>View Details</span>
+                      </button>
+                      <button
+                        onClick={() => handleViewAnalytics(employee)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors font-medium text-sm"
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                        <span>Analytics</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
