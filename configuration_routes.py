@@ -7,6 +7,7 @@ CONFIGURATION_ROUTES.PY - Enhanced Company Configuration Management
 ✅ Multi-tenant isolated
 ✅ Configuration broadcast to active trackers
 ✅ JSONB support for working_days
+✅ FIXED: Use admin_id (INTEGER) instead of admin_email (STRING) for last_modified_by
 """
 
 from flask import Blueprint, request, jsonify
@@ -84,7 +85,7 @@ def get_configuration():
                         office_start_time TIME DEFAULT '09:00:00',
                         office_end_time TIME DEFAULT '18:00:00',
                         working_days JSONB DEFAULT '[1,2,3,4,5]'::jsonb,
-                        last_modified_by VARCHAR(255),
+                        last_modified_by INTEGER REFERENCES admin_users(id),
                         last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         UNIQUE(company_id)
@@ -191,12 +192,13 @@ def update_configuration():
     """
     try:
         company_id = request.company_id
-        admin_email = request.admin_email
+        admin_id = request.admin_id  # FIXED: Use admin_id (INTEGER) instead of admin_email (STRING)
         
         data = request.get_json() or {}
         config_data = data.get('config', {})
         
         print(f"\n💾 UPDATE CONFIGURATION: Company ID = {company_id}")
+        print(f"👤 Admin ID: {admin_id}")
         print(f"📝 Data: {json.dumps(config_data, indent=2)}")
         
         # Extract configuration values
@@ -255,7 +257,7 @@ def update_configuration():
                     office_start,
                     office_end,
                     working_days_json,
-                    admin_email,
+                    admin_id,  # FIXED: Now using admin_id (INTEGER)
                     get_ist_now(),
                     company_id
                 ))
@@ -282,7 +284,7 @@ def update_configuration():
                     office_start,
                     office_end,
                     working_days_json,
-                    admin_email,
+                    admin_id,  # FIXED: Now using admin_id (INTEGER)
                     get_ist_now()
                 ))
             
