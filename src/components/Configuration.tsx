@@ -141,7 +141,6 @@ export function Configuration() {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            company_id: company?.id,
             config: {
               screenshot_interval_minutes: config.screenshot_interval_minutes,
               idle_timeout_minutes: config.idle_timeout_minutes,
@@ -228,7 +227,7 @@ export function Configuration() {
                   <span>Tracker Configuration</span>
                 </h1>
                 <p className="text-sm text-slate-600 mt-1">
-                  Configure tracking settings for {company?.company_name || 'your organization'}
+                  Configure tracking settings for {company?.name || 'your organization'}
                 </p>
               </div>
             </div>
