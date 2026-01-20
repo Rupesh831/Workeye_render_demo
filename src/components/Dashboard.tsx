@@ -426,7 +426,7 @@ export function Dashboard() {
         {/* Stats Grid - 6 cards in SINGLE ROW matching first screenshot */}
         {view === 'overview' && (
           <>
-            <div className="grid grid-cols-6 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 xl:gap-6 mb-8">
               {/* Total Employees */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
                 <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
