@@ -391,16 +391,16 @@ export function EmployeeDetailView({ employee, onBack }: EmployeeDetailViewProps
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-right mr-4">
+            <div className="flex flex-col items-end gap-3">
+              <div className="text-right">
                 <p className="text-3xl font-bold text-blue-600">{liveCounters.productivityPercentage}%</p>
                 <p className="text-sm text-gray-500">Productivity</p>
               </div>
               <button
                 onClick={() => navigate(`/analytics?memberId=${employee.id}`)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-lg transition-all shadow-md hover:shadow-lg font-medium"
               >
-                <BarChart3 className="w-4 h-4" />
+                <BarChart3 className="w-5 h-5" />
                 View Analytics
               </button>
             </div>
