@@ -207,8 +207,23 @@ def get_attendance_analytics():
     try:
         company_id = request.company_id
         member_id = request.args.get('member_id')
-        start_date = request.args.get('start_date', (datetime.utcnow() - timedelta(days=30)).isoformat())
-        end_date = request.args.get('end_date', datetime.utcnow().isoformat())
+        start_date_str = request.args.get('start_date')
+        end_date_str = request.args.get('end_date')
+        
+        # Get IST dates if not provided
+        from datetime import timezone
+        ist_offset = timezone(timedelta(hours=5, minutes=30))
+        ist_now = datetime.now(ist_offset)
+        
+        if not start_date_str:
+            start_date = (ist_now - timedelta(days=30)).date()
+        else:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            
+        if not end_date_str:
+            end_date = ist_now.date()
+        else:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         
         with get_db() as conn:
             cur = conn.cursor()
@@ -243,12 +258,18 @@ def get_attendance_analytics():
             
             return jsonify({
                 'success': True,
-                'records': attendance_records
+                'records': attendance_records,
+                'date_range': {
+                    'start': start_date.isoformat(),
+                    'end': end_date.isoformat()
+                }
             }), 200
     
     except Exception as e:
         print(f"❌ Attendance analytics error: {e}")
-        return jsonify({'error': 'Failed to fetch attendance analytics'}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to fetch attendance analytics', 'details': str(e)}), 500
 
 
 # ============================================================================
