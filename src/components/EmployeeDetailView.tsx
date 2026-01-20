@@ -416,8 +416,8 @@ export function EmployeeDetailView({ employee, onBack }: EmployeeDetailViewProps
     try {
       setWebsitesLoading(true);
       const response = await websiteVisits.getByMember(employee.id, {
-        start_date: currentDate,
-        end_date: currentDate,
+        startDate: currentDate,
+        endDate: currentDate,
         limit: 50
       });
       
@@ -437,9 +437,7 @@ export function EmployeeDetailView({ employee, onBack }: EmployeeDetailViewProps
   // Fetch live stats for selected date
   const fetchLiveStats = async () => {
     try {
-      const response = await dashboard.getMemberStats(employee.id, {
-        date: currentDate
-      });
+      const response = await dashboard.getMemberLiveCounters(employee.id);
       
       if (response) {
         setLiveCounters({
