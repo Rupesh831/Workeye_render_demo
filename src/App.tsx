@@ -10,7 +10,6 @@ import { ProfilePage } from './components/ProfilePage';
 import { MembersPage } from './components/MembersPage';
 import { AttendancePage } from './components/AttendancePage';
 import AnalyticsPage from './components/AnalyticsPage';
-import { Layout } from './components/Layout';
 
 const App: React.FC = () => {
   const isAuthenticated = !!localStorage.getItem('authToken');
@@ -21,14 +20,12 @@ const App: React.FC = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignupPage />} />
         
-        {/* Protected Routes */}
+        {/* Protected Routes - NO Layout wrapper needed, all pages have their own headers */}
         <Route
           path="/"
           element={
             isAuthenticated ? (
-              <Layout>
-                <Navigate to="/dashboard" replace />
-              </Layout>
+              <Navigate to="/dashboard" replace />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -39,9 +36,7 @@ const App: React.FC = () => {
           path="/dashboard"
           element={
             isAuthenticated ? (
-              <Layout>
-                <Dashboard />
-              </Layout>
+              <Dashboard />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -52,9 +47,7 @@ const App: React.FC = () => {
           path="/employee/:id"
           element={
             isAuthenticated ? (
-              <Layout>
-                <EmployeeDetailPage />
-              </Layout>
+              <EmployeeDetailPage />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -65,9 +58,7 @@ const App: React.FC = () => {
           path="/attendance/:id"
           element={
             isAuthenticated ? (
-              <Layout>
-                <AttendanceDetailPage />
-              </Layout>
+              <AttendanceDetailPage />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -78,9 +69,7 @@ const App: React.FC = () => {
           path="/configuration"
           element={
             isAuthenticated ? (
-              <Layout>
-                <Configuration />
-              </Layout>
+              <Configuration />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -91,9 +80,7 @@ const App: React.FC = () => {
           path="/profile"
           element={
             isAuthenticated ? (
-              <Layout>
-                <ProfilePage />
-              </Layout>
+              <ProfilePage />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -104,9 +91,7 @@ const App: React.FC = () => {
           path="/members"
           element={
             isAuthenticated ? (
-              <Layout>
-                <MembersPage />
-              </Layout>
+              <MembersPage />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -117,23 +102,18 @@ const App: React.FC = () => {
           path="/attendance"
           element={
             isAuthenticated ? (
-              <Layout>
-                <AttendancePage />
-              </Layout>
+              <AttendancePage />
             ) : (
               <Navigate to="/login" replace />
             )
           }
         />
         
-        {/* Analytics Route - NEW */}
         <Route
           path="/analytics"
           element={
             isAuthenticated ? (
-              <Layout>
-                <AnalyticsPage />
-              </Layout>
+              <AnalyticsPage />
             ) : (
               <Navigate to="/login" replace />
             )
