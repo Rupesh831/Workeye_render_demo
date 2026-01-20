@@ -35,6 +35,14 @@ const AnalyticsPage: React.FC = () => {
     end: new Date().toISOString().split('T')[0]
   });
 
+  // Initialize memberId from URL parameters
+  useEffect(() => {
+    const memberIdParam = searchParams.get('memberId');
+    if (memberIdParam) {
+      setMemberId(parseInt(memberIdParam));
+    }
+  }, []);
+
   // Update URL when tab changes
   useEffect(() => {
     setSearchParams({ tab: activeTab });
