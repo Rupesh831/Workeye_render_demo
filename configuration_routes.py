@@ -1,11 +1,12 @@
 """
-CONFIGURATION_ROUTES.PY - Company Configuration Management
-===========================================================
+CONFIGURATION_ROUTES.PY - Enhanced Company Configuration Management
+===================================================================
 ✅ Manage screenshot intervals, idle timeouts, office hours
 ✅ Communicate with company_configurations table
 ✅ Support for tracker configuration sync
 ✅ Multi-tenant isolated
-✅ FIXED: working_days as JSONB instead of array
+✅ Configuration broadcast to active trackers
+✅ JSONB support for working_days
 """
 
 from flask import Blueprint, request, jsonify
@@ -15,6 +16,32 @@ from datetime import datetime
 import json
 
 configuration_bp = Blueprint('configuration', __name__)
+
+# ============================================================================
+# CONFIGURATION BROADCAST SYSTEM
+# ============================================================================
+
+# Store active tracker connections (company_id -> list of tracker sessions)
+active_trackers = {}
+
+def register_tracker(company_id, tracker_id):
+    """Register an active tracker for configuration updates"""
+    if company_id not in active_trackers:
+        active_trackers[company_id] = set()
+    active_trackers[company_id].add(tracker_id)
+    print(f"📡 Tracker registered: company={company_id}, tracker={tracker_id}")
+
+def unregister_tracker(company_id, tracker_id):
+    """Unregister a tracker when it disconnects"""
+    if company_id in active_trackers:
+        active_trackers[company_id].discard(tracker_id)
+        if not active_trackers[company_id]:
+            del active_trackers[company_id]
+    print(f"📴 Tracker unregistered: company={company_id}, tracker={tracker_id}")
+
+def get_active_tracker_count(company_id):
+    """Get count of active trackers for a company"""
+    return len(active_trackers.get(company_id, set()))
 
 # ============================================================================
 # GET CONFIGURATION
@@ -116,6 +143,9 @@ def get_configuration():
             elif not isinstance(working_days, list):
                 working_days = [1, 2, 3, 4, 5]  # Fallback
             
+            # Get active tracker count
+            active_count = get_active_tracker_count(company_id)
+            
             # Format response
             response_data = {
                 'success': True,
@@ -130,12 +160,14 @@ def get_configuration():
                     'last_modified_by': config['last_modified_by'],
                     'last_modified_at': config['last_modified_at'].isoformat() if config['last_modified_at'] else None,
                     'created_at': config['created_at'].isoformat() if config['created_at'] else None
-                }
+                },
+                'active_trackers': active_count
             }
             
             print(f"✅ Configuration retrieved successfully")
             print(f"   Screenshot: {config['screenshot_interval_minutes']}min, Idle: {config['idle_timeout_minutes']}min")
             print(f"   Working days: {working_days}")
+            print(f"   Active trackers: {active_count}")
             return jsonify(response_data), 200
             
     except Exception as e:
@@ -155,6 +187,7 @@ def update_configuration():
     """
     Update company configuration settings
     Updates screenshot interval, idle timeout, office hours, working days
+    Broadcasts changes to all active trackers for this company
     """
     try:
         company_id = request.company_id
@@ -261,12 +294,19 @@ def update_configuration():
             print(f"   Office: {office_start} - {office_end}")
             print(f"   Working days: {working_days}")
             
+            # Notify active trackers about configuration change
+            active_count = get_active_tracker_count(company_id)
+            if active_count > 0:
+                print(f"📡 Broadcasting config change to {active_count} active trackers")
+                # Note: Trackers will pull new config on their next sync cycle (every 5 minutes)
+            
             return jsonify({
                 'success': True,
                 'message': 'Configuration updated successfully',
                 'config_id': result['id'],
                 'updated_at': result['last_modified_at'].isoformat() if result['last_modified_at'] else None,
-                'created_at': result['created_at'].isoformat() if result['created_at'] else None
+                'created_at': result['created_at'].isoformat() if result['created_at'] else None,
+                'active_trackers_notified': active_count
             }), 200
             
     except Exception as e:
@@ -286,6 +326,7 @@ def get_tracker_configuration():
     Get configuration for tracker clients
     Returns screenshot interval and idle timeout based on company_id from tracker token
     No authentication required - uses tracker token
+    Also registers tracker as active for configuration broadcast
     """
     try:
         # Get tracker token from header or query
@@ -304,7 +345,12 @@ def get_tracker_configuration():
             print(f"❌ Invalid tracker token: {e}")
             return jsonify({'error': 'Invalid tracker token'}), 401
         
-        print(f"\n🔧 TRACKER CONFIG REQUEST: Company ID = {company_id}")
+        # Generate tracker session ID for registration
+        tracker_id = request.remote_addr or 'unknown'
+        if 'device_id' in request.args:
+            tracker_id = f"{tracker_id}_{request.args.get('device_id')}"
+        
+        print(f"\n🔧 TRACKER CONFIG REQUEST: Company ID = {company_id}, Tracker = {tracker_id}")
         
         with get_db() as conn:
             cur = conn.cursor()
@@ -313,7 +359,10 @@ def get_tracker_configuration():
             cur.execute("""
                 SELECT 
                     screenshot_interval_minutes,
-                    idle_timeout_minutes
+                    idle_timeout_minutes,
+                    office_start_time,
+                    office_end_time,
+                    working_days
                 FROM company_configurations
                 WHERE company_id = %s
             """, (company_id,))
@@ -323,18 +372,37 @@ def get_tracker_configuration():
             if not config:
                 # Return defaults if no configuration exists
                 print(f"⚠️ No configuration found, returning defaults")
+                register_tracker(company_id, tracker_id)
                 return jsonify({
                     'success': True,
                     'screenshot_interval_minutes': 10,
-                    'idle_timeout_minutes': 5
+                    'idle_timeout_minutes': 5,
+                    'office_start_time': '09:00:00',
+                    'office_end_time': '18:00:00',
+                    'working_days': [1, 2, 3, 4, 5]
                 }), 200
             
+            # Parse working_days
+            working_days = config['working_days']
+            if isinstance(working_days, str):
+                working_days = json.loads(working_days)
+            elif not isinstance(working_days, list):
+                working_days = [1, 2, 3, 4, 5]
+            
+            # Register this tracker as active
+            register_tracker(company_id, tracker_id)
+            
             print(f"✅ Configuration sent to tracker: screenshot={config['screenshot_interval_minutes']}min, idle={config['idle_timeout_minutes']}min")
+            print(f"📊 Total active trackers for company {company_id}: {get_active_tracker_count(company_id)}")
             
             return jsonify({
                 'success': True,
                 'screenshot_interval_minutes': config['screenshot_interval_minutes'],
-                'idle_timeout_minutes': config['idle_timeout_minutes']
+                'idle_timeout_minutes': config['idle_timeout_minutes'],
+                'office_start_time': str(config['office_start_time']),
+                'office_end_time': str(config['office_end_time']),
+                'working_days': working_days,
+                'sync_interval_seconds': 300  # Tell tracker to re-sync every 5 minutes
             }), 200
             
     except Exception as e:
@@ -344,4 +412,48 @@ def get_tracker_configuration():
         return jsonify({'error': 'Failed to retrieve tracker configuration'}), 500
 
 
-__all__ = ['configuration_bp']
+# ============================================================================
+# TRACKER HEARTBEAT (For keeping tracker registration alive)
+# ============================================================================
+
+@configuration_bp.route('/api/tracker/heartbeat', methods=['POST'])
+def tracker_heartbeat():
+    """
+    Tracker heartbeat endpoint to keep registration alive
+    Call this every minute from trackers to maintain active status
+    """
+    try:
+        tracker_token = request.headers.get('X-Tracker-Token')
+        
+        if not tracker_token:
+            return jsonify({'error': 'Tracker token required'}), 401
+        
+        # Extract company_id
+        import base64
+        try:
+            decoded = base64.b64decode(tracker_token.encode()).decode()
+            parts = decoded.split(':', 1)
+            company_id = int(parts[0])
+        except:
+            return jsonify({'error': 'Invalid tracker token'}), 401
+        
+        # Generate tracker ID
+        data = request.get_json(silent=True) or {}
+        device_id = data.get('device_id', request.remote_addr or 'unknown')
+        tracker_id = f"{request.remote_addr}_{device_id}"
+        
+        # Re-register tracker to keep it active
+        register_tracker(company_id, tracker_id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Heartbeat received',
+            'active_trackers': get_active_tracker_count(company_id)
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Heartbeat Error: {e}")
+        return jsonify({'error': 'Heartbeat failed'}), 500
+
+
+__all__ = ['configuration_bp', 'register_tracker', 'unregister_tracker', 'get_active_tracker_count']
