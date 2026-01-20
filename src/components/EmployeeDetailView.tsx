@@ -112,6 +112,143 @@ interface LiveCounters {
 }
 
 // ============================================================================
+// AUTHENTICATED MODAL IMAGE COMPONENT
+// ============================================================================
+
+interface AuthenticatedModalImageProps {
+  screenshotId: number;
+  timestamp: string;
+  windowTitle?: string;
+}
+
+function AuthenticatedModalImage({ screenshotId, timestamp, windowTitle }: AuthenticatedModalImageProps) {
+  const [imageSrc, setImageSrc] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        setLoading(true);
+        const blobUrl = await screenshots.getImageBlob(screenshotId);
+        setImageSrc(blobUrl);
+      } catch (err) {
+        console.error('Failed to load modal screenshot:', screenshotId, err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadImage();
+
+    return () => {
+      if (imageSrc) {
+        URL.revokeObjectURL(imageSrc);
+      }
+    };
+  }, [screenshotId]);
+
+  if (loading) {
+    return (
+      <div className="w-full h-96 flex items-center justify-center bg-gray-900">
+        <RefreshCw className="w-12 h-12 animate-spin text-white" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <img 
+        src={imageSrc}
+        alt="Screenshot"
+        className="max-w-full max-h-[90vh] rounded-lg"
+      />
+      <div className="absolute bottom-4 left-4 bg-white rounded-lg p-4 shadow-lg">
+        <p className="text-sm text-gray-600">
+          Captured: {new Date(timestamp).toLocaleString()}
+        </p>
+        {windowTitle && (
+          <p className="text-sm text-gray-800 mt-1">
+            Window: {windowTitle}
+          </p>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ============================================================================
+// AUTHENTICATED IMAGE COMPONENT
+// ============================================================================
+
+interface AuthenticatedImageProps {
+  screenshotId: number;
+  timestamp: string;
+  onClick: () => void;
+}
+
+function AuthenticatedImage({ screenshotId, timestamp, onClick }: AuthenticatedImageProps) {
+  const [imageSrc, setImageSrc] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+        const blobUrl = await screenshots.getImageBlob(screenshotId);
+        setImageSrc(blobUrl);
+      } catch (err) {
+        console.error('Failed to load screenshot:', screenshotId, err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadImage();
+
+    // Cleanup blob URL on unmount
+    return () => {
+      if (imageSrc) {
+        URL.revokeObjectURL(imageSrc);
+      }
+    };
+  }, [screenshotId]);
+
+  return (
+    <div 
+      className="border border-gray-200 rounded-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow bg-white"
+      onClick={onClick}
+    >
+      {loading ? (
+        <div className="w-full aspect-video flex items-center justify-center bg-gray-100">
+          <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+        </div>
+      ) : error ? (
+        <div className="w-full aspect-video flex items-center justify-center bg-gray-100">
+          <div className="text-center text-gray-400 text-xs p-4">
+            <Camera className="w-8 h-8 mx-auto mb-2" />
+            <p>Failed to load</p>
+          </div>
+        </div>
+      ) : (
+        <img 
+          src={imageSrc}
+          alt={`Screenshot at ${new Date(timestamp).toLocaleTimeString()}`}
+          className="w-full h-auto object-cover"
+        />
+      )}
+      <div className="p-2 bg-gray-50">
+        <p className="text-xs text-gray-600">
+          {new Date(timestamp).toLocaleTimeString()}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // COMPONENT
 // ============================================================================
 
@@ -593,23 +730,12 @@ export function EmployeeDetailView({ employee, onBack }: EmployeeDetailViewProps
                 <>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {screenshotsList.map((screenshot) => (
-                      <div 
-                        key={screenshot.id} 
-                        className="border border-gray-200 rounded-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                      <AuthenticatedImage
+                        key={screenshot.id}
+                        screenshotId={screenshot.id}
+                        timestamp={screenshot.timestamp}
                         onClick={() => setSelectedScreenshot(screenshot)}
-                      >
-                        <img 
-                          src={screenshots.getImageUrl(screenshot.id)}
-                          alt={`Screenshot at ${new Date(screenshot.timestamp).toLocaleTimeString()}`}
-                          className="w-full h-auto"
-                          loading="lazy"
-                        />
-                        <div className="p-2 bg-gray-50">
-                          <p className="text-xs text-gray-600">
-                            {new Date(screenshot.timestamp).toLocaleTimeString()}
-                          </p>
-                        </div>
-                      </div>
+                      />
                     ))}
                   </div>
 
@@ -890,31 +1016,21 @@ export function EmployeeDetailView({ employee, onBack }: EmployeeDetailViewProps
       {/* Screenshot Modal */}
       {selectedScreenshot && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedScreenshot(null)}
         >
-          <div className="max-w-5xl max-h-[90vh] relative">
+          <div className="max-w-5xl w-full relative" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setSelectedScreenshot(null)}
-              className="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100"
+              className="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 z-10 shadow-lg"
             >
               <X className="w-6 h-6" />
             </button>
-            <img 
-              src={screenshots.getImageUrl(selectedScreenshot.id)}
-              alt="Screenshot"
-              className="max-w-full max-h-[90vh] rounded-lg"
+            <AuthenticatedModalImage
+              screenshotId={selectedScreenshot.id}
+              timestamp={selectedScreenshot.timestamp}
+              windowTitle={selectedScreenshot.window_title}
             />
-            <div className="absolute bottom-4 left-4 bg-white rounded-lg p-4 shadow-lg">
-              <p className="text-sm text-gray-600">
-                Captured: {new Date(selectedScreenshot.timestamp).toLocaleString()}
-              </p>
-              {selectedScreenshot.window_title && (
-                <p className="text-sm text-gray-800 mt-1">
-                  Window: {selectedScreenshot.window_title}
-                </p>
-              )}
-            </div>
           </div>
         </div>
       )}
