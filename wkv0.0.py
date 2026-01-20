@@ -39,7 +39,7 @@ CONFIG = {
     'log_file': None,
     
     # Backend configuration (EMBEDDED BY ADMIN DOWNLOAD)
-    'backend_url': 'https://backend-35m2.onrender.com',
+    'backend_url': 'https://workeye-render-demo-backend.onrender.com/',
     'tracker_token': None,  # Will be replaced by backend
     'company_id': None,     # Will be replaced by backend
     
