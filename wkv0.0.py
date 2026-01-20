@@ -71,6 +71,96 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ============================================================================
+# CONFIGURATION MANAGER
+# ============================================================================
+
+class ConfigurationManager:
+    """Fetch and manage dynamic configuration from backend"""
+    def __init__(self):
+        self.last_sync = 0
+        self.sync_interval = 300  # Re-sync every 5 minutes
+        self.sync_in_progress = False
+    
+    def fetch_configuration(self):
+        """Fetch configuration from server and update CONFIG"""
+        if self.sync_in_progress:
+            return False
+        
+        try:
+            self.sync_in_progress = True
+            
+            if not CONFIG.get('tracker_token'):
+                logger.warning("[CONFIG] No tracker token available")
+                return False
+            
+            url = f"{CONFIG['backend_url']}/api/tracker/configuration"
+            params = {'device_id': STATE.device_id if hasattr(STATE, 'device_id') else 'unknown'}
+            
+            logger.info(f"[CONFIG] Fetching configuration from {url}")
+            
+            response = requests.get(
+                url,
+                headers={'X-Tracker-Token': CONFIG['tracker_token']},
+                params=params,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    # Update configuration intervals
+                    # Backend sends minutes, convert to seconds
+                    screenshot_min = data.get('screenshot_interval_minutes', 10)
+                    idle_min = data.get('idle_timeout_minutes', 5)
+                    
+                    CONFIG['screenshot_interval'] = screenshot_min * 60
+                    CONFIG['idle_threshold'] = idle_min * 60
+                    
+                    # Store office hours if needed
+                    CONFIG['office_start_time'] = data.get('office_start_time', '09:00:00')
+                    CONFIG['office_end_time'] = data.get('office_end_time', '18:00:00')
+                    CONFIG['working_days'] = data.get('working_days', [1,2,3,4,5])
+                    
+                    self.last_sync = time.time()
+                    
+                    logger.info(f"✅ Configuration synced successfully")
+                    logger.info(f"   📸 Screenshot interval: {screenshot_min} min ({CONFIG['screenshot_interval']}s)")
+                    logger.info(f"   ⏰ Idle threshold: {idle_min} min ({CONFIG['idle_threshold']}s)")
+                    logger.info(f"   🏢 Office hours: {CONFIG['office_start_time']} - {CONFIG['office_end_time']}")
+                    logger.info(f"   📅 Working days: {CONFIG['working_days']}")
+                    
+                    return True
+                else:
+                    logger.error(f"[CONFIG] Server returned error: {data}")
+            else:
+                logger.error(f"[CONFIG] HTTP {response.status_code}: {response.text}")
+                
+        except requests.exceptions.Timeout:
+            logger.error("[CONFIG] Request timeout - server may be slow")
+        except requests.exceptions.ConnectionError:
+            logger.error("[CONFIG] Connection error - check network and backend URL")
+        except Exception as e:
+            logger.error(f"[CONFIG] Fetch failed: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            self.sync_in_progress = False
+        
+        return False
+    
+    def should_sync(self):
+        """Check if it's time to re-sync configuration"""
+        return (time.time() - self.last_sync) > self.sync_interval
+    
+    def force_sync(self):
+        """Force immediate configuration sync"""
+        self.last_sync = 0
+        return self.fetch_configuration()
+
+# Initialize configuration manager
+config_manager = ConfigurationManager()
+
+# ============================================================================
 # GLOBAL STATE
 # ============================================================================
 
@@ -482,82 +572,43 @@ def upload_data():
         return False
 
 def heartbeat():
-    """
-    Send heartbeat
-    Synced with: /tracker/heartbeat endpoint in tracker_routes.py
-    
-    Backend flow:
-    1. Validates tracker token
-    2. Updates device.last_seen timestamp
-    """
+    """Send heartbeat to backend + check for configuration updates"""
     try:
         if not CONFIG.get('member_email') or not CONFIG.get('tracker_token'):
-            return False
+            return
         
         url = f"{CONFIG['backend_url']}/tracker/heartbeat"
         
-        # Backend expects these fields
         payload = {
-            "email": CONFIG['member_email'],
-            "deviceid": STATE.device_id
+            'device_id': STATE.device_id,
+            'email': CONFIG['member_email'],
+            'hostname': STATE.hostname,
+            'os_info': STATE.os_info
         }
         
-        headers = {
-            'Content-Type': 'application/json',
-            'X-Tracker-Token': CONFIG['tracker_token']
-        }
-        
-        requests.post(url, json=payload, headers=headers, timeout=5)
-        return True
-        
-    except:
-        return False
-
-def fetch_configuration():
-    """
-    Fetch configuration settings from backend
-    Updates screenshot_interval and idle_threshold based on company settings
-    """
-    try:
-        if not CONFIG.get('tracker_token'):
-            logger.info("[CONFIG] No tracker token, using defaults")
-            return False
-        
-        url = f"{CONFIG['backend_url']}/api/configuration?company_id={CONFIG['company_id']}"
-        
-        headers = {
-            'Authorization': f"Bearer {CONFIG['tracker_token']}",
-            'Content-Type': 'application/json'
-        }
-        
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.post(
+            url,
+            json=payload,
+            headers={'X-Tracker-Token': CONFIG['tracker_token']},
+            timeout=5
+        )
         
         if response.status_code == 200:
-            data = response.json()
-            if data.get('success') and data.get('config'):
-                config = data['config']
-                
-                # Update screenshot interval (convert minutes to seconds)
-                screenshot_minutes = config.get('screenshot_interval_minutes', 5)
-                CONFIG['screenshot_interval'] = screenshot_minutes * 60
-                logger.info(f"[CONFIG] Screenshot interval: {screenshot_minutes} minutes ({CONFIG['screenshot_interval']}s)")
-                
-                # Update idle timeout (convert minutes to seconds)
-                idle_minutes = config.get('idle_timeout_minutes', 3)
-                CONFIG['idle_threshold'] = idle_minutes * 60
-                logger.info(f"[CONFIG] Idle timeout: {idle_minutes} minutes ({CONFIG['idle_threshold']}s)")
-                
-                return True
-            else:
-                logger.warning("[CONFIG] No config data in response")
-                return False
+            logger.info(f"[HEARTBEAT] ❤️ Sent successfully")
+            
+            # Check if it's time to sync configuration
+            if config_manager.should_sync():
+                logger.info("[HEARTBEAT] Configuration sync due, fetching...")
+                config_manager.fetch_configuration()
         else:
-            logger.warning(f"[CONFIG] Failed to fetch: HTTP {response.status_code}")
-            return False
+            logger.warning(f"[HEARTBEAT] Failed: HTTP {response.status_code}")
             
     except Exception as e:
-        logger.error(f"[CONFIG] Error: {e}")
-        return False
+        logger.error(f"[HEARTBEAT] Error: {e}")
+
+def fetch_configuration():
+    """Fetch configuration from backend"""
+    return config_manager.fetch_configuration()
 
 # ============================================================================
 # TRACKING THREADS
@@ -629,15 +680,21 @@ class ConfigurationFetcher(Thread):
         self.running = True
     
     def run(self):
-        # Fetch configuration immediately on start
-        if STATE.is_tracking:
-            fetch_configuration()
+        logger.info("[CONFIG-THREAD] Configuration fetcher started")
         
-        # Then fetch every 5 minutes
+        # Initial fetch after 5 seconds (give time for tracking to start)
+        time.sleep(5)
+        if STATE.is_tracking:
+            logger.info("[CONFIG-THREAD] Performing initial configuration fetch")
+            config_manager.fetch_configuration()
+        
+        # Then check every minute if sync is needed (checks should_sync internally)
         while self.running:
-            time.sleep(300)  # 5 minutes
-            if STATE.is_tracking:
-                fetch_configuration()
+            time.sleep(60)  # Check every minute
+            
+            if STATE.is_tracking and config_manager.should_sync():
+                logger.info("[CONFIG-THREAD] Configuration sync cycle triggered")
+                config_manager.fetch_configuration()
 
 class ScreenshotCapture(Thread):
     """Capture screenshots at intervals defined in configuration"""
@@ -646,6 +703,8 @@ class ScreenshotCapture(Thread):
         self.running = True
     
     def run(self):
+        logger.info("[SCREENSHOT-THREAD] Screenshot capture thread started")
+        
         while self.running:
             if not STATE.is_tracking:
                 time.sleep(5)
@@ -657,12 +716,25 @@ class ScreenshotCapture(Thread):
                 if screenshot_b64:
                     STATE.latest_screenshot_b64 = screenshot_b64
                     STATE.last_screenshot_time = datetime.now()
-                    logger.info(f"[SCREENSHOT] Captured at {datetime.now().strftime('%H:%M:%S')}")
+                    interval_min = CONFIG['screenshot_interval'] // 60
+                    logger.info(f"[SCREENSHOT] 📸 Captured at {datetime.now().strftime('%H:%M:%S')} (interval: {interval_min}min)")
             except Exception as e:
-                logger.error(f"[SCREENSHOT] Error: {e}")
+                logger.error(f"[SCREENSHOT] ❌ Error: {e}")
             
-            # Wait for the configured interval (dynamically updated)
-            time.sleep(CONFIG['screenshot_interval'])
+            # Wait for the configured interval (dynamically updated from config)
+            # Check every 30 seconds if interval changed, but only capture at full interval
+            interval = CONFIG['screenshot_interval']
+            elapsed = 0
+            
+            while elapsed < interval and self.running and STATE.is_tracking:
+                sleep_time = min(30, interval - elapsed)
+                time.sleep(sleep_time)
+                elapsed += sleep_time
+                
+                # Check if config changed during wait
+                if elapsed < interval and CONFIG['screenshot_interval'] != interval:
+                    logger.info(f"[SCREENSHOT] ⚙️ Interval changed during wait, adjusting...")
+                    break
 
 # ============================================================================
 # MINIMAL UI
@@ -798,55 +870,78 @@ class MinimalUI:
         self.tracking_label.config(text=f"Tracking: {email}")
     
     def handle_punch_in(self):
-        email = self.email_var.get().strip().lower()
-        if not email or '@' not in email:
-            messagebox.showerror("Error", "Please enter valid email")
+        email = self.email_var.get().strip()
+        if not email:
+            messagebox.showwarning("Warning", "Please enter your email")
             return
         
-        self.email_entry.config(state='disabled')
-        self.punch_in_btn.config(state='disabled', text="Verifying...")
-        self.root.update()
-        
         try:
-            # Step 1: Verify email with backend DB
-            verified, member, msg = verify_member(email)
-            if not verified:
-                self.email_entry.config(state='normal')
-                self.punch_in_btn.config(state='normal', text="PUNCH IN")
-                messagebox.showerror("Verification Failed", 
-                    f"{msg}\n\nPlease ensure:\n" +
-                    "• You are registered by your admin\n" +
-                    "• Email is correct\n" +
-                    "• Internet connection is active")
-                return
+            self.punch_in_btn.config(state='disabled', text='Verifying...')
+            self.root.update()
             
-            # Step 2: Punch IN
-            success, msg2 = punch_in()
-            if not success:
-                self.email_entry.config(state='normal')
-                self.punch_in_btn.config(state='normal', text="PUNCH IN")
-                messagebox.showerror("Punch IN Failed", msg2)
-                return
+            # Verify member
+            logger.info(f"[UI] Verifying member: {email}")
+            result = verify_member(email)
             
-            # Success!
-            CONFIG['member_email'] = email
-            self.save_email()
-            
-            member_name = member.get('name', member.get('fullname', 'Member'))
-            messagebox.showinfo("Success", 
-                f"✅ Punched IN!\n\n" +
-                f"Name: {member_name}\n" +
-                f"Email: {email}\n" +
-                f"Device: {STATE.device_id}\n\n" +
-                f"Tracking started.")
-            
-            self.start_tracking()
-            self.show_punch_out_view()
-            
+            if result:
+                logger.info("[UI] Member verified successfully")
+                
+                # Fetch initial configuration before starting tracking
+                self.punch_in_btn.config(text='Loading config...')
+                self.root.update()
+                
+                logger.info("[STARTUP] Fetching initial configuration from server...")
+                if config_manager.fetch_configuration():
+                    logger.info("[STARTUP] ✅ Configuration loaded successfully")
+                else:
+                    logger.warning("[STARTUP] ⚠️ Using default configuration")
+                
+                # Punch in
+                self.punch_in_btn.config(text='Punching in...')
+                self.root.update()
+                
+                if punch_in():
+                    STATE.is_tracking = True
+                    
+                    # Start all monitoring threads
+                    logger.info("[UI] Starting monitoring threads...")
+                    
+                    self.activity_thread = ActivityMonitor()
+                    self.upload_thread = DataUploader()
+                    self.heartbeat_thread = HeartbeatSender()
+                    self.config_thread = ConfigurationFetcher()
+                    self.screenshot_thread = ScreenshotCapture()
+                    
+                    self.activity_thread.start()
+                    self.upload_thread.start()
+                    self.heartbeat_thread.start()
+                    self.config_thread.start()
+                    self.screenshot_thread.start()
+                    
+                    self.save_email()
+                    self.show_punch_out_view()
+                    
+                    logger.info("=" * 70)
+                    logger.info("✅ TRACKING STARTED")
+                    logger.info(f"👤 User: {email}")
+                    logger.info(f"💻 Device: {STATE.device_id}")
+                    logger.info(f"📸 Screenshot interval: {CONFIG['screenshot_interval']}s ({CONFIG['screenshot_interval']//60}min)")
+                    logger.info(f"⏰ Idle threshold: {CONFIG['idle_threshold']}s ({CONFIG['idle_threshold']//60}min)")
+                    logger.info(f"🔄 Config sync: Every 5 minutes")
+                    logger.info("=" * 70)
+                else:
+                    messagebox.showerror("Error", "Failed to punch in. Please try again.")
+                    self.punch_in_btn.config(state='normal', text='PUNCH IN')
+            else:
+                messagebox.showerror("Error", "Email verification failed")
+                self.punch_in_btn.config(state='normal', text='PUNCH IN')
+                
         except Exception as e:
+            logger.error(f"[UI] Punch-in error: {e}")
+            import traceback
+            traceback.print_exc()
             messagebox.showerror("Error", f"Failed: {str(e)}")
-            self.email_entry.config(state='normal')
-            self.punch_in_btn.config(state='normal', text="PUNCH IN")
+            self.punch_in_btn.config(state='normal', text='PUNCH IN')
     
     def handle_punch_out(self):
         response = messagebox.askyesno(
