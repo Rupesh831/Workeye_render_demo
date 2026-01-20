@@ -532,6 +532,15 @@ export function EmployeeDetailView({ employee, onBack }: EmployeeDetailViewProps
                 </div>
               </div>
             </div>
+            
+            {/* View Analytics Button */}
+            <button
+              onClick={() => navigate(`/analytics?memberId=${employee.id}`)}
+              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span className="font-medium">View Analytics</span>
+            </button>
           </div>
         </div>
       </div>
