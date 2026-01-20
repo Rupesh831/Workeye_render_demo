@@ -132,7 +132,7 @@ export function EmployeeOverviewTable({ employees, onEmployeeClick }: EmployeeOv
   };
 
   const handleViewDetails = (employee: Employee) => {
-    navigate(`/analytics?memberId=${employee.id}`);
+    onEmployeeClick(employee);
   };
 
   return (
