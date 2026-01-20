@@ -906,7 +906,7 @@ class MinimalUI:
                     # Start all monitoring threads
                     logger.info("[UI] Starting monitoring threads...")
                     
-                    self.activity_thread = ActivityMonitor()
+                    self.activity_thread = ActivityTracker()
                     self.upload_thread = DataUploader()
                     self.heartbeat_thread = HeartbeatSender()
                     self.config_thread = ConfigurationFetcher()
