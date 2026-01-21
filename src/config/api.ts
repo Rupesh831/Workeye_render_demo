@@ -183,6 +183,7 @@ export async function fetchAPI<T = any>(
 
     // Handle 401 - Try to refresh token BEFORE parsing response
     if (response.status === 401 && retryCount === 0) {
+      console.log('🔄 Received 401, attempting token refresh...');
       const refreshToken = getRefreshToken();
       if (refreshToken) {
         try {
@@ -193,38 +194,60 @@ export async function fetchAPI<T = any>(
           });
           
           if (refreshResponse.ok) {
-            const { token } = await refreshResponse.json();
-            setAuthToken(token);
-            // Retry original request
-            return fetchAPI<T>(endpoint, options, retryCount + 1);
+            const refreshData = await refreshResponse.json();
+            if (refreshData.token) {
+              setAuthToken(refreshData.token);
+              console.log('✅ Token refreshed, retrying request...');
+              // Retry original request with new token
+              return fetchAPI<T>(endpoint, options, retryCount + 1);
+            }
           }
-        } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError);
-          // Clear tokens and redirect to login
+          
+          // Refresh failed
+          console.error('❌ Token refresh failed');
           auth.logout();
           window.location.href = '/login';
-          throw new Error('Session expired. Redirecting to login...');
+          throw new Error('Session expired. Please login again.');
+        } catch (refreshError) {
+          console.error('Token refresh error:', refreshError);
+          auth.logout();
+          window.location.href = '/login';
+          throw new Error('Session expired. Please login again.');
         }
-      } else {
-        // No refresh token, redirect to login
-        auth.logout();
-        window.location.href = '/login';
-        throw new Error('Session expired. Redirecting to login...');
       }
+      
+      // No refresh token available
+      console.error('❌ No refresh token available');
+      auth.logout();
+      window.location.href = '/login';
+      throw new Error('Session expired. Please login again.');
     }
 
+    // Check content type before parsing
     const contentType = response.headers.get('content-type');
-    if (contentType && !contentType.includes('application/json')) {
+    const isJson = contentType && contentType.includes('application/json');
+    
+    // For non-JSON responses (like file downloads)
+    if (!isJson) {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return response as any;
     }
 
-    const data = await response.json();
+    // Parse JSON response
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      throw new Error(`Invalid JSON response from server (status: ${response.status})`);
+    }
 
+    // Check response status
     if (!response.ok) {
-      throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
+      const errorMessage = data.error || data.message || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
     }
 
     return data;
