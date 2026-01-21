@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// UPDATED: 2026-01-22 00:23 IST - Fixed live activity updates and idle time display
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, TrendingUp, Eye, ArrowUpDown, ArrowUp, ArrowDown, BarChart3 } from 'lucide-react';
 import { formatLastActivity } from '../utils/timeUtils';
@@ -41,6 +42,16 @@ export function EmployeeOverviewTable({ employees, onEmployeeClick }: EmployeeOv
   const navigate = useNavigate();
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Update current time every 30 seconds to refresh "X mins ago" displays
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
