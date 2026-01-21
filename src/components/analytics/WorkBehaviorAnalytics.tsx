@@ -42,7 +42,10 @@ const WorkBehaviorAnalytics: React.FC<Props> = ({ memberId, date, startDate, end
       setAttendanceData(attendance);
       setActivityData(activity.logs);
     } catch (err: any) {
-      setError(err.message);
+      console.error('Work behavior analytics error:', err);
+      setError(err.message || 'Failed to load work behavior data');
+      setAttendanceData([]);
+      setActivityData([]);
     } finally {
       setLoading(false);
     }
