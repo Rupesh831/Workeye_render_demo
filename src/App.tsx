@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import SignupPage from './components/auth/SignupPage';
+import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { EmployeeDetailPage } from './components/EmployeeDetailPage';
 import { Configuration } from './components/Configuration';
@@ -17,10 +18,11 @@ const App: React.FC = () => {
   return (
     <Router>
       <Routes>
+        {/* Public Routes - NO Layout */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignupPage />} />
         
-        {/* Protected Routes - NO Layout wrapper needed, all pages have their own headers */}
+        {/* Root redirect */}
         <Route
           path="/"
           element={
@@ -32,11 +34,14 @@ const App: React.FC = () => {
           }
         />
         
+        {/* Protected Routes - WITH Layout */}
         <Route
           path="/dashboard"
           element={
             isAuthenticated ? (
-              <Dashboard />
+              <Layout>
+                <Dashboard />
+              </Layout>
             ) : (
               <Navigate to="/login" replace />
             )
@@ -47,7 +52,9 @@ const App: React.FC = () => {
           path="/employee/:id"
           element={
             isAuthenticated ? (
-              <EmployeeDetailPage />
+              <Layout>
+                <EmployeeDetailPage />
+              </Layout>
             ) : (
               <Navigate to="/login" replace />
             )
@@ -58,7 +65,9 @@ const App: React.FC = () => {
           path="/attendance/:id"
           element={
             isAuthenticated ? (
-              <AttendanceDetailPage />
+              <Layout>
+                <AttendanceDetailPage />
+              </Layout>
             ) : (
               <Navigate to="/login" replace />
             )
@@ -69,7 +78,9 @@ const App: React.FC = () => {
           path="/configuration"
           element={
             isAuthenticated ? (
-              <Configuration />
+              <Layout>
+                <Configuration />
+              </Layout>
             ) : (
               <Navigate to="/login" replace />
             )
@@ -80,7 +91,9 @@ const App: React.FC = () => {
           path="/profile"
           element={
             isAuthenticated ? (
-              <ProfilePage />
+              <Layout>
+                <ProfilePage />
+              </Layout>
             ) : (
               <Navigate to="/login" replace />
             )
@@ -91,7 +104,9 @@ const App: React.FC = () => {
           path="/members"
           element={
             isAuthenticated ? (
-              <MembersPage />
+              <Layout>
+                <MembersPage />
+              </Layout>
             ) : (
               <Navigate to="/login" replace />
             )
@@ -102,7 +117,9 @@ const App: React.FC = () => {
           path="/attendance"
           element={
             isAuthenticated ? (
-              <AttendancePage />
+              <Layout>
+                <AttendancePage />
+              </Layout>
             ) : (
               <Navigate to="/login" replace />
             )
@@ -113,13 +130,16 @@ const App: React.FC = () => {
           path="/analytics"
           element={
             isAuthenticated ? (
-              <AnalyticsPage />
+              <Layout>
+                <AnalyticsPage />
+              </Layout>
             ) : (
               <Navigate to="/login" replace />
             )
           }
         />
         
+        {/* Catch all */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Router>
