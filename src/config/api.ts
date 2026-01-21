@@ -188,81 +188,78 @@ export async function fetchAPI<T = any>(
     if (response.status === 401 && retryCount === 0) {
       console.log('🔄 Received 401, attempting token refresh...');
       const refreshToken = getRefreshToken();
-      if (refreshToken) {
-        try {
-          const refreshResponse = await fetch(`${API_BASE_URL}/auth/admin/refresh-token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refreshToken })
-          });
-          
-          if (refreshResponse.ok) {
-            const refreshData = await refreshResponse.json();
-            if (refreshData.token) {
-              setAuthToken(refreshData.token);
-              console.log('✅ Token refreshed successfully');
-              
-              // IMPORTANT: Create new headers with the fresh token for retry
-              const retryHeaders = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${refreshData.token}`,
-                ...options.headers,
-              };
-              
-              // Retry original request with new token
-              const retryResponse = await fetch(url, {
-                ...options,
-                headers: retryHeaders,
-              });
-              
-              // Parse retry response
-              const contentType = retryResponse.headers.get('content-type');
-              const isJson = contentType && contentType.includes('application/json');
-              
-              if (!isJson) {
-                if (!retryResponse.ok) {
-                  throw new Error(`HTTP error! status: ${retryResponse.status}`);
-                }
-                return retryResponse as any;
-              }
-              
-              let retryData;
-              try {
-                retryData = await retryResponse.json();
-              } catch (parseError) {
-                console.error('Failed to parse retry JSON response:', parseError);
-                throw new Error(`Invalid JSON response from server (status: ${retryResponse.status})`);
-              }
-              
-              if (!retryResponse.ok) {
-                const errorMessage = retryData.error || retryData.message || `HTTP error! status: ${retryResponse.status}`;
-                throw new Error(errorMessage);
-              }
-              
-              return retryData;
-            }
-          }
-          
-          // Refresh failed - Only logout if refresh explicitly failed
-          console.error('❌ Token refresh failed - session truly expired');
-          auth.logout();
-          window.location.href = '/login';
-          throw new Error('Session expired. Please login again.');
-        } catch (refreshError: any) {
-          // Only logout if it's truly a refresh failure, not a network error
-          if (refreshError.message && refreshError.message.includes('Session expired')) {
-            console.error('Token refresh error - logging out:', refreshError);
-            auth.logout();
-            window.location.href = '/login';
-          }
-          throw refreshError;
-        }
-      } else {
-        // No refresh token available - logout
+      
+      if (!refreshToken) {
+        // No refresh token available - must logout
         console.error('❌ No refresh token available');
         auth.logout();
         window.location.href = '/login';
         throw new Error('Session expired. Please login again.');
+      }
+      
+      try {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/admin/refresh-token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        
+        if (!refreshResponse.ok) {
+          // Refresh token itself is invalid or expired
+          console.error('❌ Refresh token invalid or expired (status:', refreshResponse.status, ')');
+          const errorData = await refreshResponse.json().catch(() => ({}));
+          console.error('Refresh error details:', errorData);
+          
+          // Clear everything and logout
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('adminData');
+          auth.logout();
+          window.location.href = '/login';
+          throw new Error('Session expired. Please login again.');
+        }
+        
+        const refreshData = await refreshResponse.json();
+        
+        if (!refreshData.token) {
+          console.error('❌ Refresh response missing token');
+          auth.logout();
+          window.location.href = '/login';
+          throw new Error('Invalid refresh response. Please login again.');
+        }
+        
+        // Store new token
+        setAuthToken(refreshData.token);
+        
+        // Also update refresh token if provided
+        if (refreshData.refresh_token) {
+          setRefreshToken(refreshData.refresh_token);
+        }
+        
+        console.log('✅ Token refreshed successfully, retrying original request...');
+        
+        // Retry original request with new token using recursion with retryCount
+        return await fetchAPI(endpoint, options, 1);
+        
+      } catch (refreshError: any) {
+        console.error('❌ Token refresh error:', refreshError);
+        
+        // If it's a network error, throw it without logging out
+        if (refreshError instanceof TypeError && refreshError.message.includes('fetch')) {
+          console.error('Network error during token refresh');
+          throw new Error('Network error. Please check your connection.');
+        }
+        
+        // Otherwise, it's likely an auth error - logout
+        if (!refreshError.message.includes('Network error')) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('adminData');
+          auth.logout();
+          window.location.href = '/login';
+        }
+        
+        throw refreshError;
       }
     }
 
