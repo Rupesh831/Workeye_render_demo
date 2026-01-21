@@ -181,7 +181,7 @@ export async function fetchAPI<T = any>(
       },
     });
 
-    // Handle 401 - Try to refresh token
+    // Handle 401 - Try to refresh token BEFORE parsing response
     if (response.status === 401 && retryCount === 0) {
       const refreshToken = getRefreshToken();
       if (refreshToken) {
@@ -203,11 +203,13 @@ export async function fetchAPI<T = any>(
           // Clear tokens and redirect to login
           auth.logout();
           window.location.href = '/login';
+          throw new Error('Session expired. Redirecting to login...');
         }
       } else {
         // No refresh token, redirect to login
         auth.logout();
         window.location.href = '/login';
+        throw new Error('Session expired. Redirecting to login...');
       }
     }
 
