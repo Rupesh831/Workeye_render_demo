@@ -4,10 +4,11 @@ ANALYTICS_ROUTES.PY - Advanced Analytics (Synchronous + psycopg2)
 ✅ psycopg2 ONLY
 ✅ Member-specific analytics
 ✅ PostgreSQL aggregations
+✅ FIXED: Uses admin_auth for proper authentication
 """
 
 from flask import Blueprint, request, jsonify
-from auth_routes import require_auth
+from admin_auth_routes import require_admin_auth
 from db import get_db
 from datetime import datetime, timedelta
 
@@ -18,7 +19,7 @@ analytics_bp = Blueprint('analytics', __name__)
 # ============================================================================
 
 @analytics_bp.route('/analytics/member/<int:member_id>', methods=['GET'])
-@require_auth
+@require_admin_auth
 def get_member_analytics(member_id):
     """Get detailed analytics for a specific member"""
     try:
@@ -111,7 +112,7 @@ def get_member_analytics(member_id):
 # ============================================================================
 
 @analytics_bp.route('/analytics/productivity-trends', methods=['GET'])
-@require_auth
+@require_admin_auth
 def get_productivity_trends():
     """Get productivity trends over time"""
     try:
@@ -155,7 +156,7 @@ def get_productivity_trends():
 # ============================================================================
 
 @analytics_bp.route('/analytics/app-usage', methods=['GET'])
-@require_auth
+@require_admin_auth
 def get_app_usage():
     """Get application usage breakdown"""
     try:
@@ -201,7 +202,7 @@ def get_app_usage():
 # ============================================================================
 
 @analytics_bp.route('/analytics/attendance', methods=['GET'])
-@require_auth
+@require_admin_auth
 def get_attendance_analytics():
     """Get attendance analytics for a member with raw data"""
     try:
@@ -277,7 +278,7 @@ def get_attendance_analytics():
 # ============================================================================
 
 @analytics_bp.route('/analytics/activity', methods=['GET'])
-@require_auth
+@require_admin_auth
 def get_activity_analytics():
     """Get activity analytics (active/idle time) for a member"""
     try:
@@ -358,7 +359,7 @@ def get_activity_analytics():
 # ============================================================================
 
 @analytics_bp.route('/analytics/apps', methods=['GET'])
-@require_auth
+@require_admin_auth
 def get_apps_analytics():
     """Get detailed application usage analytics"""
     try:
@@ -409,7 +410,7 @@ def get_apps_analytics():
 # ============================================================================
 
 @analytics_bp.route('/analytics/websites', methods=['GET'])
-@require_auth
+@require_admin_auth
 def get_websites_analytics():
     """Get detailed website usage analytics"""
     try:
@@ -460,7 +461,7 @@ def get_websites_analytics():
 # ============================================================================
 
 @analytics_bp.route('/analytics/work-behavior', methods=['GET'])
-@require_auth
+@require_admin_auth
 def get_work_behavior_analytics():
     """Get work behavior analytics combining attendance and activity data"""
     try:
