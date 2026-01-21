@@ -107,13 +107,7 @@ const AnalyticsPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    // Check if there's history to go back to
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      // Fallback to dashboard if no history
-      navigate('/dashboard');
-    }
+    window.history.back();
   };
 
   const renderAnalytics = () => {
@@ -122,6 +116,33 @@ const AnalyticsPage: React.FC = () => {
       startDate: dateRange.start,
       endDate: dateRange.end
     };
+
+    // Show message if member ID is required but not provided
+    const requiresMember = ['activity', 'applications', 'websites', 'comparison', 'idle', 'behavior'].includes(activeTab);
+    
+    if (requiresMember && !memberId) {
+      return (
+        <div className="text-center py-20">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 max-w-md mx-auto">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Member Selection Required</h3>
+            <p className="text-slate-600 mb-4">
+              This analytics view requires a specific member. Please navigate from a member's detail page to view their analytics.
+            </p>
+            <button
+              onClick={() => window.history.back()}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      );
+    }
 
     switch (activeTab) {
       case 'attendance':
@@ -183,19 +204,7 @@ const AnalyticsPage: React.FC = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-md border border-slate-100 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Member ID (Optional)
-              </label>
-              <input
-                type="number"
-                value={memberId || ''}
-                onChange={(e) => setMemberId(e.target.value ? parseInt(e.target.value) : null)}
-                placeholder="Leave empty for all members"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Start Date
