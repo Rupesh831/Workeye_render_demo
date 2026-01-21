@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-21 17:43 IST - Minimal Clean Layout
+// UPDATED: 2026-01-21 17:54 IST - Vertical Stack Layout
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -81,7 +81,7 @@ export function Layout({ children }: LayoutProps) {
         style={{ boxShadow: '5px 0 15px rgba(163, 177, 198, 0.3)' }}
       >
         {/* Logo */}
-        <div className="h-20 flex items-center justify-between px-6 border-b border-gray-200">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
           {sidebarOpen && (
             <div className="flex items-center space-x-3">
               <div 
@@ -102,9 +102,13 @@ export function Layout({ children }: LayoutProps) {
           </button>
         </div>
 
-        {/* Admin Section */}
+        {/* Profile at Top - Clickable */}
         <div className="px-4 py-5 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
+          <button
+            onClick={() => navigate('/profile')}
+            className="w-full flex items-center space-x-3 p-3 rounded-2xl hover:bg-gray-200 transition-all"
+            style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
+          >
             <div 
               className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
@@ -112,15 +116,15 @@ export function Layout({ children }: LayoutProps) {
               <span className="text-white font-semibold text-sm">{userName.charAt(0).toUpperCase()}</span>
             </div>
             {sidebarOpen && (
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 text-left min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">{userName}</p>
-                <p className="text-xs text-gray-500">Administrator</p>
+                <p className="text-xs text-gray-500">View Profile</p>
               </div>
             )}
-          </div>
+          </button>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation - Stacked Vertically */}
         <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto">
           {[
             { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -147,7 +151,7 @@ export function Layout({ children }: LayoutProps) {
           ))}
         </nav>
 
-        {/* Profile Dropdown */}
+        {/* Profile Dropdown at Bottom */}
         <div className="p-4 border-t border-gray-200">
           <div className="relative" ref={dropdownRef}>
             <button
@@ -165,7 +169,7 @@ export function Layout({ children }: LayoutProps) {
                 <>
                   <div className="flex-1 text-left min-w-0">
                     <p className="text-sm font-semibold text-gray-900 truncate">{userName}</p>
-                    <p className="text-xs text-gray-500">View Profile</p>
+                    <p className="text-xs text-gray-500">Options</p>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 </>
@@ -208,7 +212,7 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </aside>
 
-      {/* Main Content - NO HEADER BAR */}
+      {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
         <main className="h-full overflow-auto bg-gradient-to-br from-[#e8ecf3] via-[#e8ecf3] to-[#d4dae6]">
           {children}
