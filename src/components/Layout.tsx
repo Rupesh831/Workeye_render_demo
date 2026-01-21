@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-21 22:55 IST - Fixed sidebar width
+// UPDATED: 2026-01-22 00:22 IST - Added mobile responsive sidebar
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -10,7 +10,9 @@ import {
   UserCircle,
   Download,
   LogOut,
-  Eye
+  Eye,
+  Menu,
+  X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -24,6 +26,7 @@ export function Layout({ children }: LayoutProps) {
   const { user, company, logout } = useAuth();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [downloadingTracker, setDownloadingTracker] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const userName = user?.full_name || company?.company_name || 'Averlon';
@@ -70,11 +73,23 @@ export function Layout({ children }: LayoutProps) {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const navigationItems = [
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/members', icon: UsersIcon, label: 'Team' },
+    { path: '/attendance', icon: ClipboardList, label: 'Attendance' },
+    { path: '/configuration', icon: Settings, label: 'Settings' }
+  ];
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    setMobileMenuOpen(false);
+  };
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 overflow-hidden">
-      {/* Sidebar - Always Visible */}
+      {/* Sidebar - Desktop */}
       <aside 
-        className="bg-slate-50 flex flex-col flex-shrink-0 h-full"
+        className="bg-slate-50 flex-col flex-shrink-0 h-full hidden lg:flex"
         style={{ width: '256px', boxShadow: '5px 0 15px rgba(163, 177, 198, 0.3)' }}
       >
         {/* Logo */}
@@ -112,12 +127,7 @@ export function Layout({ children }: LayoutProps) {
 
         {/* Navigation - Stacked Vertically */}
         <nav className="flex-1 py-4 px-3 gap-2 overflow-y-auto" style={{ display: 'flex', flexDirection: 'column' }}>
-          {[
-            { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-            { path: '/members', icon: UsersIcon, label: 'Team' },
-            { path: '/attendance', icon: ClipboardList, label: 'Attendance' },
-            { path: '/configuration', icon: Settings, label: 'Settings' }
-          ].map(({ path, icon: Icon, label }) => (
+          {navigationItems.map(({ path, icon: Icon, label }) => (
             <button
               key={path}
               onClick={() => navigate(path)}
@@ -200,9 +210,110 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </aside>
 
+      {/* Mobile Sidebar - Overlay */}
+      {mobileMenuOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <aside 
+            className="fixed inset-y-0 left-0 bg-slate-50 flex flex-col flex-shrink-0 h-full z-50 lg:hidden transform transition-transform duration-300"
+            style={{ width: '256px', boxShadow: '5px 0 15px rgba(163, 177, 198, 0.3)' }}
+          >
+            {/* Mobile Close Button */}
+            <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center"
+                  style={{ boxShadow: '4px 4px 8px rgba(99, 102, 241, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.8)' }}
+                >
+                  <Eye className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">WorkEye</span>
+              </div>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2">
+                <X className="w-6 h-6 text-slate-600" />
+              </button>
+            </div>
+
+            {/* Profile at Top */}
+            <div className="px-4 py-4 border-b border-slate-200">
+              <button
+                onClick={() => handleNavigate('/profile')}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-200 transition-all"
+                style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
+              >
+                <div 
+                  className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
+                >
+                  <span className="text-white font-semibold text-sm">{userName.charAt(0).toUpperCase()}</span>
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
+                  <p className="text-sm text-slate-500">View Profile</p>
+                </div>
+              </button>
+            </div>
+
+            {/* Mobile Navigation */}
+            <nav className="flex-1 py-4 px-3 gap-2 overflow-y-auto" style={{ display: 'flex', flexDirection: 'column' }}>
+              {navigationItems.map(({ path, icon: Icon, label }) => (
+                <button
+                  key={path}
+                  onClick={() => handleNavigate(path)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+                    isActive(path)
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
+                      : 'text-slate-600 hover:bg-slate-200'
+                  }`}
+                  style={isActive(path)
+                    ? { boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.6)' }
+                    : { boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }
+                  }
+                >
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="font-medium">{label}</span>
+                </button>
+              ))}
+            </nav>
+
+            {/* Mobile Logout */}
+            <div className="p-4 border-t border-slate-200">
+              <button
+                onClick={() => { logout(); navigate('/login'); }}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-orange-50 transition-all"
+                style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
+              >
+                <LogOut className="w-5 h-5 text-orange-600" />
+                <span className="text-sm font-medium text-orange-600">Logout</span>
+              </button>
+            </div>
+          </aside>
+        </>
+      )}
+
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
-        <main className="h-full overflow-auto bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50">
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Mobile Header */}
+        <div className="lg:hidden h-16 bg-slate-50 border-b border-slate-200 flex items-center justify-between px-4" style={{ boxShadow: '0 2px 8px rgba(163, 177, 198, 0.2)' }}>
+          <button onClick={() => setMobileMenuOpen(true)} className="p-2">
+            <Menu className="w-6 h-6 text-slate-700" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center"
+              style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.3)' }}
+            >
+              <Eye className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">WorkEye</span>
+          </div>
+          <div className="w-10"></div>
+        </div>
+
+        <main className="flex-1 overflow-auto bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50">
           {children}
         </main>
       </div>
