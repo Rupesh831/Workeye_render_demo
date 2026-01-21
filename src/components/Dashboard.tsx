@@ -8,11 +8,8 @@ import {
   AlertCircle, 
   TrendingUp,
   ChevronDown,
-  TrendingDown,
-  Package,
-  ShoppingBag
+  ChevronRight
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 
 // Employee interface
 interface Employee {
@@ -33,7 +30,6 @@ interface Employee {
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { company } = useAuth();
   const [members, setMembers] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -162,7 +158,8 @@ export function Dashboard() {
   }, [members]);
 
   return (
-    <div className="p-8 w-full max-w-full">
+    <div className="p-6 w-full">
+      {/* Error Alert */}
       {error && (
         <div 
           className="mb-6 p-4 bg-red-50 rounded-2xl flex items-start space-x-3"
@@ -178,104 +175,100 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* Analytics Overview Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
-        {/* Card 1 - Total Employees */}
+      {/* Stats Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {/* Total Employees */}
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105 min-w-0"
+          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
           style={{
             boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
           }}
         >
-          <div className="flex items-start justify-between mb-2">
+          <div className="flex items-start justify-between mb-3">
             <div 
-              className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0"
+              className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center"
               style={{
                 boxShadow: '3px 3px 6px rgba(167, 139, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
               }}
             >
-              <Users className="w-5 h-5 text-white" />
+              <Users className="w-6 h-6 text-white" />
             </div>
-            <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</h3>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Total Employees</p>
-          <div className="text-xs text-gray-400">Active members</div>
+          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.total}</h3>
+          <p className="text-sm text-gray-500 font-medium">Total Employees</p>
+          <p className="text-xs text-gray-400 mt-1">Active members</p>
         </div>
 
-        {/* Card 2 - Active Now */}
+        {/* Active Now */}
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105 min-w-0"
+          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
           style={{
             boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
           }}
         >
-          <div className="flex items-start justify-between mb-2">
+          <div className="flex items-start justify-between mb-3">
             <div 
-              className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0"
+              className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center"
               style={{
-                boxShadow: '3px 3px 6px rgba(251, 146, 60, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
+                boxShadow: '3px 3px 6px rgba(34, 197, 94, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
               }}
             >
-              <Activity className="w-5 h-5 text-white" />
+              <Activity className="w-6 h-6 text-white" />
             </div>
-            <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.active}</h3>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Active Now</p>
-          <div className="text-xs text-green-500">Online members</div>
+          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.active}</h3>
+          <p className="text-sm text-gray-500 font-medium">Active Now</p>
+          <p className="text-xs text-green-500 mt-1">● Online</p>
         </div>
 
-        {/* Card 3 - Avg Screen Time */}
+        {/* Avg Screen Time */}
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105 min-w-0"
+          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
           style={{
             boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
           }}
         >
-          <div className="flex items-start justify-between mb-2">
+          <div className="flex items-start justify-between mb-3">
             <div 
-              className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0"
+              className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center"
               style={{
                 boxShadow: '3px 3px 6px rgba(96, 165, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
               }}
             >
-              <Clock className="w-5 h-5 text-white" />
+              <Clock className="w-6 h-6 text-white" />
             </div>
-            <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.avgScreenTime}h</h3>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Avg Screen Time</p>
-          <div className="text-xs text-gray-400">Per employee</div>
+          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.avgScreenTime}h</h3>
+          <p className="text-sm text-gray-500 font-medium">Avg Screen Time</p>
+          <p className="text-xs text-gray-400 mt-1">Per employee</p>
         </div>
 
-        {/* Card 4 - Productivity */}
+        {/* Productivity */}
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105 min-w-0"
+          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
           style={{
             boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
           }}
         >
-          <div className="flex items-start justify-between mb-2">
+          <div className="flex items-start justify-between mb-3">
             <div 
-              className="w-10 h-10 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0"
+              className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center"
               style={{
-                boxShadow: '3px 3px 6px rgba(244, 114, 182, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
+                boxShadow: '3px 3px 6px rgba(251, 146, 60, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
               }}
             >
-              <TrendingUp className="w-5 h-5 text-white" />
+              <TrendingUp className="w-6 h-6 text-white" />
             </div>
-            <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.avgProductivity}%</h3>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Productivity</p>
-          <div className="text-xs text-gray-400">Average rate</div>
+          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.avgProductivity}%</h3>
+          <p className="text-sm text-gray-500 font-medium">Avg Productivity</p>
+          <p className="text-xs text-gray-400 mt-1">Team average</p>
         </div>
       </div>
 
-      {/* Revenue Chart and Order Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 w-full">
-        {/* Revenue Chart */}
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Activity Trends Chart */}
         <div 
           className="lg:col-span-2 bg-[#e8ecf3] rounded-3xl p-6"
           style={{
@@ -285,11 +278,11 @@ export function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-gray-900">Activity Trends</h3>
-              <p className="text-sm text-gray-500 mt-1">Weekly performance overview</p>
+              <p className="text-sm text-gray-500 mt-1">Weekly performance</p>
             </div>
             <div className="flex items-center space-x-2">
               <button 
-                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-[#e8ecf3] rounded-lg"
+                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-[#e8ecf3] rounded-lg transition-all"
                 style={{
                   boxShadow: 'inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff',
                 }}
@@ -299,13 +292,13 @@ export function Dashboard() {
               <button 
                 className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg"
                 style={{
-                  boxShadow: '3px 3px 8px rgba(99, 102, 241, 0.3), -1px -1px 4px rgba(255, 255, 255, 0.5)',
+                  boxShadow: '3px 3px 8px rgba(99, 102, 241, 0.3)',
                 }}
               >
                 Week
               </button>
               <button 
-                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-[#e8ecf3] rounded-lg"
+                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-[#e8ecf3] rounded-lg transition-all"
                 style={{
                   boxShadow: 'inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff',
                 }}
@@ -318,7 +311,7 @@ export function Dashboard() {
           {/* Bar Chart */}
           <div className="h-64 flex items-end justify-between space-x-2">
             {[60, 80, 70, 90, 75, 85, 95, 70, 80, 75, 85, 90].map((height, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center min-w-0">
+              <div key={index} className="flex-1 flex flex-col items-center">
                 <div 
                   className="w-full rounded-t-xl transition-all hover:scale-105 cursor-pointer"
                   style={{
@@ -326,7 +319,7 @@ export function Dashboard() {
                     background: index % 2 === 0 
                       ? 'linear-gradient(to top, #818cf8, #a78bfa)' 
                       : 'linear-gradient(to top, #6366f1, #8b5cf6)',
-                    boxShadow: '3px 3px 8px rgba(99, 102, 241, 0.3), -1px -1px 4px rgba(255, 255, 255, 0.5)',
+                    boxShadow: '3px 3px 8px rgba(99, 102, 241, 0.3)',
                   }}
                 ></div>
               </div>
@@ -334,7 +327,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Team Status Chart */}
+        {/* Team Status Donut */}
         <div 
           className="bg-[#e8ecf3] rounded-3xl p-6"
           style={{
@@ -343,7 +336,7 @@ export function Dashboard() {
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900">Team Status</h3>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-5 h-5 text-gray-400" />
           </div>
           
           {/* Donut Chart */}
@@ -356,9 +349,9 @@ export function Dashboard() {
                   fill="none" 
                   stroke="url(#gradient1)" 
                   strokeWidth="12"
-                  strokeDasharray={`${(stats.active / stats.total) * 251.2} 251.2`}
+                  strokeDasharray={`${stats.total > 0 ? (stats.active / stats.total) * 251.2 : 0} 251.2`}
                   style={{
-                    filter: 'drop-shadow(2px 2px 4px rgba(99, 102, 241, 0.3))',
+                    filter: 'drop-shadow(2px 2px 4px rgba(34, 197, 94, 0.3))',
                   }}
                 />
                 <circle 
@@ -366,10 +359,10 @@ export function Dashboard() {
                   fill="none" 
                   stroke="url(#gradient2)" 
                   strokeWidth="12"
-                  strokeDasharray={`${(stats.idle / stats.total) * 251.2} 251.2`}
-                  strokeDashoffset={`-${(stats.active / stats.total) * 251.2}`}
+                  strokeDasharray={`${stats.total > 0 ? (stats.idle / stats.total) * 251.2 : 0} 251.2`}
+                  strokeDashoffset={`-${stats.total > 0 ? (stats.active / stats.total) * 251.2 : 0}`}
                   style={{
-                    filter: 'drop-shadow(2px 2px 4px rgba(139, 92, 246, 0.3))',
+                    filter: 'drop-shadow(2px 2px 4px rgba(251, 146, 60, 0.3))',
                   }}
                 />
                 <defs>
@@ -394,21 +387,21 @@ export function Dashboard() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-green-500 to-green-600 shadow-sm"></div>
+                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-green-500 to-green-600"></div>
                 <span className="text-sm text-gray-600">Active</span>
               </div>
               <span className="text-sm font-semibold text-gray-900">{stats.active}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 shadow-sm"></div>
+                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600"></div>
                 <span className="text-sm text-gray-600">Idle</span>
               </div>
               <span className="text-sm font-semibold text-gray-900">{stats.idle}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 shadow-sm"></div>
+                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-gray-400 to-gray-500"></div>
                 <span className="text-sm text-gray-600">Offline</span>
               </div>
               <span className="text-sm font-semibold text-gray-900">{stats.offline}</span>
@@ -419,12 +412,12 @@ export function Dashboard() {
 
       {/* Team Members Table */}
       <div 
-        className="bg-[#e8ecf3] rounded-3xl overflow-hidden w-full"
+        className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
         style={{
           boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
         }}
       >
-        <div className="px-6 py-4 flex items-center justify-between">
+        <div className="px-6 py-5 flex items-center justify-between border-b border-gray-200">
           <div>
             <h3 className="text-lg font-bold text-gray-900">Team Members</h3>
             <p className="text-sm text-gray-500 mt-1">
@@ -435,7 +428,7 @@ export function Dashboard() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-4 py-2 bg-[#e8ecf3] rounded-2xl text-sm font-medium focus:outline-none"
+              className="px-4 py-2 bg-[#e8ecf3] rounded-2xl text-sm font-medium focus:outline-none cursor-pointer"
               style={{
                 boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff',
               }}
@@ -448,9 +441,9 @@ export function Dashboard() {
             <button
               onClick={fetchDashboardData}
               disabled={loading}
-              className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl transition-all hover:scale-105 disabled:opacity-50"
+              className="p-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl transition-all hover:scale-105 disabled:opacity-50"
               style={{
-                boxShadow: '4px 4px 10px rgba(99, 102, 241, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.6)',
+                boxShadow: '4px 4px 10px rgba(99, 102, 241, 0.3)',
               }}
             >
               <Activity className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
