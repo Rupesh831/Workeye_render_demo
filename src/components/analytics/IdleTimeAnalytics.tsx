@@ -40,7 +40,32 @@ const IdleTimeAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) =>
   };
 
   const analytics = useMemo(() => {
-    if (!logs.length) return null;
+    if (!logs.length) {
+      return {
+        dailyIdleData: [],
+        histogramData: [
+          { range: '0-5m', count: 0, percentage: 0 },
+          { range: '5-10m', count: 0, percentage: 0 },
+          { range: '10-15m', count: 0, percentage: 0 },
+          { range: '15-30m', count: 0, percentage: 0 },
+          { range: '30-60m', count: 0, percentage: 0 },
+          { range: '60m+', count: 0, percentage: 0 }
+        ],
+        stackedComparisonData: [],
+        stats: {
+          totalIdleHours: 0,
+          totalSessions: 0,
+          avgIdlePerDay: 0,
+          avgSessionDuration: 0,
+          avgSessionsPerDay: 0,
+          maxIdleSession: 0,
+          maxIdleDate: 'N/A',
+          peakIdleDay: 'N/A',
+          peakIdleHours: 0,
+          totalDays: 0
+        }
+      };
+    }
 
     // Filter logs strictly within date range AND only idle/locked sessions
     const filteredIdleLogs = logs.filter(log => {
@@ -50,7 +75,32 @@ const IdleTimeAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) =>
       return isInRange && isIdle;
     });
 
-    if (!filteredIdleLogs.length) return null;
+    if (!filteredIdleLogs.length) {
+      return {
+        dailyIdleData: [],
+        histogramData: [
+          { range: '0-5m', count: 0, percentage: 0 },
+          { range: '5-10m', count: 0, percentage: 0 },
+          { range: '10-15m', count: 0, percentage: 0 },
+          { range: '15-30m', count: 0, percentage: 0 },
+          { range: '30-60m', count: 0, percentage: 0 },
+          { range: '60m+', count: 0, percentage: 0 }
+        ],
+        stackedComparisonData: [],
+        stats: {
+          totalIdleHours: 0,
+          totalSessions: 0,
+          avgIdlePerDay: 0,
+          avgSessionDuration: 0,
+          avgSessionsPerDay: 0,
+          maxIdleSession: 0,
+          maxIdleDate: 'N/A',
+          peakIdleDay: 'N/A',
+          peakIdleHours: 0,
+          totalDays: 0
+        }
+      };
+    }
 
     // Calculate idle sessions per day
     const dailyIdleMap: Record<string, { totalSeconds: number; sessionCount: number; sessions: number[] }> = {};
@@ -204,15 +254,6 @@ const IdleTimeAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) =>
       <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
         <AlertCircle className="w-5 h-5 text-red-600" />
         <p className="text-red-800">{error}</p>
-      </div>
-    );
-  }
-
-  if (!analytics) {
-    return (
-      <div className="text-center py-20 text-gray-500">
-        <Moon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-        <p>No idle time data available for the selected period.</p>
       </div>
     );
   }
