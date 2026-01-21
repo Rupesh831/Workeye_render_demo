@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-21 17:35 IST - Neumorphic Design
+// UPDATED: 2026-01-22 00:41 IST - Fixed button colors and modal positioning
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, X, Loader2, UserPlus, Mail, User, Briefcase, Building, CheckCircle, AlertCircle, Users, Search, Download } from 'lucide-react';
 import { members as membersAPI, dashboard as dashboardAPI } from '@/config/api';
@@ -197,7 +197,7 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
     const styles = {
       active: 'bg-green-100 text-green-700',
       idle: 'bg-yellow-100 text-yellow-700',
-      offline: 'bg-gray-100 text-gray-600'
+      offline: 'bg-slate-100 text-slate-600'
     };
     
     const labels = {
@@ -224,7 +224,7 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
       {/* Success/Error Messages */}
       {success && (
         <div 
-          className="mb-6 p-4 bg-green-50 rounded-2xl flex items-center space-x-3"
+          className="mb-6 p-4 bg-green-50 rounded-2xl flex items-center gap-3"
           style={{ boxShadow: '4px 4px 10px rgba(34, 197, 94, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)' }}
         >
           <CheckCircle className="w-5 h-5 text-green-600" />
@@ -234,33 +234,33 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
 
       {error && (
         <div 
-          className="mb-6 p-4 bg-red-50 rounded-2xl flex items-center space-x-3"
-          style={{ boxShadow: '4px 4px 10px rgba(239, 68, 68, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)' }}
+          className="mb-6 p-4 bg-orange-50 rounded-2xl flex items-center gap-3"
+          style={{ boxShadow: '4px 4px 10px rgba(251, 146, 60, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)' }}
         >
-          <AlertCircle className="w-5 h-5 text-red-600" />
-          <p className="text-sm font-medium text-red-800">{error}</p>
+          <AlertCircle className="w-5 h-5 text-orange-600" />
+          <p className="text-sm font-medium text-orange-800">{error}</p>
         </div>
       )}
 
       {/* Header Actions */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="relative flex-1" style={{ maxWidth: '28rem' }}>
+          <Search className="absolute w-5 h-5 text-slate-400" style={{ left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             placeholder="Search members..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
-            style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
+            className="w-full bg-slate-50 rounded-2xl focus:outline-none text-slate-900"
+            style={{ paddingLeft: '3rem', paddingRight: '1rem', paddingTop: '0.75rem', paddingBottom: '0.75rem', boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
           />
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
           <button
             onClick={handleDownloadTracker}
             disabled={downloadingTracker}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl transition-all hover:scale-105 font-medium flex items-center space-x-2 disabled:opacity-50"
+            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl transition-all hover:shadow-lg font-medium flex items-center gap-2 disabled:opacity-50"
             style={{ boxShadow: '4px 4px 12px rgba(34, 197, 94, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.7)' }}
           >
             {downloadingTracker ? (
@@ -281,7 +281,7 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
               resetForm();
               setShowAddModal(true);
             }}
-            className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl transition-all hover:scale-105 font-medium flex items-center space-x-2"
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl transition-all hover:shadow-lg font-medium flex items-center gap-2"
             style={{ boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.7)' }}
           >
             <Plus className="w-5 h-5" />
@@ -293,22 +293,22 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
       {/* Members Table */}
       {loading ? (
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-12 text-center"
+          className="bg-slate-50 rounded-3xl p-12 text-center"
           style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
         >
-          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading members...</p>
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" style={{ margin: '0 auto 1rem' }}></div>
+          <p className="text-slate-600 font-medium">Loading members...</p>
         </div>
       ) : filteredMembers.length === 0 ? (
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-12 text-center"
+          className="bg-slate-50 rounded-3xl p-12 text-center"
           style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
         >
-          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <Users className="w-16 h-16 text-slate-300" style={{ margin: '0 auto 1rem' }} />
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">
             {searchQuery ? 'No members found' : 'No members yet'}
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-slate-600 mb-6">
             {searchQuery
               ? 'Try adjusting your search criteria'
               : 'Add your first team member to get started'}
@@ -319,7 +319,7 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
                 resetForm();
                 setShowAddModal(true);
               }}
-              className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl transition-all hover:scale-105 font-medium"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl transition-all hover:shadow-lg font-medium"
               style={{ boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4)' }}
             >
               <UserPlus className="w-5 h-5" />
@@ -329,59 +329,61 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
         </div>
       ) : (
         <div 
-          className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
+          className="bg-slate-50 rounded-3xl overflow-hidden"
           style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
         >
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-slate-100 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Member</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Position</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Department</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Devices</th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase' }}>Member</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase' }}>Position</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase' }}>Department</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase' }}>Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase' }}>Devices</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredMembers.map((member) => {
+              <tbody style={{ borderTop: '1px solid #e2e8f0' }}>
+                {filteredMembers.map((member, idx) => {
                   const statusBadge = getStatusBadge(member.status);
                   return (
-                    <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={member.id} className="hover:bg-slate-100 transition-colors" style={{ borderBottom: idx < filteredMembers.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
                       <td className="px-6 py-4">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3">
                           <div 
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold"
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold"
                             style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4)' }}
                           >
                             {member.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">{member.name}</p>
-                            <p className="text-sm text-gray-500">{member.email}</p>
+                            <p className="font-medium text-slate-900">{member.name}</p>
+                            <p className="text-sm text-slate-500">{member.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{member.position || '-'}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{member.department || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{member.position || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{member.department || '-'}</td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusBadge.className}`}>
                           {statusBadge.label}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{member.device_count || 0}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{member.device_count || 0}</td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-end space-x-2">
+                        <div className="flex items-center gap-2" style={{ justifyContent: 'flex-end' }}>
                           <button
                             onClick={() => handleEditClick(member)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                            title="Edit member"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteMember(member.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
+                            title="Remove member"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -396,143 +398,146 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
         </div>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Modal - FIXED: Proper centered overlay */}
       {(showAddModal || editingMember) && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div 
-            className="bg-[#e8ecf3] rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-            style={{ boxShadow: '12px 12px 24px #d1d9e6, -12px -12px 24px #ffffff' }}
-          >
-            {/* Modal Header */}
-            <div className="px-6 py-4 flex items-center justify-between border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center space-x-2">
-                <UserPlus className="w-6 h-6 text-indigo-600" />
-                <span>{editingMember ? 'Edit Member' : 'Add New Member'}</span>
-              </h3>
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setEditingMember(null);
-                  resetForm();
-                }}
-                className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <form
-              onSubmit={editingMember ? handleUpdateMember : handleAddMember}
-              className="p-6 space-y-5"
+        <div className="fixed z-50 overflow-y-auto" style={{ inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="flex items-center justify-center" style={{ minHeight: '100vh', padding: '1rem' }}>
+            <div 
+              className="bg-slate-50 rounded-3xl w-full"
+              style={{ maxWidth: '28rem', maxHeight: '90vh', overflowY: 'auto', boxShadow: '12px 12px 24px #d1d9e6, -12px -12px 24px #ffffff' }}
             >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Mail className="w-4 h-4 inline mr-2 text-gray-400" />
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
-                  style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
-                  placeholder="john.doe@company.com"
-                  disabled={!!editingMember}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <User className="w-4 h-4 inline mr-2 text-gray-400" />
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
-                  style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
-                  placeholder="John Doe"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Briefcase className="w-4 h-4 inline mr-2 text-gray-400" />
-                  Position
-                </label>
-                <input
-                  type="text"
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
-                  style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
-                  placeholder="Software Developer"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Building className="w-4 h-4 inline mr-2 text-gray-400" />
-                  Department
-                </label>
-                <input
-                  type="text"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
-                  style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
-                  placeholder="Engineering"
-                />
-              </div>
-
-              {error && (
-                <div 
-                  className="bg-red-50 rounded-2xl p-3 flex items-center space-x-2"
-                  style={{ boxShadow: '2px 2px 6px rgba(239, 68, 68, 0.2)' }}
-                >
-                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                  <p className="text-sm text-red-800">{error}</p>
-                </div>
-              )}
-
-              <div className="flex space-x-3 pt-4">
+              {/* Modal Header */}
+              <div className="px-6 py-4 flex items-center justify-between border-b border-slate-200">
+                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <UserPlus className="w-6 h-6 text-blue-600" />
+                  <span>{editingMember ? 'Edit Member' : 'Add New Member'}</span>
+                </h3>
                 <button
-                  type="button"
                   onClick={() => {
                     setShowAddModal(false);
                     setEditingMember(null);
                     resetForm();
                   }}
-                  className="flex-1 px-4 py-3 bg-[#e8ecf3] text-gray-700 rounded-2xl transition-all hover:scale-105 font-medium"
-                  style={{ boxShadow: '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff' }}
-                  disabled={submitting}
+                  className="p-2 hover:bg-slate-200 rounded-xl transition-colors"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl transition-all hover:scale-105 font-medium disabled:opacity-50 flex items-center justify-center space-x-2"
-                  style={{ boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4)' }}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{editingMember ? 'Updating...' : 'Adding...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4" />
-                      <span>{editingMember ? 'Update Member' : 'Add Member'}</span>
-                    </>
-                  )}
+                  <X className="w-5 h-5 text-slate-400" />
                 </button>
               </div>
-            </form>
+
+              {/* Modal Body */}
+              <form
+                onSubmit={editingMember ? handleUpdateMember : handleAddMember}
+                className="p-6 gap-5"
+                style={{ display: 'flex', flexDirection: 'column' }}
+              >
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <Mail className="w-4 h-4 text-slate-400" style={{ display: 'inline', marginRight: '0.5rem' }} />
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 rounded-2xl focus:outline-none text-slate-900"
+                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    placeholder="john.doe@company.com"
+                    disabled={!!editingMember}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <User className="w-4 h-4 text-slate-400" style={{ display: 'inline', marginRight: '0.5rem' }} />
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 rounded-2xl focus:outline-none text-slate-900"
+                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <Briefcase className="w-4 h-4 text-slate-400" style={{ display: 'inline', marginRight: '0.5rem' }} />
+                    Position
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.position}
+                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 rounded-2xl focus:outline-none text-slate-900"
+                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    placeholder="Software Developer"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <Building className="w-4 h-4 text-slate-400" style={{ display: 'inline', marginRight: '0.5rem' }} />
+                    Department
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 rounded-2xl focus:outline-none text-slate-900"
+                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    placeholder="Engineering"
+                  />
+                </div>
+
+                {error && (
+                  <div 
+                    className="bg-orange-50 rounded-2xl p-3 flex items-center gap-2"
+                    style={{ boxShadow: '2px 2px 6px rgba(251, 146, 60, 0.2)' }}
+                  >
+                    <AlertCircle className="w-4 h-4 text-orange-600" style={{ flexShrink: 0 }} />
+                    <p className="text-sm text-orange-800">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3" style={{ paddingTop: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setEditingMember(null);
+                      resetForm();
+                    }}
+                    className="flex-1 px-4 py-3 bg-slate-50 text-slate-700 rounded-2xl transition-all hover:shadow-md font-medium"
+                    style={{ boxShadow: '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff' }}
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl transition-all hover:shadow-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                    style={{ boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4)' }}
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{editingMember ? 'Updating...' : 'Adding...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        <span>{editingMember ? 'Update Member' : 'Add Member'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
