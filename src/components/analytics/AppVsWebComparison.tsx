@@ -48,7 +48,30 @@ const AppVsWebComparison: React.FC<Props> = ({ memberId, startDate, endDate }) =
   };
 
   const analytics = useMemo(() => {
-    if (!appLogs.length && !webLogs.length) return null;
+    if (!appLogs.length && !webLogs.length) {
+      return {
+        stackedBarData: [],
+        lineChartData: [],
+        donutData: [
+          { name: 'Applications', value: 0, percentage: 0, color: '#3B82F6' },
+          { name: 'Websites', value: 0, percentage: 0, color: '#10B981' }
+        ],
+        stats: {
+          totalAppHours: 0,
+          totalWebHours: 0,
+          totalHours: 0,
+          appRatio: 0,
+          webRatio: 0,
+          avgAppPerDay: 0,
+          avgWebPerDay: 0,
+          dominant: 'N/A',
+          dominantPercentage: 0,
+          uniqueApps: 0,
+          uniqueWebsites: 0,
+          totalDays: 0
+        }
+      };
+    }
 
     // Filter logs strictly within date range
     const filteredAppLogs = appLogs.filter(log => {
@@ -157,15 +180,6 @@ const AppVsWebComparison: React.FC<Props> = ({ memberId, startDate, endDate }) =
       <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
         <AlertCircle className="w-5 h-5 text-red-600" />
         <p className="text-red-800">{error}</p>
-      </div>
-    );
-  }
-
-  if (!analytics) {
-    return (
-      <div className="text-center py-20 text-gray-500">
-        <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-        <p>No data available for app vs website comparison.</p>
       </div>
     );
   }
