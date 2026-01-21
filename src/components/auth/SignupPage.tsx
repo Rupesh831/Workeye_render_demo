@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-21 18:11 IST - Neumorphic Design
+// UPDATED: 2026-01-21 22:01 IST - Fixed Alignment Issues
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -84,15 +84,15 @@ const SignupPage = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div 
-            className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-4"
+            className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-4"
             style={{ boxShadow: '6px 6px 12px rgba(99, 102, 241, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.8)' }}
           >
-            <UserPlus className="w-8 h-8 text-white" />
+            <UserPlus className="w-9 h-9 text-white" />
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
             Create Account
           </h2>
-          <p className="text-gray-600">Start your free trial today</p>
+          <p className="text-gray-600 text-sm">Start your free trial today</p>
         </div>
 
         {/* Error Message */}
@@ -110,18 +110,20 @@ const SignupPage = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
               Full Name / Company Name
             </label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <User className="w-5 h-5 text-gray-400" />
+              </div>
               <input
                 type="text"
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="John Doe or Acme Corp"
-                className="w-full pl-12 pr-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
+                className="w-full pl-12 pr-4 py-3.5 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900 placeholder-gray-400 text-sm"
                 style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
                 required
                 disabled={loading}
@@ -131,18 +133,20 @@ const SignupPage = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <Mail className="w-5 h-5 text-gray-400" />
+              </div>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@company.com"
-                className="w-full pl-12 pr-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
+                className="w-full pl-12 pr-4 py-3.5 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900 placeholder-gray-400 text-sm"
                 style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
                 required
                 disabled={loading}
@@ -153,18 +157,20 @@ const SignupPage = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <Lock className="w-5 h-5 text-gray-400" />
+              </div>
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full pl-12 pr-12 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
+                className="w-full pl-12 pr-12 py-3.5 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900 placeholder-gray-400 text-sm"
                 style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
                 required
                 disabled={loading}
@@ -173,13 +179,13 @@ const SignupPage = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2"
+                className="absolute right-4 top-1/2 -translate-y-1/2 focus:outline-none"
                 disabled={loading}
               >
                 {showPassword ? (
-                  <EyeOff className="w-5 h-5 text-gray-400" />
+                  <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
                 ) : (
-                  <Eye className="w-5 h-5 text-gray-400" />
+                  <Eye className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
                 )}
               </button>
             </div>
@@ -187,18 +193,20 @@ const SignupPage = () => {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
               Confirm Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <Lock className="w-5 h-5 text-gray-400" />
+              </div>
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full pl-12 pr-12 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
+                className="w-full pl-12 pr-12 py-3.5 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900 placeholder-gray-400 text-sm"
                 style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
                 required
                 disabled={loading}
@@ -207,21 +215,21 @@ const SignupPage = () => {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2"
+                className="absolute right-4 top-1/2 -translate-y-1/2 focus:outline-none"
                 disabled={loading}
               >
                 {showConfirmPassword ? (
-                  <EyeOff className="w-5 h-5 text-gray-400" />
+                  <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
                 ) : (
-                  <Eye className="w-5 h-5 text-gray-400" />
+                  <Eye className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
                 )}
               </button>
             </div>
           </div>
 
           {/* Terms Checkbox */}
-          <div className="flex items-start space-x-3">
-            <div className="relative mt-1">
+          <div className="flex items-start space-x-3 pt-2">
+            <div className="relative mt-0.5">
               <input
                 type="checkbox"
                 checked={agreeToTerms}
@@ -249,7 +257,7 @@ const SignupPage = () => {
                 )}
               </div>
             </div>
-            <label className="text-sm text-gray-700 leading-relaxed">
+            <label className="text-xs text-gray-700 leading-relaxed">
               I agree to the{' '}
               <span className="font-semibold text-indigo-600">Terms of Service</span>
               {' '}and{' '}
@@ -261,7 +269,7 @@ const SignupPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-2xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-2"
+            className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-2xl transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-2 mt-6"
             style={{ boxShadow: '6px 6px 12px rgba(99, 102, 241, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.7)' }}
           >
             {loading ? (
@@ -279,7 +287,7 @@ const SignupPage = () => {
         </form>
 
         {/* Sign In Link */}
-        <p className="text-center mt-6 text-gray-600">
+        <p className="text-center mt-6 text-gray-600 text-sm">
           Already have an account?{' '}
           <Link
             to="/login"
