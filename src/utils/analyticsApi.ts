@@ -4,11 +4,7 @@
  * Handles all analytics API calls with pagination and caching
  */
 
-import { API_BASE_URL } from '../config/api';
-
-function getAuthToken(): string | null {
-  return localStorage.getItem('authToken');
-}
+import { API_BASE_URL, fetchAPI } from '../config/api';
 
 export interface AttendanceRecord {
   id: number;
@@ -77,28 +73,16 @@ export async function getAttendanceAnalytics(
   startDate?: string,
   endDate?: string
 ): Promise<AttendanceRecord[]> {
-  const token = getAuthToken();
   const params = new URLSearchParams();
   
   if (memberId) params.append('member_id', memberId.toString());
   if (startDate) params.append('start_date', startDate);
   if (endDate) params.append('end_date', endDate);
 
-  const response = await fetch(
-    `${API_BASE_URL}/analytics/attendance?${params.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
+  const data = await fetchAPI<{ success: boolean; records: AttendanceRecord[] }>(
+    `/analytics/attendance?${params.toString()}`
   );
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch attendance analytics: ${response.statusText}`);
-  }
-
-  const data = await response.json();
   return data.records || [];
 }
 
@@ -112,7 +96,6 @@ export async function getActivityAnalytics(
   page: number = 1,
   limit: number = 50
 ): Promise<{ logs: ActivityLog[]; pagination: any }> {
-  const token = getAuthToken();
   const params = new URLSearchParams({
     member_id: memberId.toString(),
     page: page.toString(),
@@ -122,21 +105,10 @@ export async function getActivityAnalytics(
   if (startDate) params.append('start_date', startDate);
   if (endDate) params.append('end_date', endDate);
 
-  const response = await fetch(
-    `${API_BASE_URL}/analytics/activity?${params.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
+  const data = await fetchAPI<{ logs: ActivityLog[]; pagination: any }>(
+    `/analytics/activity?${params.toString()}`
   );
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch activity analytics: ${response.statusText}`);
-  }
-
-  const data = await response.json();
   return {
     logs: data.logs || [],
     pagination: data.pagination || {},
@@ -151,7 +123,6 @@ export async function getAppsAnalytics(
   startDate?: string,
   endDate?: string
 ): Promise<AppLog[]> {
-  const token = getAuthToken();
   const params = new URLSearchParams({
     member_id: memberId.toString(),
   });
@@ -159,21 +130,10 @@ export async function getAppsAnalytics(
   if (startDate) params.append('start_date', startDate);
   if (endDate) params.append('end_date', endDate);
 
-  const response = await fetch(
-    `${API_BASE_URL}/analytics/apps?${params.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
+  const data = await fetchAPI<{ logs: AppLog[] }>(
+    `/analytics/apps?${params.toString()}`
   );
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch apps analytics: ${response.statusText}`);
-  }
-
-  const data = await response.json();
   return data.logs || [];
 }
 
@@ -185,7 +145,6 @@ export async function getWebsitesAnalytics(
   startDate?: string,
   endDate?: string
 ): Promise<WebsiteLog[]> {
-  const token = getAuthToken();
   const params = new URLSearchParams({
     member_id: memberId.toString(),
   });
@@ -193,21 +152,10 @@ export async function getWebsitesAnalytics(
   if (startDate) params.append('start_date', startDate);
   if (endDate) params.append('end_date', endDate);
 
-  const response = await fetch(
-    `${API_BASE_URL}/analytics/websites?${params.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
+  const data = await fetchAPI<{ logs: WebsiteLog[] }>(
+    `/analytics/websites?${params.toString()}`
   );
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch websites analytics: ${response.statusText}`);
-  }
-
-  const data = await response.json();
   return data.logs || [];
 }
 
@@ -218,28 +166,16 @@ export async function getWorkBehaviorAnalytics(
   memberId: number,
   date?: string
 ): Promise<WorkBehavior> {
-  const token = getAuthToken();
   const params = new URLSearchParams({
     member_id: memberId.toString(),
   });
   
   if (date) params.append('date', date);
 
-  const response = await fetch(
-    `${API_BASE_URL}/analytics/work-behavior?${params.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
+  const data = await fetchAPI<WorkBehavior>(
+    `/analytics/work-behavior?${params.toString()}`
   );
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch work behavior analytics: ${response.statusText}`);
-  }
-
-  const data = await response.json();
   return {
     attendance: data.attendance || null,
     activities: data.activities || [],
