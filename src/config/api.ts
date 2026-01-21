@@ -173,12 +173,15 @@ export async function fetchAPI<T = any>(
   try {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
     
+    // Ensure headers are properly merged with fresh token
+    const headers = {
+      ...createHeaders(), // This gets the current token
+      ...options.headers,
+    };
+    
     const response = await fetch(url, {
       ...options,
-      headers: {
-        ...createHeaders(),
-        ...options.headers,
-      },
+      headers,
     });
 
     // Handle 401 - Try to refresh token BEFORE parsing response
@@ -197,9 +200,46 @@ export async function fetchAPI<T = any>(
             const refreshData = await refreshResponse.json();
             if (refreshData.token) {
               setAuthToken(refreshData.token);
-              console.log('✅ Token refreshed, retrying request...');
+              console.log('✅ Token refreshed successfully');
+              
+              // IMPORTANT: Create new headers with the fresh token for retry
+              const retryHeaders = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${refreshData.token}`,
+                ...options.headers,
+              };
+              
               // Retry original request with new token
-              return fetchAPI<T>(endpoint, options, retryCount + 1);
+              const retryResponse = await fetch(url, {
+                ...options,
+                headers: retryHeaders,
+              });
+              
+              // Parse retry response
+              const contentType = retryResponse.headers.get('content-type');
+              const isJson = contentType && contentType.includes('application/json');
+              
+              if (!isJson) {
+                if (!retryResponse.ok) {
+                  throw new Error(`HTTP error! status: ${retryResponse.status}`);
+                }
+                return retryResponse as any;
+              }
+              
+              let retryData;
+              try {
+                retryData = await retryResponse.json();
+              } catch (parseError) {
+                console.error('Failed to parse retry JSON response:', parseError);
+                throw new Error(`Invalid JSON response from server (status: ${retryResponse.status})`);
+              }
+              
+              if (!retryResponse.ok) {
+                const errorMessage = retryData.error || retryData.message || `HTTP error! status: ${retryResponse.status}`;
+                throw new Error(errorMessage);
+              }
+              
+              return retryData;
             }
           }
           
