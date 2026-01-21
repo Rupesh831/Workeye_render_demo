@@ -24,14 +24,15 @@ import {
   UserCircle,
   ClipboardList,
   ArrowLeft,
-  Zap,
-  Target,
-  Award,
-  TrendingDown,
   Eye,
   Bell,
-  Moon,
-  Sun
+  Menu,
+  X,
+  ChevronRight,
+  TrendingDown,
+  Target,
+  Award,
+  Calendar
 } from 'lucide-react';
 import { dashboard, members as membersAPI, wsClient, tracker } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -64,8 +65,8 @@ export function Dashboard() {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [downloadingTracker, setDownloadingTracker] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [darkMode, setDarkMode] = useState(false);
 
   // Filter states
   const [nameFilter, setNameFilter] = useState('');
@@ -252,382 +253,341 @@ export function Dashboard() {
   const companyId = company?.id || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Premium Glassmorphic Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl bg-white/70 border-b border-white/20 shadow-lg shadow-slate-200/50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between h-20">
-            {/* Left: Logo & Brand */}
-            <div className="flex items-center space-x-4">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
-                <div className="relative w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/50 transform group-hover:scale-105 transition-transform duration-300">
-                  <Eye className="w-7 h-7 text-white" />
-                </div>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                  Workeye
-                </h1>
-                <p className="text-xs text-slate-500 font-medium">Premium Workspace Analytics</p>
-              </div>
-            </div>
-
-            {/* Center: Navigation Pills */}
-            <nav className="hidden md:flex items-center space-x-2 bg-white/50 backdrop-blur-xl rounded-full p-1.5 shadow-inner shadow-slate-200/50 border border-white/60">
-              <button
-                onClick={() => setView('overview')}
-                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
-                  view === 'overview'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50 scale-105'
-                    : 'text-slate-600 hover:bg-white/80 hover:text-slate-900'
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4 inline mr-2" />
-                Dashboard
-              </button>
-              <button
-                onClick={() => navigate('/analytics')}
-                className="px-6 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:bg-white/80 hover:text-slate-900 transition-all duration-300"
-              >
-                <BarChart3 className="w-4 h-4 inline mr-2" />
-                Analytics
-              </button>
-              <button
-                onClick={() => setView('members')}
-                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
-                  view === 'members'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50 scale-105'
-                    : 'text-slate-600 hover:bg-white/80 hover:text-slate-900'
-                }`}
-              >
-                <UsersIcon className="w-4 h-4 inline mr-2" />
-                Team
-              </button>
-              <button
-                onClick={() => navigate('/attendance')}
-                className="px-6 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:bg-white/80 hover:text-slate-900 transition-all duration-300"
-              >
-                <ClipboardList className="w-4 h-4 inline mr-2" />
-                Attendance
-              </button>
-            </nav>
-
-            {/* Right: Actions & Profile */}
+    <div className="flex h-screen bg-[#f5f6fa] overflow-hidden">
+      {/* Sidebar */}
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex flex-col`}>
+        {/* Logo */}
+        <div className="h-20 flex items-center justify-between px-6 border-b border-gray-200">
+          {sidebarOpen && (
             <div className="flex items-center space-x-3">
-              {/* Notifications */}
-              <button className="relative p-3 rounded-full hover:bg-white/80 transition-all duration-300 group">
-                <Bell className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              </button>
-
-              {/* Settings */}
-              <button 
-                onClick={() => navigate('/configuration')}
-                className="p-3 rounded-full hover:bg-white/80 transition-all duration-300 group"
-              >
-                <Settings className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors" />
-              </button>
-
-              {/* Profile Dropdown */}
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  className="flex items-center space-x-3 p-2 pr-4 rounded-full hover:bg-white/80 transition-all duration-300 group"
-                >
-                  <div className="relative">
-                    <div className="w-11 h-11 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30">
-                      <span className="text-white font-bold text-sm">
-                        {userName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-slate-600 transition-transform duration-300 ${showProfileDropdown ? 'rotate-180' : ''}`} />
-                </button>
-
-                {showProfileDropdown && (
-                  <div className="absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/60 overflow-hidden animate-in slide-in-from-top-2 duration-300">
-                    {/* Profile Header */}
-                    <div className="p-6 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center ring-4 ring-white/30">
-                          <span className="text-white font-bold text-xl">
-                            {userName.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="text-white font-bold text-lg">{userName}</h3>
-                          <p className="text-blue-100 text-sm">{user?.email || 'Administrator'}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Menu Items */}
-                    <div className="p-3 space-y-1">
-                      <button
-                        onClick={() => navigate('/profile')}
-                        className="w-full px-4 py-3.5 flex items-center space-x-4 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-2xl transition-all duration-200 group"
-                      >
-                        <div className="w-11 h-11 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <UserCircle className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <span className="text-sm text-slate-800 font-semibold block">My Profile</span>
-                          <span className="text-xs text-slate-500">View and edit profile</span>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={handleDownloadTracker}
-                        disabled={downloadingTracker}
-                        className="w-full px-4 py-3.5 flex items-center space-x-4 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 rounded-2xl transition-all duration-200 group disabled:opacity-50"
-                      >
-                        <div className="w-11 h-11 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <Download className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <span className="text-sm text-slate-800 font-semibold block">
-                            {downloadingTracker ? 'Downloading...' : 'Download Tracker'}
-                          </span>
-                          <span className="text-xs text-slate-500">Get desktop app</span>
-                        </div>
-                      </button>
-
-                      <div className="my-2 border-t border-slate-200"></div>
-
-                      <button
-                        onClick={() => {
-                          logout();
-                          navigate('/login');
-                        }}
-                        className="w-full px-4 py-3.5 flex items-center space-x-4 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 rounded-2xl transition-all duration-200 group"
-                      >
-                        <div className="w-11 h-11 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <LogOut className="w-5 h-5 text-red-600" />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <span className="text-sm text-red-600 font-semibold block">Sign Out</span>
-                          <span className="text-xs text-red-400">End your session</span>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Eye className="w-5 h-5 text-white" />
               </div>
+              <span className="text-xl font-bold text-gray-900">Dashon</span>
             </div>
+          )}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            {sidebarOpen ? <X className="w-5 h-5 text-gray-600" /> : <Menu className="w-5 h-5 text-gray-600" />}
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 py-6 px-3 space-y-1">
+          <button
+            onClick={() => setView('overview')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
+              view === 'overview'
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/50'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            {sidebarOpen && <span className="font-medium">Dashboard</span>}
+          </button>
+
+          <button
+            onClick={() => navigate('/analytics')}
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all"
+          >
+            <BarChart3 className="w-5 h-5" />
+            {sidebarOpen && <span className="font-medium">Analytics</span>}
+          </button>
+
+          <button
+            onClick={() => setView('members')}
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
+              view === 'members'
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/50'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <UsersIcon className="w-5 h-5" />
+            {sidebarOpen && <span className="font-medium">Team</span>}
+          </button>
+
+          <button
+            onClick={() => navigate('/attendance')}
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all"
+          >
+            <ClipboardList className="w-5 h-5" />
+            {sidebarOpen && <span className="font-medium">Attendance</span>}
+          </button>
+
+          <button
+            onClick={() => navigate('/configuration')}
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all"
+          >
+            <Settings className="w-5 h-5" />
+            {sidebarOpen && <span className="font-medium">Settings</span>}
+          </button>
+        </nav>
+
+        {/* User Profile */}
+        <div className="p-4 border-t border-gray-200">
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+              className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">
+                  {userName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              {sidebarOpen && (
+                <>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold text-gray-900">{userName}</p>
+                    <p className="text-xs text-gray-500">Administrator</p>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </>
+              )}
+            </button>
+
+            {showProfileDropdown && (
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors"
+                >
+                  <UserCircle className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">Profile</span>
+                </button>
+                <button
+                  onClick={handleDownloadTracker}
+                  disabled={downloadingTracker}
+                  className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors"
+                >
+                  <Download className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {downloadingTracker ? 'Downloading...' : 'Download Tracker'}
+                  </span>
+                </button>
+                <div className="border-t border-gray-100"></div>
+                <button
+                  onClick={() => {
+                    logout();
+                    navigate('/login');
+                  }}
+                  className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="w-5 h-5 text-red-600" />
+                  <span className="text-sm font-medium text-red-600">Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
-      </header>
+      </aside>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 pt-28 pb-12">
-        {error && (
-          <div className="mb-8 p-5 bg-red-50/80 backdrop-blur-xl border border-red-200/50 rounded-3xl flex items-start space-x-4 shadow-lg shadow-red-100/50 animate-in slide-in-from-top-4 duration-500">
-            <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <AlertCircle className="w-6 h-6 text-red-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-red-900">Unable to load dashboard</p>
-              <p className="text-sm text-red-600 mt-1">{error}</p>
-            </div>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Bar */}
+        <header className="h-20 bg-white border-b border-gray-200 px-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Analytics Overview</h1>
+            <p className="text-sm text-gray-500 mt-1">Track your team's performance</p>
           </div>
-        )}
-
-        {/* Premium Stats Grid */}
-        {view === 'overview' && (
-          <>
-            {/* Greeting Section */}
-            <div className="mb-8 animate-in slide-in-from-bottom-4 duration-700">
-              <h2 className="text-4xl font-bold text-slate-900 mb-2">
-                Welcome back, {userName} 👋
-              </h2>
-              <p className="text-slate-500 text-lg">
-                Here's what's happening with your team today
-              </p>
+          
+          <div className="flex items-center space-x-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+                className="w-64 pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
+              />
             </div>
 
-            {/* Stats Cards - Apple Style */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-              {/* Total Employees Card */}
-              <div className="group relative animate-in slide-in-from-bottom-4 duration-700 delay-100">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500 opacity-0 group-hover:opacity-100"></div>
-                <div className="relative bg-white/80 backdrop-blur-2xl rounded-3xl p-8 border border-white/60 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-blue-200/50 transition-all duration-500 hover:-translate-y-1">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
-                      <Users className="w-8 h-8 text-white" />
-                    </div>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Live</span>
-                  </div>
-                  <h3 className="text-5xl font-black text-slate-900 mb-2 tracking-tight">{stats.total}</h3>
-                  <p className="text-sm font-semibold text-slate-600 mb-3">Total Team Members</p>
-                  <div className="flex items-center space-x-4 text-xs">
-                    <span className="flex items-center text-green-600 font-semibold">
-                      <span className="w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
-                      {stats.active} active
-                    </span>
-                    <span className="flex items-center text-amber-600 font-semibold">
-                      <span className="w-2 h-2 bg-amber-500 rounded-full mr-1.5"></span>
-                      {stats.idle} idle
-                    </span>
-                  </div>
-                </div>
-              </div>
+            {/* Calendar Icon */}
+            <button className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
+              <Calendar className="w-5 h-5 text-gray-600" />
+            </button>
 
-              {/* Active Now Card */}
-              <div className="group relative animate-in slide-in-from-bottom-4 duration-700 delay-200">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500 opacity-0 group-hover:opacity-100"></div>
-                <div className="relative bg-white/80 backdrop-blur-2xl rounded-3xl p-8 border border-white/60 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-green-200/50 transition-all duration-500 hover:-translate-y-1">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30 group-hover:scale-110 transition-transform duration-300">
-                      <Activity className="w-8 h-8 text-white" />
-                    </div>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                      {Math.round((stats.active / (stats.total || 1)) * 100)}%
-                    </span>
-                  </div>
-                  <h3 className="text-5xl font-black text-slate-900 mb-2 tracking-tight">{stats.active}</h3>
-                  <p className="text-sm font-semibold text-slate-600 mb-3">Active Right Now</p>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-1000"
-                      style={{ width: `${(stats.active / (stats.total || 1)) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
+            {/* Notifications */}
+            <button className="relative p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
+              <Bell className="w-5 h-5 text-gray-600" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+          </div>
+        </header>
 
-              {/* Screen Time Card */}
-              <div className="group relative animate-in slide-in-from-bottom-4 duration-700 delay-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500 opacity-0 group-hover:opacity-100"></div>
-                <div className="relative bg-white/80 backdrop-blur-2xl rounded-3xl p-8 border border-white/60 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-purple-200/50 transition-all duration-500 hover:-translate-y-1">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform duration-300">
-                      <Clock className="w-8 h-8 text-white" />
-                    </div>
-                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">Avg</span>
-                  </div>
-                  <h3 className="text-5xl font-black text-slate-900 mb-2 tracking-tight">{stats.avgScreenTime}<span className="text-3xl text-slate-400">h</span></h3>
-                  <p className="text-sm font-semibold text-slate-600 mb-3">Screen Time</p>
-                  <p className="text-xs text-slate-500 font-medium">
-                    {(stats.totalActiveTime / (stats.total || 1)).toFixed(1)}h active work time
-                  </p>
-                </div>
-              </div>
-
-              {/* Productivity Card */}
-              <div className="group relative animate-in slide-in-from-bottom-4 duration-700 delay-400">
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-400/20 to-red-400/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500 opacity-0 group-hover:opacity-100"></div>
-                <div className="relative bg-white/80 backdrop-blur-2xl rounded-3xl p-8 border border-white/60 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-orange-200/50 transition-all duration-500 hover:-translate-y-1">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform duration-300">
-                      <TrendingUp className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="flex items-center space-x-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                      <TrendingUp className="w-3 h-3" />
-                      <span>+5%</span>
-                    </div>
-                  </div>
-                  <h3 className="text-5xl font-black text-slate-900 mb-2 tracking-tight">{stats.avgProductivity}<span className="text-3xl text-slate-400">%</span></h3>
-                  <p className="text-sm font-semibold text-slate-600 mb-3">Team Productivity</p>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-orange-500 to-red-600 rounded-full transition-all duration-1000"
-                        style={{ width: `${stats.avgProductivity}%` }}
-                      ></div>
-                    </div>
-                    <Award className="w-4 h-4 text-orange-500" />
-                  </div>
-                </div>
+        {/* Content Area */}
+        <main className="flex-1 overflow-auto p-8">
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-800">Error loading dashboard</p>
+                <p className="text-sm text-red-600 mt-1">{error}</p>
               </div>
             </div>
+          )}
 
-            {/* Search & Filters Section - Apple Style */}
-            <div className="mb-8 animate-in slide-in-from-bottom-4 duration-700 delay-500">
-              <div className="bg-white/60 backdrop-blur-2xl rounded-3xl p-6 border border-white/60 shadow-xl shadow-slate-200/30">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center">
-                    <Filter className="w-5 h-5 text-slate-700" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900">Smart Filters</h3>
-                    <p className="text-sm text-slate-500">Refine your team view instantly</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Search Input */}
-                  <div className="relative md:col-span-2">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search team members..."
-                      value={nameFilter}
-                      onChange={(e) => setNameFilter(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 bg-white/70 border border-slate-200/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium placeholder:text-slate-400 shadow-sm"
-                    />
-                  </div>
-
-                  {/* Status Filter */}
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                    className="w-full px-4 py-4 bg-white/70 border border-slate-200/50 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium shadow-sm appearance-none cursor-pointer"
-                  >
-                    <option value="">All Status</option>
-                    <option value="active">🟢 Active</option>
-                    <option value="idle">🟡 Idle</option>
-                    <option value="offline">⚫ Offline</option>
-                  </select>
-                </div>
-
-                {/* Active Filters Badge */}
-                {(nameFilter || statusFilter) && (
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-slate-600 font-medium">Active filters:</span>
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
-                        {members.length} result{members.length !== 1 ? 's' : ''}
-                      </span>
+          {view === 'overview' && (
+            <>
+              {/* Stats Cards */}
+              <div className="grid grid-cols-4 gap-6 mb-8">
+                {/* Card 1 */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                      <Users className="w-6 h-6 text-white" />
                     </div>
-                    <button
-                      onClick={() => {
-                        setNameFilter('');
-                        setStatusFilter('');
-                      }}
-                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-all duration-200 hover:scale-105"
-                    >
-                      Clear All
-                    </button>
+                    <TrendingUp className="w-5 h-5 text-green-500" />
                   </div>
-                )}
-              </div>
-            </div>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</h3>
+                  <p className="text-sm text-gray-500 font-medium">Total Employees</p>
+                </div>
 
-            {/* Employee Table - Premium Design */}
-            <div className="animate-in slide-in-from-bottom-4 duration-700 delay-600">
-              <div className="bg-white/60 backdrop-blur-2xl rounded-3xl border border-white/60 shadow-xl shadow-slate-200/50 overflow-hidden">
-                <div className="px-8 py-6 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-blue-50/50">
-                  <div className="flex items-center justify-between">
+                {/* Card 2 */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                      <Activity className="w-6 h-6 text-white" />
+                    </div>
+                    <TrendingUp className="w-5 h-5 text-green-500" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.active}</h3>
+                  <p className="text-sm text-gray-500 font-medium">Active Now</p>
+                </div>
+
+                {/* Card 3 */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-white" />
+                    </div>
+                    <TrendingDown className="w-5 h-5 text-red-500" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.avgScreenTime}h</h3>
+                  <p className="text-sm text-gray-500 font-medium">Avg Screen Time</p>
+                </div>
+
+                {/* Card 4 */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-white" />
+                    </div>
+                    <TrendingUp className="w-5 h-5 text-green-500" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.avgProductivity}%</h3>
+                  <p className="text-sm text-gray-500 font-medium">Productivity</p>
+                </div>
+              </div>
+
+              {/* Two Column Layout */}
+              <div className="grid grid-cols-3 gap-6 mb-8">
+                {/* Revenue Chart (Placeholder) */}
+                <div className="col-span-2 bg-white rounded-2xl p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h2 className="text-2xl font-bold text-slate-900">Team Overview</h2>
-                      <p className="text-sm text-slate-500 mt-1">
-                        Real-time monitoring and performance insights
-                      </p>
+                      <h3 className="text-lg font-bold text-gray-900">Activity Overview</h3>
+                      <p className="text-sm text-gray-500 mt-1">Team activity patterns</p>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <span className="px-4 py-2 bg-white rounded-full text-sm font-semibold text-slate-600 shadow-sm">
-                        Last updated: {lastRefresh.toLocaleTimeString()}
-                      </span>
-                      <button
-                        onClick={fetchDashboardData}
-                        disabled={loading}
-                        className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-300 disabled:opacity-50 hover:scale-105"
-                      >
-                        <Activity className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                    <div className="flex items-center space-x-2">
+                      <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+                        Day
+                      </button>
+                      <button className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg">
+                        Week
+                      </button>
+                      <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+                        Month
                       </button>
                     </div>
+                  </div>
+                  {/* Placeholder for chart */}
+                  <div className="h-64 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl flex items-center justify-center">
+                    <div className="text-center">
+                      <BarChart3 className="w-12 h-12 text-indigo-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Activity chart visualization</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Status (Donut Chart Placeholder) */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-gray-900">Team Status</h3>
+                  </div>
+                  {/* Donut chart placeholder */}
+                  <div className="flex items-center justify-center h-48">
+                    <div className="relative">
+                      <div className="w-40 h-40 rounded-full border-[20px] border-indigo-500" style={{ 
+                        borderColor: 'transparent',
+                        borderTopColor: '#6366f1',
+                        borderRightColor: '#8b5cf6',
+                        borderBottomColor: '#a855f7',
+                        borderLeftColor: '#c084fc'
+                      }}></div>
+                      <div className="absolute inset-0 flex items-center justify-center flex-col">
+                        <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                        <p className="text-xs text-gray-500">Total</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                        <span className="text-sm text-gray-600">Active</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900">{stats.active}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                        <span className="text-sm text-gray-600">Idle</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900">{stats.idle}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                        <span className="text-sm text-gray-600">Offline</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900">{stats.offline}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Employee Table */}
+              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Team Members</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {members.length} member{members.length !== 1 ? 's' : ''} total
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value as any)}
+                      className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="idle">Idle</option>
+                      <option value="offline">Offline</option>
+                    </select>
+                    <button
+                      onClick={fetchDashboardData}
+                      disabled={loading}
+                      className="p-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <Activity className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
                   </div>
                 </div>
                 <EmployeeOverviewTable
@@ -638,34 +598,34 @@ export function Dashboard() {
                   }}
                 />
               </div>
+            </>
+          )}
+
+          {/* Detail View */}
+          {view === 'detail' && selectedEmployee && (
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <EmployeeDetailView
+                employee={selectedEmployee}
+                onBack={() => {
+                  setSelectedEmployee(null);
+                  setView('overview');
+                }}
+              />
             </div>
-          </>
-        )}
+          )}
 
-        {/* Detail View */}
-        {view === 'detail' && selectedEmployee && (
-          <div className="bg-white/60 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/60 overflow-hidden animate-in slide-in-from-right-4 duration-500">
-            <EmployeeDetailView
-              employee={selectedEmployee}
-              onBack={() => {
-                setSelectedEmployee(null);
-                setView('overview');
-              }}
-            />
-          </div>
-        )}
-
-        {/* Members Management */}
-        {view === 'members' && (
-          <div className="bg-white/60 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/60 overflow-hidden animate-in slide-in-from-right-4 duration-500">
-            <MembersManagement 
-              companyUsername={companyUsername}
-              companyId={companyId}
-              onMembersUpdate={fetchDashboardData}
-            />
-          </div>
-        )}
-      </main>
+          {/* Members Management */}
+          {view === 'members' && (
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <MembersManagement 
+                companyUsername={companyUsername}
+                companyId={companyId}
+                onMembersUpdate={fetchDashboardData}
+              />
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
