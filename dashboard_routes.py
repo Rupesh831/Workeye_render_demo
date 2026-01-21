@@ -8,6 +8,7 @@ DASHBOARD_ROUTES - ENHANCED WITH ACCURATE DATA AND FILTERS
 ✅ Filters: Employee Name (searchable) and Status
 ✅ All timestamps in IST (Indian Standard Time)
 ✅ FIXED: Improved idle status detection with detailed logging
+✅ NEW: Activity Trends endpoint for 7-day chart
 """
 
 from flask import Blueprint, request, jsonify
@@ -288,6 +289,105 @@ def get_dashboard_stats():
         import traceback
         traceback.print_exc()
         return jsonify({'error': 'Failed to fetch dashboard stats'}), 500
+
+
+# ============================================================================
+# ACTIVITY TRENDS - 7 DAY CHART DATA
+# ============================================================================
+
+@dashboard_bp.route('/api/dashboard/activity-trends', methods=['GET'])
+@require_admin_auth
+def get_activity_trends():
+    """
+    Get activity trends for the last 7 days for chart visualization
+    
+    Returns:
+    - 7 days of aggregated data (today back to 6 days ago)
+    - Each day includes:
+      - date: ISO date string
+      - screen_time: Total screen time in seconds
+      - active_time: Total active time in seconds
+      - idle_time: Total idle time in seconds
+      - productivity: Average productivity percentage
+    """
+    try:
+        company_id = request.company_id
+        today = datetime.now(IST).date()
+        start_date = today - timedelta(days=6)  # 7 days total including today
+        
+        print(f"\n📈 ========== ACTIVITY TRENDS REQUEST ==========")
+        print(f"Company ID: {company_id}")
+        print(f"Date range: {start_date} to {today}")
+        
+        with get_db() as conn:
+            cur = conn.cursor()
+            
+            # Get daily summaries for the last 7 days
+            cur.execute(
+                """
+                SELECT 
+                    date,
+                    SUM(total_screen_time) as total_screen,
+                    SUM(active_time) as total_active,
+                    SUM(idle_time) as total_idle,
+                    AVG(productivity_percentage) as avg_productivity
+                FROM daily_summaries
+                WHERE company_id = %s
+                  AND date >= %s
+                  AND date <= %s
+                GROUP BY date
+                ORDER BY date ASC
+                """,
+                (company_id, start_date, today)
+            )
+            
+            rows = cur.fetchall()
+            
+            # Create a map of date -> data
+            data_map = {row['date']: row for row in rows}
+            
+            # Fill in all 7 days (including missing days with zeros)
+            result = []
+            for i in range(7):
+                check_date = start_date + timedelta(days=i)
+                day_data = data_map.get(check_date)
+                
+                if day_data:
+                    result.append({
+                        'date': check_date.isoformat(),
+                        'screen_time': float(day_data['total_screen'] or 0),
+                        'active_time': float(day_data['total_active'] or 0),
+                        'idle_time': float(day_data['total_idle'] or 0),
+                        'productivity': float(day_data['avg_productivity'] or 0)
+                    })
+                else:
+                    # No data for this day
+                    result.append({
+                        'date': check_date.isoformat(),
+                        'screen_time': 0,
+                        'active_time': 0,
+                        'idle_time': 0,
+                        'productivity': 0
+                    })
+            
+            print(f"📊 Returning {len(result)} days of trend data")
+            print(f"========================================\n")
+            
+            return jsonify({
+                'success': True,
+                'trends': result,
+                'date_range': {
+                    'start': start_date.isoformat(),
+                    'end': today.isoformat()
+                },
+                'timestamp': get_ist_now().isoformat()
+            }), 200
+    
+    except Exception as e:
+        print(f"❌ Activity trends error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to fetch activity trends'}), 500
 
 
 # ============================================================================
