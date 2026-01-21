@@ -107,7 +107,8 @@ const AnalyticsPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    window.history.back();
+    // Simply navigate to dashboard - most reliable approach
+    navigate('/dashboard');
   };
 
   const renderAnalytics = () => {
