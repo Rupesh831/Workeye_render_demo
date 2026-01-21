@@ -33,7 +33,9 @@ const WebsiteAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) => 
       const data = await getWebsitesAnalytics(memberId!, startDate, endDate);
       setLogs(data);
     } catch (err: any) {
-      setError(err.message);
+      console.error('Website analytics error:', err);
+      setError(err.message || 'Failed to load website data');
+      setLogs([]);
     } finally {
       setLoading(false);
     }
