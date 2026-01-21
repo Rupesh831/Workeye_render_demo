@@ -33,7 +33,9 @@ const IdleTimeAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) =>
       const data = await getActivityAnalytics(memberId!, startDate, endDate);
       setLogs(data.logs);
     } catch (err: any) {
-      setError(err.message);
+      console.error('Idle time analytics error:', err);
+      setError(err.message || 'Failed to load idle time data');
+      setLogs([]);
     } finally {
       setLoading(false);
     }
