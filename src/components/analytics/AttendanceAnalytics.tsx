@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getAttendanceAnalytics, AttendanceRecord } from '../../utils/analyticsApi';
 import {
   BarChart,
@@ -17,7 +18,7 @@ import {
   LineChart,
   Line
 } from 'recharts';
-import { Calendar, Clock, TrendingUp, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, AlertCircle, ExternalLink } from 'lucide-react';
 
 interface Props {
   memberId: number | null;
@@ -26,6 +27,7 @@ interface Props {
 }
 
 const AttendanceAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) => {
+  const navigate = useNavigate();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +46,14 @@ const AttendanceAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) 
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleViewFullAttendance = () => {
+    if (memberId) {
+      navigate(`/attendance/${memberId}`);
+    } else {
+      navigate('/attendance');
     }
   };
 
@@ -142,6 +152,21 @@ const AttendanceAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) 
 
   return (
     <div className="space-y-6">
+      {/* Header with View Full Attendance Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Attendance Analytics</h2>
+          <p className="text-sm text-slate-500 mt-1">Comprehensive attendance metrics and trends</p>
+        </div>
+        <button
+          onClick={handleViewFullAttendance}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        >
+          <ExternalLink className="w-4 h-4" />
+          View Full Attendance
+        </button>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
