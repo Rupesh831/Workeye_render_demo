@@ -1,3 +1,4 @@
+// UPDATED: 2026-01-21 17:43 IST - Minimal Clean Layout
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -10,9 +11,6 @@ import {
   Download,
   LogOut,
   Eye,
-  Search,
-  Calendar,
-  Bell,
   Menu,
   X
 } from 'lucide-react';
@@ -75,28 +73,6 @@ export function Layout({ children }: LayoutProps) {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const getPageTitle = () => {
-    const titles: { [key: string]: string } = {
-      '/dashboard': 'Analytics Overview',
-      '/members': 'Team Management',
-      '/attendance': 'Attendance Records',
-      '/configuration': 'System Settings',
-      '/profile': 'My Profile'
-    };
-    return titles[location.pathname] || 'Dashboard';
-  };
-
-  const getPageSubtitle = () => {
-    const subtitles: { [key: string]: string } = {
-      '/dashboard': 'Track your team\'s performance',
-      '/members': 'Manage your team members',
-      '/attendance': 'View attendance history',
-      '/configuration': 'Configure your workspace',
-      '/profile': 'Manage your account'
-    };
-    return subtitles[location.pathname] || '';
-  };
-
   return (
     <div className="flex h-screen bg-gradient-to-br from-[#e8ecf3] via-[#e8ecf3] to-[#d4dae6] overflow-hidden">
       {/* Sidebar */}
@@ -114,7 +90,7 @@ export function Layout({ children }: LayoutProps) {
               >
                 <Eye className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Dashon</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">WorkEye</span>
             </div>
           )}
           <button
@@ -232,58 +208,9 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
-        {/* Header */}
-        <header 
-          className="h-20 bg-[#e8ecf3] px-8 flex items-center justify-between flex-shrink-0"
-          style={{ boxShadow: '0 4px 12px rgba(163, 177, 198, 0.3)' }}
-        >
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-              {getPageTitle()}
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">{getPageSubtitle()}</p>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-64 pl-10 pr-4 py-2.5 bg-[#e8ecf3] rounded-2xl focus:outline-none text-sm text-gray-700"
-                style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
-              />
-            </div>
-
-            <button 
-              className="p-2.5 bg-[#e8ecf3] rounded-2xl hover:scale-105 transition-all"
-              style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-            >
-              <Calendar className="w-5 h-5 text-gray-600" />
-            </button>
-
-            <button 
-              className="relative p-2.5 bg-[#e8ecf3] rounded-2xl hover:scale-105 transition-all"
-              style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-            >
-              <Bell className="w-5 h-5 text-gray-600" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            <div 
-              className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer hover:scale-105 transition-all"
-              style={{ boxShadow: '4px 4px 10px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.7)' }}
-              onClick={() => navigate('/profile')}
-            >
-              <span className="text-white font-semibold text-sm">{userName.charAt(0).toUpperCase()}</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main className="flex-1 overflow-auto bg-gradient-to-br from-[#e8ecf3] via-[#e8ecf3] to-[#d4dae6]">
+      {/* Main Content - NO HEADER BAR */}
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
+        <main className="h-full overflow-auto bg-gradient-to-br from-[#e8ecf3] via-[#e8ecf3] to-[#d4dae6]">
           {children}
         </main>
       </div>
