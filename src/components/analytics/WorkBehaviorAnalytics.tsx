@@ -49,7 +49,22 @@ const WorkBehaviorAnalytics: React.FC<Props> = ({ memberId, date, startDate, end
   };
 
   const analytics = useMemo(() => {
-    if (!attendanceData.length || !activityData.length) return null;
+    if (!attendanceData.length || !activityData.length) {
+      return {
+        dailyMetrics: [],
+        heatmapData: Array.from({ length: 24 }, (_, hour) => ({ hour: `${hour}:00` })),
+        stats: {
+          avgGapStart: 0,
+          avgGapEnd: 0,
+          avgFocusPeriods: 0,
+          avgWorkIntensity: 0,
+          totalFocusPeriods: 0,
+          peakProductivityHour: 0,
+          peakProductivityHours: 0,
+          totalDays: 0
+        }
+      };
+    }
 
     // Filter data strictly within date range
     const filteredAttendance = attendanceData.filter(record => {
@@ -62,7 +77,22 @@ const WorkBehaviorAnalytics: React.FC<Props> = ({ memberId, date, startDate, end
       return logDate >= startDate && logDate <= endDate;
     });
 
-    if (!filteredAttendance.length || !filteredActivity.length) return null;
+    if (!filteredAttendance.length || !filteredActivity.length) {
+      return {
+        dailyMetrics: [],
+        heatmapData: Array.from({ length: 24 }, (_, hour) => ({ hour: `${hour}:00` })),
+        stats: {
+          avgGapStart: 0,
+          avgGapEnd: 0,
+          avgFocusPeriods: 0,
+          avgWorkIntensity: 0,
+          totalFocusPeriods: 0,
+          peakProductivityHour: 0,
+          peakProductivityHours: 0,
+          totalDays: 0
+        }
+      };
+    }
 
     // Combine attendance and activity data by date
     const dailyBehaviorMap: Record<string, {
@@ -240,15 +270,6 @@ const WorkBehaviorAnalytics: React.FC<Props> = ({ memberId, date, startDate, end
       <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
         <AlertCircle className="w-5 h-5 text-red-600" />
         <p className="text-red-800">{error}</p>
-      </div>
-    );
-  }
-
-  if (!analytics) {
-    return (
-      <div className="text-center py-20 text-gray-500">
-        <Target className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-        <p>No work behavior data available for the selected period.</p>
       </div>
     );
   }
