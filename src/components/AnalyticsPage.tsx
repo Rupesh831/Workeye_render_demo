@@ -71,8 +71,8 @@ const AnalyticsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'attendance');
   const [memberId, setMemberId] = useState<number | null>(null);
   const [dateRange, setDateRange] = useState({
-    start: getIST30DaysAgo(),
-    end: getTodayIST()
+    start: getTodayIST(), // Current day as default
+    end: getTodayIST()     // Current day as default
   });
 
   // Initialize memberId from URL parameters
