@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-21 18:03 IST - Always Visible Sidebar
+// UPDATED: 2026-01-21 22:55 IST - Fixed sidebar width
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -71,47 +71,47 @@ export function Layout({ children }: LayoutProps) {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-[#e8ecf3] via-[#e8ecf3] to-[#d4dae6] overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 overflow-hidden">
       {/* Sidebar - Always Visible */}
       <aside 
-        className="w-64 bg-[#e8ecf3] flex flex-col flex-shrink-0 h-full"
-        style={{ boxShadow: '5px 0 15px rgba(163, 177, 198, 0.3)' }}
+        className="bg-slate-50 flex flex-col flex-shrink-0 h-full"
+        style={{ width: '256px', boxShadow: '5px 0 15px rgba(163, 177, 198, 0.3)' }}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-center px-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
+        <div className="h-16 flex items-center justify-center px-6 border-b border-slate-200">
+          <div className="flex items-center gap-3">
             <div 
-              className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center"
+              className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center"
               style={{ boxShadow: '4px 4px 8px rgba(99, 102, 241, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.8)' }}
             >
               <Eye className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">WorkEye</span>
+            <span className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">WorkEye</span>
           </div>
         </div>
 
         {/* Profile at Top - Clickable */}
-        <div className="px-4 py-4 border-b border-gray-200">
+        <div className="px-4 py-4 border-b border-slate-200">
           <button
             onClick={() => navigate('/profile')}
-            className="w-full flex items-center space-x-3 p-3 rounded-2xl hover:bg-gray-200 transition-all"
+            className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-200 transition-all"
             style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
           >
             <div 
-              className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0"
+              className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
             >
               <span className="text-white font-semibold text-sm">{userName.charAt(0).toUpperCase()}</span>
             </div>
             <div className="flex-1 text-left min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{userName}</p>
-              <p className="text-xs text-gray-500">View Profile</p>
+              <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
+              <p className="text-sm text-slate-500">View Profile</p>
             </div>
           </button>
         </div>
 
         {/* Navigation - Stacked Vertically */}
-        <nav className="flex-1 py-4 px-3 space-y-2 overflow-y-auto">
+        <nav className="flex-1 py-4 px-3 gap-2 overflow-y-auto" style={{ display: 'flex', flexDirection: 'column' }}>
           {[
             { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
             { path: '/members', icon: UsersIcon, label: 'Team' },
@@ -121,10 +121,10 @@ export function Layout({ children }: LayoutProps) {
             <button
               key={path}
               onClick={() => navigate(path)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
                 isActive(path)
-                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
+                  : 'text-slate-600 hover:bg-slate-200'
               }`}
               style={isActive(path)
                 ? { boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.6)' }
@@ -138,55 +138,61 @@ export function Layout({ children }: LayoutProps) {
         </nav>
 
         {/* Profile Dropdown at Bottom */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-slate-200">
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-              className="w-full flex items-center space-x-3 p-3 rounded-2xl hover:bg-gray-200 transition-all"
+              className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-200 transition-all"
               style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
             >
               <div 
-                className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0"
+                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4)' }}
               >
                 <span className="text-white font-semibold text-sm">{userName.charAt(0).toUpperCase()}</span>
               </div>
               <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{userName}</p>
-                <p className="text-xs text-gray-500">Options</p>
+                <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
+                <p className="text-sm text-slate-500">Options</p>
               </div>
-              <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
             </button>
 
             {showProfileDropdown && (
               <div 
-                className="absolute bottom-full left-0 right-0 mb-2 bg-[#e8ecf3] rounded-2xl overflow-hidden"
-                style={{ boxShadow: '8px 8px 20px rgba(163, 177, 198, 0.6), -8px -8px 20px rgba(255, 255, 255, 0.9)' }}
+                className="absolute bg-slate-50 rounded-2xl overflow-hidden"
+                style={{ 
+                  bottom: '100%',
+                  left: 0,
+                  right: 0,
+                  marginBottom: '8px',
+                  boxShadow: '8px 8px 20px rgba(163, 177, 198, 0.6), -8px -8px 20px rgba(255, 255, 255, 0.9)' 
+                }}
               >
                 <button
                   onClick={() => { navigate('/profile'); setShowProfileDropdown(false); }}
-                  className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-[#d4dae6] transition-colors"
+                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-200 transition-colors"
                 >
-                  <UserCircle className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">My Profile</span>
+                  <UserCircle className="w-5 h-5 text-slate-600" />
+                  <span className="text-sm font-medium text-slate-700">My Profile</span>
                 </button>
                 <button
                   onClick={handleDownloadTracker}
                   disabled={downloadingTracker}
-                  className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-[#d4dae6] transition-colors disabled:opacity-50"
+                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-200 transition-colors disabled:opacity-50"
                 >
-                  <Download className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">
+                  <Download className="w-5 h-5 text-slate-600" />
+                  <span className="text-sm font-medium text-slate-700">
                     {downloadingTracker ? 'Downloading...' : 'Download Tracker'}
                   </span>
                 </button>
-                <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                <div className="h-1 bg-gradient-to-r from-transparent via-slate-300 to-transparent" style={{ height: '1px' }}></div>
                 <button
                   onClick={() => { logout(); navigate('/login'); }}
-                  className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-red-50 transition-colors"
+                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-orange-50 transition-colors"
                 >
-                  <LogOut className="w-5 h-5 text-red-600" />
-                  <span className="text-sm font-medium text-red-600">Logout</span>
+                  <LogOut className="w-5 h-5 text-orange-600" />
+                  <span className="text-sm font-medium text-orange-600">Logout</span>
                 </button>
               </div>
             )}
@@ -196,7 +202,7 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
-        <main className="h-full overflow-auto bg-gradient-to-br from-[#e8ecf3] via-[#e8ecf3] to-[#d4dae6]">
+        <main className="h-full overflow-auto bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50">
           {children}
         </main>
       </div>
