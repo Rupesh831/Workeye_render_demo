@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-21 16:56 IST - Force Refresh Version
+// UPDATED: 2026-01-21 22:56 IST - Fixed missing Tailwind classes
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EmployeeOverviewTable } from './EmployeeOverviewTable';
@@ -156,110 +156,113 @@ export function Dashboard() {
     <div className="p-6">
       {error && (
         <div 
-          className="mb-6 p-4 bg-red-50 rounded-2xl flex items-start space-x-3"
+          className="mb-6 p-4 bg-orange-50 rounded-2xl flex items-start gap-3"
           style={{ boxShadow: '4px 4px 10px rgba(239, 68, 68, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)' }}
         >
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-red-800">Error</p>
-            <p className="text-sm text-red-600 mt-1">{error}</p>
+            <p className="text-sm font-medium text-orange-600">Error</p>
+            <p className="text-sm text-orange-600 mt-1">{error}</p>
           </div>
         </div>
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
+          className="bg-slate-50 rounded-3xl p-6 transition-all"
           style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
         >
           <div className="flex items-start justify-between mb-3">
             <div 
-              className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center"
+              className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center"
               style={{ boxShadow: '3px 3px 6px rgba(167, 139, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
             >
               <Users className="w-6 h-6 text-white" />
             </div>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.total}</h3>
-          <p className="text-sm text-gray-500 font-medium">Total Employees</p>
+          <h3 className="text-3xl font-semibold text-slate-900 mb-2">{stats.total}</h3>
+          <p className="text-sm text-slate-500 font-medium">Total Employees</p>
         </div>
 
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
+          className="bg-slate-50 rounded-3xl p-6 transition-all"
           style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
         >
           <div className="flex items-start justify-between mb-3">
             <div 
-              className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center"
+              className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center"
               style={{ boxShadow: '3px 3px 6px rgba(34, 197, 94, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
             >
               <Activity className="w-6 h-6 text-white" />
             </div>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.active}</h3>
-          <p className="text-sm text-gray-500 font-medium">Active Now</p>
+          <h3 className="text-3xl font-semibold text-slate-900 mb-2">{stats.active}</h3>
+          <p className="text-sm text-slate-500 font-medium">Active Now</p>
         </div>
 
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
+          className="bg-slate-50 rounded-3xl p-6 transition-all"
           style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
         >
           <div className="flex items-start justify-between mb-3">
             <div 
-              className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center"
+              className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center"
               style={{ boxShadow: '3px 3px 6px rgba(96, 165, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
             >
               <Clock className="w-6 h-6 text-white" />
             </div>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.avgScreenTime}h</h3>
-          <p className="text-sm text-gray-500 font-medium">Avg Screen Time</p>
+          <h3 className="text-3xl font-semibold text-slate-900 mb-2">{stats.avgScreenTime}h</h3>
+          <p className="text-sm text-slate-500 font-medium">Avg Screen Time</p>
         </div>
 
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
+          className="bg-slate-50 rounded-3xl p-6 transition-all"
           style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
         >
           <div className="flex items-start justify-between mb-3">
             <div 
-              className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center"
+              className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center"
               style={{ boxShadow: '3px 3px 6px rgba(251, 146, 60, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
             >
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.avgProductivity}%</h3>
-          <p className="text-sm text-gray-500 font-medium">Productivity</p>
+          <h3 className="text-3xl font-semibold text-slate-900 mb-2">{stats.avgProductivity}%</h3>
+          <p className="text-sm text-slate-500 font-medium">Productivity</p>
         </div>
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div 
-          className="lg:col-span-2 bg-[#e8ecf3] rounded-3xl p-6"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
+          className="bg-slate-50 rounded-3xl p-6"
+          style={{ 
+            gridColumn: 'span 2',
+            boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' 
+          }}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Activity Trends</h3>
-              <p className="text-sm text-gray-500 mt-1">Weekly performance</p>
+              <h3 className="text-lg font-semibold text-slate-900">Activity Trends</h3>
+              <p className="text-sm text-slate-500 mt-1">Weekly performance</p>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <button 
-                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-[#e8ecf3] rounded-lg"
+                className="px-3 py-1.5 text-sm font-medium text-slate-600 bg-slate-50 rounded-lg"
                 style={{ boxShadow: 'inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff' }}
               >
                 Day
               </button>
               <button 
-                className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg"
+                className="px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg"
                 style={{ boxShadow: '3px 3px 8px rgba(99, 102, 241, 0.3)' }}
               >
                 Week
               </button>
               <button 
-                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-[#e8ecf3] rounded-lg"
+                className="px-3 py-1.5 text-sm font-medium text-slate-600 bg-slate-50 rounded-lg"
                 style={{ boxShadow: 'inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff' }}
               >
                 Month
@@ -267,11 +270,11 @@ export function Dashboard() {
             </div>
           </div>
           
-          <div className="h-64 flex items-end justify-between space-x-2">
+          <div className="flex items-end justify-between gap-2" style={{ height: '256px' }}>
             {[60, 80, 70, 90, 75, 85, 95, 70, 80, 75, 85, 90].map((height, index) => (
               <div key={index} className="flex-1 flex flex-col items-center">
                 <div 
-                  className="w-full rounded-t-xl transition-all hover:scale-105 cursor-pointer"
+                  className="w-full rounded-t-xl transition-all cursor-pointer"
                   style={{
                     height: `${height}%`,
                     background: index % 2 === 0 
@@ -286,16 +289,16 @@ export function Dashboard() {
         </div>
 
         <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6"
+          className="bg-slate-50 rounded-3xl p-6"
           style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
         >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-gray-900">Team Status</h3>
-            <ChevronDown className="w-5 h-5 text-gray-400" />
+            <h3 className="text-lg font-semibold text-slate-900">Team Status</h3>
+            <ChevronDown className="w-5 h-5 text-slate-400" />
           </div>
           
           <div className="flex items-center justify-center mb-6">
-            <div className="relative w-40 h-40">
+            <div className="relative" style={{ width: '160px', height: '160px' }}>
               <svg viewBox="0 0 100 100" className="transform -rotate-90">
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#d1d9e6" strokeWidth="12"/>
                 <circle 
@@ -327,33 +330,33 @@ export function Dashboard() {
                 </defs>
               </svg>
               <div className="absolute inset-0 flex items-center justify-center flex-col">
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                <p className="text-xs text-gray-500">Total</p>
+                <p className="text-2xl font-semibold text-slate-900">{stats.total}</p>
+                <p className="text-sm text-slate-500">Total</p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-gradient-to-br from-green-500 to-green-600"></div>
-                <span className="text-sm text-gray-600">Active</span>
+                <span className="text-sm text-slate-600">Active</span>
               </div>
-              <span className="text-sm font-semibold text-gray-900">{stats.active}</span>
+              <span className="text-sm font-semibold text-slate-900">{stats.active}</span>
             </div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600"></div>
-                <span className="text-sm text-gray-600">Idle</span>
+                <span className="text-sm text-slate-600">Idle</span>
               </div>
-              <span className="text-sm font-semibold text-gray-900">{stats.idle}</span>
+              <span className="text-sm font-semibold text-slate-900">{stats.idle}</span>
             </div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-gray-400 to-gray-500"></div>
-                <span className="text-sm text-gray-600">Offline</span>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-slate-400 to-slate-500"></div>
+                <span className="text-sm text-slate-600">Offline</span>
               </div>
-              <span className="text-sm font-semibold text-gray-900">{stats.offline}</span>
+              <span className="text-sm font-semibold text-slate-900">{stats.offline}</span>
             </div>
           </div>
         </div>
@@ -361,19 +364,19 @@ export function Dashboard() {
 
       {/* Team Table */}
       <div 
-        className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
+        className="bg-slate-50 rounded-3xl overflow-hidden"
         style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
       >
-        <div className="px-6 py-5 flex items-center justify-between border-b border-gray-200">
+        <div className="px-6 py-4 flex items-center justify-between border-b border-slate-200">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Team Members</h3>
-            <p className="text-sm text-gray-500 mt-1">{members.length} members</p>
+            <h3 className="text-lg font-semibold text-slate-900">Team Members</h3>
+            <p className="text-sm text-slate-500 mt-1">{members.length} members</p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-4 py-2 bg-[#e8ecf3] rounded-2xl text-sm font-medium focus:outline-none cursor-pointer"
+              className="px-4 py-2 bg-slate-50 rounded-2xl text-sm font-medium focus:outline-none cursor-pointer text-slate-700"
               style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
             >
               <option value="">All Status</option>
@@ -384,7 +387,7 @@ export function Dashboard() {
             <button
               onClick={fetchDashboardData}
               disabled={loading}
-              className="p-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl transition-all hover:scale-105 disabled:opacity-50"
+              className="p-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl transition-all disabled:opacity-50"
               style={{ boxShadow: '4px 4px 10px rgba(99, 102, 241, 0.3)' }}
             >
               <Activity className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
