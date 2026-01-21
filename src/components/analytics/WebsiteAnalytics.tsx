@@ -89,7 +89,20 @@ const WebsiteAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) => 
   };
 
   const analytics = useMemo(() => {
-    if (!logs.length) return null;
+    if (!logs.length) {
+      return {
+        topWebsites: [],
+        categoryData: [],
+        dailyTrendData: [],
+        stats: {
+          totalWebsites: 0,
+          totalHours: 0,
+          totalVisits: 0,
+          avgTimePerSite: 0,
+          topWebsite: null
+        }
+      };
+    }
 
     // Filter logs strictly within date range
     const filteredLogs = logs.filter(log => {
@@ -97,7 +110,20 @@ const WebsiteAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) => 
       return logDate >= startDate && logDate <= endDate;
     });
 
-    if (!filteredLogs.length) return null;
+    if (!filteredLogs.length) {
+      return {
+        topWebsites: [],
+        categoryData: [],
+        dailyTrendData: [],
+        stats: {
+          totalWebsites: 0,
+          totalHours: 0,
+          totalVisits: 0,
+          avgTimePerSite: 0,
+          topWebsite: null
+        }
+      };
+    }
 
     // Calculate time per website
     const websiteMap: Record<string, { duration: number; visits: number; category: string }> = {};
@@ -199,15 +225,6 @@ const WebsiteAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) => 
       <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
         <AlertCircle className="w-5 h-5 text-red-600" />
         <p className="text-red-800">{error}</p>
-      </div>
-    );
-  }
-
-  if (!analytics) {
-    return (
-      <div className="text-center py-20 text-gray-500">
-        <Globe className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-        <p>No website data available for the selected period.</p>
       </div>
     );
   }
