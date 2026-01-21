@@ -40,10 +40,12 @@ const AttendanceAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) 
     try {
       setLoading(true);
       setError(null);
+      // Pass undefined if no memberId to get all members' data
       const data = await getAttendanceAnalytics(memberId || undefined, startDate, endDate);
       setRecords(data);
     } catch (err: any) {
-      setError(err.message);
+      console.error('Attendance analytics error:', err);
+      setError(err.message || 'Failed to load attendance data');
     } finally {
       setLoading(false);
     }
