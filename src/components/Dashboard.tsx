@@ -254,26 +254,17 @@ export function Dashboard() {
   const companyUsername = company?.company_username || '';
   const companyId = company?.id || 0;
 
-  // Neumorphic shadow styles
-  const neumorphicStyle = {
-    boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
-  };
-
-  const neumorphicInsetStyle = {
-    boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff',
-  };
-
   return (
     <div className="flex h-screen bg-gradient-to-br from-[#e8ecf3] via-[#e8ecf3] to-[#d4dae6] overflow-hidden">
-      {/* Sidebar with Neumorphism */}
+      {/* Sidebar */}
       <aside 
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[#e8ecf3] transition-all duration-300 ease-in-out flex flex-col`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[#e8ecf3] transition-all duration-300 ease-in-out flex flex-col flex-shrink-0`}
         style={{
           boxShadow: '5px 0 15px rgba(163, 177, 198, 0.3)',
         }}
       >
         {/* Logo */}
-        <div className="h-20 flex items-center justify-between px-6">
+        <div className="h-20 flex items-center justify-between px-6 flex-shrink-0">
           {sidebarOpen && (
             <div className="flex items-center space-x-3">
               <div 
@@ -290,14 +281,16 @@ export function Dashboard() {
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 rounded-lg transition-all"
-            style={neumorphicStyle}
+            style={{
+              boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+            }}
           >
             {sidebarOpen ? <X className="w-5 h-5 text-gray-600" /> : <Menu className="w-5 h-5 text-gray-600" />}
           </button>
         </div>
 
-        {/* Navigation with Neumorphism */}
-        <nav className="flex-1 py-6 px-3 space-y-2">
+        {/* Navigation */}
+        <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto">
           <button
             onClick={() => setView('overview')}
             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all ${
@@ -305,7 +298,7 @@ export function Dashboard() {
                 ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white'
                 : 'text-gray-600'
             }`}
-            style={view === 'overview' ? { boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.6)' } : neumorphicStyle}
+            style={view === 'overview' ? { boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.6)' } : { boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
           >
             <LayoutDashboard className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Dashboard</span>}
@@ -314,7 +307,7 @@ export function Dashboard() {
           <button
             onClick={() => navigate('/analytics')}
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-gray-600 transition-all"
-            style={neumorphicStyle}
+            style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
           >
             <BarChart3 className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Analytics</span>}
@@ -327,7 +320,7 @@ export function Dashboard() {
                 ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white'
                 : 'text-gray-600'
             }`}
-            style={view === 'members' ? { boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.6)' } : neumorphicStyle}
+            style={view === 'members' ? { boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.6)' } : { boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
           >
             <UsersIcon className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Team</span>}
@@ -336,7 +329,7 @@ export function Dashboard() {
           <button
             onClick={() => navigate('/attendance')}
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-gray-600 transition-all"
-            style={neumorphicStyle}
+            style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
           >
             <ClipboardList className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Attendance</span>}
@@ -345,7 +338,7 @@ export function Dashboard() {
           <button
             onClick={() => navigate('/configuration')}
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-gray-600 transition-all"
-            style={neumorphicStyle}
+            style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
           >
             <Settings className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Settings</span>}
@@ -353,12 +346,12 @@ export function Dashboard() {
         </nav>
 
         {/* User Profile */}
-        <div className="p-4">
+        <div className="p-4 flex-shrink-0">
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowProfileDropdown(!showProfileDropdown)}
               className="w-full flex items-center space-x-3 p-3 rounded-2xl transition-all"
-              style={neumorphicStyle}
+              style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
             >
               <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
                 <span className="text-white font-semibold text-sm">
@@ -418,10 +411,10 @@ export function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Top Bar */}
         <header 
-          className="h-20 bg-[#e8ecf3] px-8 flex items-center justify-between"
+          className="h-20 bg-[#e8ecf3] px-8 flex items-center justify-between flex-shrink-0"
           style={{
             boxShadow: '0 4px 12px rgba(163, 177, 198, 0.3)',
           }}
@@ -432,7 +425,7 @@ export function Dashboard() {
           </div>
           
           <div className="flex items-center space-x-4">
-            {/* Search with Neumorphism */}
+            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -441,14 +434,16 @@ export function Dashboard() {
                 value={nameFilter}
                 onChange={(e) => setNameFilter(e.target.value)}
                 className="w-64 pl-10 pr-4 py-2.5 bg-[#e8ecf3] rounded-2xl focus:outline-none transition-all text-sm text-gray-700"
-                style={neumorphicInsetStyle}
+                style={{
+                  boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff',
+                }}
               />
             </div>
 
             {/* Calendar Icon */}
             <button 
               className="p-2.5 bg-[#e8ecf3] rounded-2xl transition-all hover:scale-105"
-              style={neumorphicStyle}
+              style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
             >
               <Calendar className="w-5 h-5 text-gray-600" />
             </button>
@@ -456,7 +451,7 @@ export function Dashboard() {
             {/* Notifications */}
             <button 
               className="relative p-2.5 bg-[#e8ecf3] rounded-2xl transition-all hover:scale-105"
-              style={neumorphicStyle}
+              style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
             >
               <Bell className="w-5 h-5 text-gray-600" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full shadow-lg"></span>
@@ -494,116 +489,110 @@ export function Dashboard() {
           )}
 
           {view === 'overview' && (
-            <>
-              {/* Analytics Overview Stats Cards - Neumorphism */}
-              <div className="grid grid-cols-4 gap-6 mb-8">
+            <div className="w-full max-w-full">
+              {/* Analytics Overview Stats Cards - FIXED GRID */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
                 {/* Card 1 - Total */}
                 <div 
-                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
-                  style={neumorphicStyle}
+                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105 min-w-0"
+                  style={{
+                    boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                  }}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center"
-                        style={{
-                          boxShadow: '3px 3px 6px rgba(167, 139, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
-                        }}
-                      >
-                        <Users className="w-4 h-4 text-white" />
-                      </div>
+                  <div className="flex items-start justify-between mb-2">
+                    <div 
+                      className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{
+                        boxShadow: '3px 3px 6px rgba(167, 139, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
+                      }}
+                    >
+                      <Users className="w-5 h-5 text-white" />
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <ChevronDown className="w-3 h-3 text-gray-400" />
-                    </div>
+                    <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   </div>
                   <h3 className="text-3xl font-bold text-gray-900 mb-1">2056</h3>
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Total Employees</p>
-                  <div className="mt-2 text-xs text-gray-400">+8% from yesterday</div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Total Employees</p>
+                  <div className="text-xs text-gray-400">+8% from yesterday</div>
                 </div>
 
                 {/* Card 2 - Active */}
                 <div 
-                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
-                  style={neumorphicStyle}
+                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105 min-w-0"
+                  style={{
+                    boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                  }}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center"
-                        style={{
-                          boxShadow: '3px 3px 6px rgba(251, 146, 60, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
-                        }}
-                      >
-                        <Activity className="w-4 h-4 text-white" />
-                      </div>
+                  <div className="flex items-start justify-between mb-2">
+                    <div 
+                      className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{
+                        boxShadow: '3px 3px 6px rgba(251, 146, 60, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
+                      }}
+                    >
+                      <Activity className="w-5 h-5 text-white" />
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <ChevronDown className="w-3 h-3 text-gray-400" />
-                    </div>
+                    <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   </div>
                   <h3 className="text-3xl font-bold text-gray-900 mb-1">7456</h3>
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Active Now</p>
-                  <div className="mt-2 text-xs text-gray-400">+5% from yesterday</div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Active Now</p>
+                  <div className="text-xs text-gray-400">+5% from yesterday</div>
                 </div>
 
                 {/* Card 3 - Screen Time */}
                 <div 
-                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
-                  style={neumorphicStyle}
+                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105 min-w-0"
+                  style={{
+                    boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                  }}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center"
-                        style={{
-                          boxShadow: '3px 3px 6px rgba(96, 165, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
-                        }}
-                      >
-                        <Clock className="w-4 h-4 text-white" />
-                      </div>
+                  <div className="flex items-start justify-between mb-2">
+                    <div 
+                      className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{
+                        boxShadow: '3px 3px 6px rgba(96, 165, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
+                      }}
+                    >
+                      <Clock className="w-5 h-5 text-white" />
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <ChevronDown className="w-3 h-3 text-gray-400" />
-                    </div>
+                    <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   </div>
                   <h3 className="text-3xl font-bold text-gray-900 mb-1">4657</h3>
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Screen Time</p>
-                  <div className="mt-2 text-xs text-gray-400">+1% from yesterday</div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Screen Time</p>
+                  <div className="text-xs text-gray-400">+1% from yesterday</div>
                 </div>
 
                 {/* Card 4 - Productivity */}
                 <div 
-                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
-                  style={neumorphicStyle}
+                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105 min-w-0"
+                  style={{
+                    boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                  }}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-8 h-8 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl flex items-center justify-center"
-                        style={{
-                          boxShadow: '3px 3px 6px rgba(244, 114, 182, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
-                        }}
-                      >
-                        <TrendingUp className="w-4 h-4 text-white" />
-                      </div>
+                  <div className="flex items-start justify-between mb-2">
+                    <div 
+                      className="w-10 h-10 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{
+                        boxShadow: '3px 3px 6px rgba(244, 114, 182, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
+                      }}
+                    >
+                      <TrendingUp className="w-5 h-5 text-white" />
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <ChevronDown className="w-3 h-3 text-gray-400" />
-                    </div>
+                    <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   </div>
                   <h3 className="text-3xl font-bold text-gray-900 mb-1">4765</h3>
-                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Productivity</p>
-                  <div className="mt-2 text-xs text-gray-400">+3% from yesterday</div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Productivity</p>
+                  <div className="text-xs text-gray-400">+3% from yesterday</div>
                 </div>
               </div>
 
               {/* Revenue Chart and Order Status */}
-              <div className="grid grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 w-full">
                 {/* Revenue Chart - 2 columns */}
                 <div 
-                  className="col-span-2 bg-[#e8ecf3] rounded-3xl p-6"
-                  style={neumorphicStyle}
+                  className="lg:col-span-2 bg-[#e8ecf3] rounded-3xl p-6"
+                  style={{
+                    boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                  }}
                 >
                   <div className="flex items-center justify-between mb-6">
                     <div>
@@ -639,9 +628,9 @@ export function Dashboard() {
                   </div>
                   
                   {/* Bar Chart Visualization */}
-                  <div className="h-64 flex items-end justify-between space-x-3">
+                  <div className="h-64 flex items-end justify-between space-x-2">
                     {[60, 80, 70, 90, 75, 85, 95, 70, 80, 75, 85, 90].map((height, index) => (
-                      <div key={index} className="flex-1 flex flex-col items-center">
+                      <div key={index} className="flex-1 flex flex-col items-center min-w-0">
                         <div 
                           className="w-full rounded-t-xl transition-all hover:scale-105"
                           style={{
@@ -660,13 +649,13 @@ export function Dashboard() {
                 {/* Order Status - Donut Chart */}
                 <div 
                   className="bg-[#e8ecf3] rounded-3xl p-6"
-                  style={neumorphicStyle}
+                  style={{
+                    boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                  }}
                 >
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-bold text-gray-900">Order Status</h3>
-                    <div className="flex items-center space-x-1">
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
-                    </div>
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
                   </div>
                   
                   {/* Donut Chart */}
@@ -758,11 +747,13 @@ export function Dashboard() {
               </div>
 
               {/* Best Selling Categories and Recent Orders */}
-              <div className="grid grid-cols-2 gap-6 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 w-full">
                 {/* Best Selling Categories */}
                 <div 
                   className="bg-[#e8ecf3] rounded-3xl p-6"
-                  style={neumorphicStyle}
+                  style={{
+                    boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                  }}
                 >
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-bold text-gray-900">Best Selling Categories</h3>
@@ -795,7 +786,9 @@ export function Dashboard() {
                 {/* Recent Orders */}
                 <div 
                   className="bg-[#e8ecf3] rounded-3xl p-6"
-                  style={neumorphicStyle}
+                  style={{
+                    boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                  }}
                 >
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
@@ -842,8 +835,10 @@ export function Dashboard() {
 
               {/* Employee Table */}
               <div 
-                className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
-                style={neumorphicStyle}
+                className="bg-[#e8ecf3] rounded-3xl overflow-hidden w-full"
+                style={{
+                  boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+                }}
               >
                 <div className="px-6 py-4 flex items-center justify-between">
                   <div>
@@ -857,7 +852,9 @@ export function Dashboard() {
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value as any)}
                       className="px-4 py-2 bg-[#e8ecf3] rounded-2xl text-sm font-medium focus:outline-none"
-                      style={neumorphicInsetStyle}
+                      style={{
+                        boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff',
+                      }}
                     >
                       <option value="">All Status</option>
                       <option value="active">Active</option>
@@ -884,14 +881,16 @@ export function Dashboard() {
                   }}
                 />
               </div>
-            </>
+            </div>
           )}
 
           {/* Detail View */}
           {view === 'detail' && selectedEmployee && (
             <div 
-              className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
-              style={neumorphicStyle}
+              className="bg-[#e8ecf3] rounded-3xl overflow-hidden w-full"
+              style={{
+                boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+              }}
             >
               <EmployeeDetailView
                 employee={selectedEmployee}
@@ -906,8 +905,10 @@ export function Dashboard() {
           {/* Members Management */}
           {view === 'members' && (
             <div 
-              className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
-              style={neumorphicStyle}
+              className="bg-[#e8ecf3] rounded-3xl overflow-hidden w-full"
+              style={{
+                boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+              }}
             >
               <MembersManagement 
                 companyUsername={companyUsername}
