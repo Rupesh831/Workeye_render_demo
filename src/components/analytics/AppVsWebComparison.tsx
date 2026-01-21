@@ -41,7 +41,10 @@ const AppVsWebComparison: React.FC<Props> = ({ memberId, startDate, endDate }) =
       setAppLogs(appsData);
       setWebLogs(websitesData);
     } catch (err: any) {
-      setError(err.message);
+      console.error('App vs Web comparison error:', err);
+      setError(err.message || 'Failed to load comparison data');
+      setAppLogs([]);
+      setWebLogs([]);
     } finally {
       setLoading(false);
     }
