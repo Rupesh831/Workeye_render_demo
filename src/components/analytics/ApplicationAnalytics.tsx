@@ -33,7 +33,9 @@ const ApplicationAnalytics: React.FC<Props> = ({ memberId, startDate, endDate })
       const data = await getAppsAnalytics(memberId!, startDate, endDate);
       setLogs(data);
     } catch (err: any) {
-      setError(err.message);
+      console.error('Application analytics error:', err);
+      setError(err.message || 'Failed to load application data');
+      setLogs([]);
     } finally {
       setLoading(false);
     }
