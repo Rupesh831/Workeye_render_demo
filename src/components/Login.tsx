@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-21 18:11 IST - Neumorphic Design + Auth Fix
+// UPDATED: 2026-01-21 22:01 IST - Fixed Alignment Issues
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -44,15 +44,15 @@ const Login = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div 
-            className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-4"
+            className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-4"
             style={{ boxShadow: '6px 6px 12px rgba(99, 102, 241, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.8)' }}
           >
-            <Lock className="w-8 h-8 text-white" />
+            <Lock className="w-9 h-9 text-white" />
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
             Welcome Back
           </h2>
-          <p className="text-gray-600">Sign in to your admin account</p>
+          <p className="text-gray-600 text-sm">Sign in to your admin account</p>
         </div>
 
         {/* Error Message */}
@@ -70,11 +70,13 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <Mail className="w-5 h-5 text-gray-400" />
+              </div>
               <input
                 type="email"
                 value={email}
@@ -83,7 +85,7 @@ const Login = () => {
                   setError('');
                 }}
                 placeholder="admin@company.com"
-                className="w-full pl-12 pr-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
+                className="w-full pl-12 pr-4 py-3.5 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900 placeholder-gray-400 text-sm"
                 style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
                 required
                 disabled={loading}
@@ -94,11 +96,13 @@ const Login = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <Lock className="w-5 h-5 text-gray-400" />
+              </div>
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
@@ -107,7 +111,7 @@ const Login = () => {
                   setError('');
                 }}
                 placeholder="Enter your password"
-                className="w-full pl-12 pr-12 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
+                className="w-full pl-12 pr-12 py-3.5 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900 placeholder-gray-400 text-sm"
                 style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
                 required
                 disabled={loading}
@@ -116,13 +120,13 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2"
+                className="absolute right-4 top-1/2 -translate-y-1/2 focus:outline-none"
                 disabled={loading}
               >
                 {showPassword ? (
-                  <EyeOff className="w-5 h-5 text-gray-400" />
+                  <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
                 ) : (
-                  <Eye className="w-5 h-5 text-gray-400" />
+                  <Eye className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
                 )}
               </button>
             </div>
@@ -132,7 +136,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-2xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-2"
+            className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-2xl transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-2 mt-8"
             style={{ boxShadow: '6px 6px 12px rgba(99, 102, 241, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.7)' }}
           >
             {loading ? (
@@ -150,7 +154,7 @@ const Login = () => {
         </form>
 
         {/* Sign Up Link */}
-        <p className="text-center mt-6 text-gray-600">
+        <p className="text-center mt-6 text-gray-600 text-sm">
           Don't have an account?{' '}
           <Link
             to="/signup"
