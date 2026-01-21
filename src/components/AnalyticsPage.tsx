@@ -107,7 +107,13 @@ const AnalyticsPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate(-1); // Go back to previous page
+    // Check if there's history to go back to
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      // Fallback to dashboard if no history
+      navigate('/dashboard');
+    }
   };
 
   const renderAnalytics = () => {
