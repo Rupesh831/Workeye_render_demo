@@ -33,7 +33,10 @@ const ActivityAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) =>
       const data = await getActivityAnalytics(memberId!, startDate, endDate);
       setLogs(data.logs);
     } catch (err: any) {
-      setError(err.message);
+      console.error('Activity analytics error:', err);
+      // Only show error message, don't trigger logout
+      setError(err.message || 'Failed to load activity data');
+      setLogs([]); // Clear any stale data
     } finally {
       setLoading(false);
     }
