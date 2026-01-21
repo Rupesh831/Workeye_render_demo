@@ -243,24 +243,27 @@ export async function fetchAPI<T = any>(
             }
           }
           
-          // Refresh failed
-          console.error('❌ Token refresh failed');
+          // Refresh failed - Only logout if refresh explicitly failed
+          console.error('❌ Token refresh failed - session truly expired');
           auth.logout();
           window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
-        } catch (refreshError) {
-          console.error('Token refresh error:', refreshError);
-          auth.logout();
-          window.location.href = '/login';
-          throw new Error('Session expired. Please login again.');
+        } catch (refreshError: any) {
+          // Only logout if it's truly a refresh failure, not a network error
+          if (refreshError.message && refreshError.message.includes('Session expired')) {
+            console.error('Token refresh error - logging out:', refreshError);
+            auth.logout();
+            window.location.href = '/login';
+          }
+          throw refreshError;
         }
+      } else {
+        // No refresh token available - logout
+        console.error('❌ No refresh token available');
+        auth.logout();
+        window.location.href = '/login';
+        throw new Error('Session expired. Please login again.');
       }
-      
-      // No refresh token available
-      console.error('❌ No refresh token available');
-      auth.logout();
-      window.location.href = '/login';
-      throw new Error('Session expired. Please login again.');
     }
 
     // Check content type before parsing
