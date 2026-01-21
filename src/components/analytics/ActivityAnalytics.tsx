@@ -41,7 +41,25 @@ const ActivityAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) =>
 
   // CLIENT-SIDE ANALYTICS CALCULATIONS with Date Isolation
   const analytics = useMemo(() => {
-    if (!logs.length) return null;
+    // Always return analytics object, even with empty data
+    if (!logs.length) {
+      return {
+        totalActiveHours: 0,
+        totalIdleHours: 0,
+        avgActivePerDay: 0,
+        avgIdlePerDay: 0,
+        activeRatio: 0,
+        peakDay: { date: 'N/A', hours: 0 },
+        stackedData: [],
+        lineChartData: [],
+        pieChartData: [
+          { name: 'Active', value: 0, color: '#10B981' },
+          { name: 'Idle', value: 0, color: '#F59E0B' }
+        ],
+        totalDays: 0,
+        activeDays: 0
+      };
+    }
 
     // Filter logs strictly within the date range
     const filteredLogs = logs.filter(log => {
@@ -164,15 +182,6 @@ const ActivityAnalytics: React.FC<Props> = ({ memberId, startDate, endDate }) =>
       <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
         <AlertCircle className="w-5 h-5 text-red-600" />
         <p className="text-red-800">{error}</p>
-      </div>
-    );
-  }
-
-  if (!analytics) {
-    return (
-      <div className="text-center py-20 text-gray-500">
-        <Activity className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-        <p>No activity data available for the selected period.</p>
       </div>
     );
   }
