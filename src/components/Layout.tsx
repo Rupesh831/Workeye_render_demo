@@ -45,7 +45,7 @@ export function Layout({ children }: LayoutProps) {
     try {
       setDownloadingTracker(true);
       const token = localStorage.getItem('authToken');
-      
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'https://workeye-render-demo-backend.onrender.com'}/api/tracker/download`,
         {
@@ -88,14 +88,15 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 overflow-hidden">
       {/* Sidebar - Desktop */}
-      <aside 
-        className="bg-slate-50 flex-col flex-shrink-0 h-full hidden lg:flex"
+      {/* NOTE: Using lg:block instead of lg:flex because the shipped CSS doesn't include lg:flex utilities */}
+      <aside
+        className="bg-slate-50 flex-shrink-0 h-full hidden lg:block"
         style={{ width: '256px', boxShadow: '5px 0 15px rgba(163, 177, 198, 0.3)' }}
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-center px-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div 
+            <div
               className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center"
               style={{ boxShadow: '4px 4px 8px rgba(99, 102, 241, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.8)' }}
             >
@@ -112,7 +113,7 @@ export function Layout({ children }: LayoutProps) {
             className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-200 transition-all"
             style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
           >
-            <div 
+            <div
               className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
             >
@@ -126,7 +127,7 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         {/* Navigation - Stacked Vertically */}
-        <nav className="flex-1 py-4 px-3 gap-2 overflow-y-auto" style={{ display: 'flex', flexDirection: 'column' }}>
+        <nav className="py-4 px-3 gap-2 overflow-y-auto" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 16rem)' }}>
           {navigationItems.map(({ path, icon: Icon, label }) => (
             <button
               key={path}
@@ -155,7 +156,7 @@ export function Layout({ children }: LayoutProps) {
               className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-200 transition-all"
               style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
             >
-              <div 
+              <div
                 className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4)' }}
               >
@@ -169,14 +170,14 @@ export function Layout({ children }: LayoutProps) {
             </button>
 
             {showProfileDropdown && (
-              <div 
+              <div
                 className="absolute bg-slate-50 rounded-2xl overflow-hidden"
-                style={{ 
+                style={{
                   bottom: '100%',
                   left: 0,
                   right: 0,
                   marginBottom: '8px',
-                  boxShadow: '8px 8px 20px rgba(163, 177, 198, 0.6), -8px -8px 20px rgba(255, 255, 255, 0.9)' 
+                  boxShadow: '8px 8px 20px rgba(163, 177, 198, 0.6), -8px -8px 20px rgba(255, 255, 255, 0.9)'
                 }}
               >
                 <button
@@ -213,18 +214,18 @@ export function Layout({ children }: LayoutProps) {
       {/* Mobile Sidebar - Overlay */}
       {mobileMenuOpen && (
         <>
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside 
+          <aside
             className="fixed inset-y-0 left-0 bg-slate-50 flex flex-col flex-shrink-0 h-full z-50 lg:hidden transform transition-transform duration-300"
             style={{ width: '256px', boxShadow: '5px 0 15px rgba(163, 177, 198, 0.3)' }}
           >
             {/* Mobile Close Button */}
             <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200">
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center"
                   style={{ boxShadow: '4px 4px 8px rgba(99, 102, 241, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.8)' }}
                 >
@@ -244,7 +245,7 @@ export function Layout({ children }: LayoutProps) {
                 className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-200 transition-all"
                 style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
               >
-                <div 
+                <div
                   className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
                 >
@@ -302,7 +303,7 @@ export function Layout({ children }: LayoutProps) {
             <Menu className="w-6 h-6 text-slate-700" />
           </button>
           <div className="flex items-center gap-2">
-            <div 
+            <div
               className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center"
               style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.3)' }}
             >
