@@ -1,20 +1,10 @@
-import React, { useState } from 'react';
+// UPDATED: 2026-01-21 18:11 IST - Neumorphic Design
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import {
-  User,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Building2,
-  Loader2,
-  AlertCircle,
-  CheckCircle2
-} from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, UserPlus } from 'lucide-react';
 
-const SignupPage: React.FC = () => {
+const SignupPage = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -34,6 +24,7 @@ const SignupPage: React.FC = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,244 +66,228 @@ const SignupPage: React.FC = () => {
       if (result.success) {
         navigate('/dashboard', { replace: true });
       } else {
-        const errorMsg = result.error || 'Signup failed';
-        
-        if (errorMsg.includes('not found') || errorMsg.includes('endpoint')) {
-          setError('⚠️ Backend service is currently unavailable. Please try again in a few moments.');
-        } else if (errorMsg.includes('already exists')) {
-          setError('This email is already registered. Please use a different email or sign in.');
-        } else {
-          setError(errorMsg);
-        }
+        setError(result.error || 'Signup failed. Please try again.');
       }
     } catch (err: any) {
-      setError('Unable to connect to the server. Please check your internet connection and try again.');
+      setError('Unable to connect to the server. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const features = [
-    'Real-time employee monitoring',
-    'Detailed productivity analytics',
-    'Automated attendance tracking',
-    'Screenshot capture and monitoring',
-    'Application and website tracking',
-    'Custom reports and insights'
-  ];
-
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-12 flex-col justify-between">
-        <div>
-          <div className="flex items-center gap-3 mb-12">
-            <Building2 className="w-10 h-10 text-white" />
-            <span className="text-3xl font-bold text-white">WorkEye</span>
-          </div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+    <div className="min-h-screen bg-gradient-to-br from-[#e8ecf3] via-[#e8ecf3] to-[#d4dae6] flex items-center justify-center p-4">
+      <div 
+        className="w-full max-w-md bg-[#e8ecf3] rounded-3xl p-8"
+        style={{ boxShadow: '12px 12px 24px #d1d9e6, -12px -12px 24px #ffffff' }}
+      >
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div 
+            className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-4"
+            style={{ boxShadow: '6px 6px 12px rgba(99, 102, 241, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.8)' }}
           >
-            <h1 className="text-4xl font-bold text-white mb-4">
-              Start Monitoring Your Team Today
-            </h1>
-            <p className="text-blue-100 text-lg mb-12">
-              Join thousands of companies using WorkEye to boost productivity and track performance.
-            </p>
-          </motion.div>
-
-          <div className="space-y-4">
-            <p className="text-blue-100 font-semibold mb-4">Everything you need:</p>
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="flex items-center gap-3"
-              >
-                <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <span className="text-blue-50">{feature}</span>
-              </motion.div>
-            ))}
+            <UserPlus className="w-8 h-8 text-white" />
           </div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+            Create Account
+          </h2>
+          <p className="text-gray-600">Start your free trial today</p>
         </div>
 
-        <div className="text-blue-100 text-sm">
-          © 2024 WorkEye. All rights reserved.
-        </div>
-      </div>
+        {/* Error Message */}
+        {error && (
+          <div 
+            className="mb-6 p-4 bg-red-50 rounded-2xl flex items-start space-x-3"
+            style={{ boxShadow: '4px 4px 10px rgba(239, 68, 68, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)' }}
+          >
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
 
-      <div className="flex-1 flex items-center justify-center p-8 bg-gray-50">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-              <p className="text-gray-600">Start your free trial today</p>
-            </div>
-
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
-              >
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-red-800 text-sm">{error}</p>
-              </motion.div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name / Company Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="John Doe or Acme Corp"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="you@company.com"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full pl-11 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="••••••••"
-                    required
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    disabled={loading}
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="w-full pl-11 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="••••••••"
-                    required
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    disabled={loading}
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <input
-                  type="checkbox"
-                  checked={agreeToTerms}
-                  onChange={(e) => setAgreeToTerms(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
-                  disabled={loading}
-                />
-                <label className="ml-2 text-sm text-gray-700">
-                  I agree to the{' '}
-                  <Link to="/terms" className="text-blue-600 hover:text-blue-700 font-medium">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link to="/privacy" className="text-blue-600 hover:text-blue-700 font-medium">
-                    Privacy Policy
-                  </Link>
-                </label>
-              </div>
-
-              <button
-                type="submit"
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Full Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Full Name / Company Name
+            </label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                placeholder="John Doe or Acme Corp"
+                className="w-full pl-12 pr-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
+                style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
+                required
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="you@company.com"
+                className="w-full pl-12 pr-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
+                style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
+                required
+                disabled={loading}
+                autoComplete="email"
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                className="w-full pl-12 pr-12 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
+                style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
+                required
+                disabled={loading}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2"
+                disabled={loading}
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Creating account...
-                  </>
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5 text-gray-400" />
                 ) : (
-                  'Create Account'
+                  <Eye className="w-5 h-5 text-gray-400" />
                 )}
               </button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <span className="text-gray-600 text-sm">Already have an account? </span>
-              <Link
-                to="/login"
-                className="text-blue-600 hover:text-blue-700 font-semibold text-sm"
-              >
-                Sign in
-              </Link>
             </div>
           </div>
 
-          <div className="lg:hidden mt-8 text-center">
-            <p className="text-sm text-gray-500">© 2024 WorkEye. All rights reserved.</p>
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="••••••••"
+                className="w-full pl-12 pr-12 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
+                style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
+                required
+                disabled={loading}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2"
+                disabled={loading}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <Eye className="w-5 h-5 text-gray-400" />
+                )}
+              </button>
+            </div>
           </div>
-        </motion.div>
+
+          {/* Terms Checkbox */}
+          <div className="flex items-start space-x-3">
+            <div className="relative mt-1">
+              <input
+                type="checkbox"
+                checked={agreeToTerms}
+                onChange={(e) => setAgreeToTerms(e.target.checked)}
+                className="sr-only"
+                disabled={loading}
+              />
+              <div 
+                onClick={() => !loading && setAgreeToTerms(!agreeToTerms)}
+                className={`w-5 h-5 rounded cursor-pointer transition-all ${
+                  agreeToTerms 
+                    ? 'bg-gradient-to-br from-indigo-500 to-purple-600' 
+                    : 'bg-[#e8ecf3]'
+                }`}
+                style={{ 
+                  boxShadow: agreeToTerms 
+                    ? '3px 3px 6px rgba(99, 102, 241, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)'
+                    : 'inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff' 
+                }}
+              >
+                {agreeToTerms && (
+                  <svg className="w-full h-full text-white p-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+            </div>
+            <label className="text-sm text-gray-700 leading-relaxed">
+              I agree to the{' '}
+              <span className="font-semibold text-indigo-600">Terms of Service</span>
+              {' '}and{' '}
+              <span className="font-semibold text-indigo-600">Privacy Policy</span>
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-2xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-2"
+            style={{ boxShadow: '6px 6px 12px rgba(99, 102, 241, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.7)' }}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Creating account...</span>
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-5 h-5" />
+                <span>Create Account</span>
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Sign In Link */}
+        <p className="text-center mt-6 text-gray-600">
+          Already have an account?{' '}
+          <Link
+            to="/login"
+            className="font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:from-indigo-700 hover:to-purple-700 transition-all"
+          >
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   );
