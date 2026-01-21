@@ -32,7 +32,9 @@ import {
   TrendingDown,
   Target,
   Award,
-  Calendar
+  Calendar,
+  Package,
+  ShoppingBag
 } from 'lucide-react';
 import { dashboard, members as membersAPI, wsClient, tracker } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -252,37 +254,58 @@ export function Dashboard() {
   const companyUsername = company?.company_username || '';
   const companyId = company?.id || 0;
 
+  // Neumorphic shadow styles
+  const neumorphicStyle = {
+    boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff',
+  };
+
+  const neumorphicInsetStyle = {
+    boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff',
+  };
+
   return (
-    <div className="flex h-screen bg-[#f5f6fa] overflow-hidden">
-      {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex flex-col`}>
+    <div className="flex h-screen bg-gradient-to-br from-[#e8ecf3] via-[#e8ecf3] to-[#d4dae6] overflow-hidden">
+      {/* Sidebar with Neumorphism */}
+      <aside 
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[#e8ecf3] transition-all duration-300 ease-in-out flex flex-col`}
+        style={{
+          boxShadow: '5px 0 15px rgba(163, 177, 198, 0.3)',
+        }}
+      >
         {/* Logo */}
-        <div className="h-20 flex items-center justify-between px-6 border-b border-gray-200">
+        <div className="h-20 flex items-center justify-between px-6">
           {sidebarOpen && (
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div 
+                className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center"
+                style={{
+                  boxShadow: '4px 4px 8px rgba(99, 102, 241, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.8)',
+                }}
+              >
                 <Eye className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Dashon</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Dashon</span>
             </div>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 rounded-lg transition-all"
+            style={neumorphicStyle}
           >
             {sidebarOpen ? <X className="w-5 h-5 text-gray-600" /> : <Menu className="w-5 h-5 text-gray-600" />}
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-6 px-3 space-y-1">
+        {/* Navigation with Neumorphism */}
+        <nav className="flex-1 py-6 px-3 space-y-2">
           <button
             onClick={() => setView('overview')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all ${
               view === 'overview'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/50'
-                : 'text-gray-600 hover:bg-gray-50'
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white'
+                : 'text-gray-600'
             }`}
+            style={view === 'overview' ? { boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.6)' } : neumorphicStyle}
           >
             <LayoutDashboard className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Dashboard</span>}
@@ -290,7 +313,8 @@ export function Dashboard() {
 
           <button
             onClick={() => navigate('/analytics')}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all"
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-gray-600 transition-all"
+            style={neumorphicStyle}
           >
             <BarChart3 className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Analytics</span>}
@@ -298,11 +322,12 @@ export function Dashboard() {
 
           <button
             onClick={() => setView('members')}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
+            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all ${
               view === 'members'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/50'
-                : 'text-gray-600 hover:bg-gray-50'
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white'
+                : 'text-gray-600'
             }`}
+            style={view === 'members' ? { boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.6)' } : neumorphicStyle}
           >
             <UsersIcon className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Team</span>}
@@ -310,7 +335,8 @@ export function Dashboard() {
 
           <button
             onClick={() => navigate('/attendance')}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all"
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-gray-600 transition-all"
+            style={neumorphicStyle}
           >
             <ClipboardList className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Attendance</span>}
@@ -318,7 +344,8 @@ export function Dashboard() {
 
           <button
             onClick={() => navigate('/configuration')}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all"
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-gray-600 transition-all"
+            style={neumorphicStyle}
           >
             <Settings className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Settings</span>}
@@ -326,13 +353,14 @@ export function Dashboard() {
         </nav>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4">
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-              className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center space-x-3 p-3 rounded-2xl transition-all"
+              style={neumorphicStyle}
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
                 <span className="text-white font-semibold text-sm">
                   {userName.charAt(0).toUpperCase()}
                 </span>
@@ -349,10 +377,15 @@ export function Dashboard() {
             </button>
 
             {showProfileDropdown && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+              <div 
+                className="absolute bottom-full left-0 right-0 mb-2 bg-[#e8ecf3] rounded-2xl overflow-hidden"
+                style={{
+                  boxShadow: '8px 8px 20px rgba(163, 177, 198, 0.6), -8px -8px 20px rgba(255, 255, 255, 0.9)',
+                }}
+              >
                 <button
                   onClick={() => navigate('/profile')}
-                  className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors"
+                  className="w-full px-4 py-3 flex items-center space-x-3 transition-colors hover:bg-[#d4dae6]"
                 >
                   <UserCircle className="w-5 h-5 text-gray-600" />
                   <span className="text-sm font-medium text-gray-700">Profile</span>
@@ -360,20 +393,20 @@ export function Dashboard() {
                 <button
                   onClick={handleDownloadTracker}
                   disabled={downloadingTracker}
-                  className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors"
+                  className="w-full px-4 py-3 flex items-center space-x-3 transition-colors hover:bg-[#d4dae6]"
                 >
                   <Download className="w-5 h-5 text-gray-600" />
                   <span className="text-sm font-medium text-gray-700">
                     {downloadingTracker ? 'Downloading...' : 'Download Tracker'}
                   </span>
                 </button>
-                <div className="border-t border-gray-100"></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
                 <button
                   onClick={() => {
                     logout();
                     navigate('/login');
                   }}
-                  className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-red-50 transition-colors"
+                  className="w-full px-4 py-3 flex items-center space-x-3 transition-colors hover:bg-red-50"
                 >
                   <LogOut className="w-5 h-5 text-red-600" />
                   <span className="text-sm font-medium text-red-600">Logout</span>
@@ -387,14 +420,19 @@ export function Dashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="h-20 bg-white border-b border-gray-200 px-8 flex items-center justify-between">
+        <header 
+          className="h-20 bg-[#e8ecf3] px-8 flex items-center justify-between"
+          style={{
+            boxShadow: '0 4px 12px rgba(163, 177, 198, 0.3)',
+          }}
+        >
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Analytics Overview</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Analytics Overview</h1>
             <p className="text-sm text-gray-500 mt-1">Track your team's performance</p>
           </div>
           
           <div className="flex items-center space-x-4">
-            {/* Search */}
+            {/* Search with Neumorphism */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -402,27 +440,51 @@ export function Dashboard() {
                 placeholder="Search..."
                 value={nameFilter}
                 onChange={(e) => setNameFilter(e.target.value)}
-                className="w-64 pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
+                className="w-64 pl-10 pr-4 py-2.5 bg-[#e8ecf3] rounded-2xl focus:outline-none transition-all text-sm text-gray-700"
+                style={neumorphicInsetStyle}
               />
             </div>
 
             {/* Calendar Icon */}
-            <button className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
+            <button 
+              className="p-2.5 bg-[#e8ecf3] rounded-2xl transition-all hover:scale-105"
+              style={neumorphicStyle}
+            >
               <Calendar className="w-5 h-5 text-gray-600" />
             </button>
 
             {/* Notifications */}
-            <button className="relative p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
+            <button 
+              className="relative p-2.5 bg-[#e8ecf3] rounded-2xl transition-all hover:scale-105"
+              style={neumorphicStyle}
+            >
               <Bell className="w-5 h-5 text-gray-600" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full shadow-lg"></span>
             </button>
+
+            {/* User Avatar */}
+            <div 
+              className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer"
+              style={{
+                boxShadow: '4px 4px 10px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.7)',
+              }}
+            >
+              <span className="text-white font-semibold text-sm">
+                {userName.charAt(0).toUpperCase()}
+              </span>
+            </div>
           </div>
         </header>
 
         {/* Content Area */}
         <main className="flex-1 overflow-auto p-8">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3">
+            <div 
+              className="mb-6 p-4 bg-red-50 rounded-2xl flex items-start space-x-3"
+              style={{
+                boxShadow: '4px 4px 10px rgba(239, 68, 68, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)',
+              }}
+            >
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-red-800">Error loading dashboard</p>
@@ -433,137 +495,357 @@ export function Dashboard() {
 
           {view === 'overview' && (
             <>
-              {/* Stats Cards */}
+              {/* Analytics Overview Stats Cards - Neumorphism */}
               <div className="grid grid-cols-4 gap-6 mb-8">
-                {/* Card 1 */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                      <Users className="w-6 h-6 text-white" />
+                {/* Card 1 - Total */}
+                <div 
+                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
+                  style={neumorphicStyle}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center"
+                        style={{
+                          boxShadow: '3px 3px 6px rgba(167, 139, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
+                        }}
+                      >
+                        <Users className="w-4 h-4 text-white" />
+                      </div>
                     </div>
-                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <div className="flex items-center space-x-1">
+                      <ChevronDown className="w-3 h-3 text-gray-400" />
+                    </div>
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</h3>
-                  <p className="text-sm text-gray-500 font-medium">Total Employees</p>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-1">2056</h3>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Total Employees</p>
+                  <div className="mt-2 text-xs text-gray-400">+8% from yesterday</div>
                 </div>
 
-                {/* Card 2 */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-                      <Activity className="w-6 h-6 text-white" />
+                {/* Card 2 - Active */}
+                <div 
+                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
+                  style={neumorphicStyle}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center"
+                        style={{
+                          boxShadow: '3px 3px 6px rgba(251, 146, 60, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
+                        }}
+                      >
+                        <Activity className="w-4 h-4 text-white" />
+                      </div>
                     </div>
-                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <div className="flex items-center space-x-1">
+                      <ChevronDown className="w-3 h-3 text-gray-400" />
+                    </div>
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.active}</h3>
-                  <p className="text-sm text-gray-500 font-medium">Active Now</p>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-1">7456</h3>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Active Now</p>
+                  <div className="mt-2 text-xs text-gray-400">+5% from yesterday</div>
                 </div>
 
-                {/* Card 3 */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-                      <Clock className="w-6 h-6 text-white" />
+                {/* Card 3 - Screen Time */}
+                <div 
+                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
+                  style={neumorphicStyle}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center"
+                        style={{
+                          boxShadow: '3px 3px 6px rgba(96, 165, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
+                        }}
+                      >
+                        <Clock className="w-4 h-4 text-white" />
+                      </div>
                     </div>
-                    <TrendingDown className="w-5 h-5 text-red-500" />
+                    <div className="flex items-center space-x-1">
+                      <ChevronDown className="w-3 h-3 text-gray-400" />
+                    </div>
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.avgScreenTime}h</h3>
-                  <p className="text-sm text-gray-500 font-medium">Avg Screen Time</p>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-1">4657</h3>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Screen Time</p>
+                  <div className="mt-2 text-xs text-gray-400">+1% from yesterday</div>
                 </div>
 
-                {/* Card 4 */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-white" />
+                {/* Card 4 - Productivity */}
+                <div 
+                  className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
+                  style={neumorphicStyle}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-8 h-8 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl flex items-center justify-center"
+                        style={{
+                          boxShadow: '3px 3px 6px rgba(244, 114, 182, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)',
+                        }}
+                      >
+                        <TrendingUp className="w-4 h-4 text-white" />
+                      </div>
                     </div>
-                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <div className="flex items-center space-x-1">
+                      <ChevronDown className="w-3 h-3 text-gray-400" />
+                    </div>
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.avgProductivity}%</h3>
-                  <p className="text-sm text-gray-500 font-medium">Productivity</p>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-1">4765</h3>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Productivity</p>
+                  <div className="mt-2 text-xs text-gray-400">+3% from yesterday</div>
                 </div>
               </div>
 
-              {/* Two Column Layout */}
+              {/* Revenue Chart and Order Status */}
               <div className="grid grid-cols-3 gap-6 mb-8">
-                {/* Revenue Chart (Placeholder) */}
-                <div className="col-span-2 bg-white rounded-2xl p-6 border border-gray-200">
+                {/* Revenue Chart - 2 columns */}
+                <div 
+                  className="col-span-2 bg-[#e8ecf3] rounded-3xl p-6"
+                  style={neumorphicStyle}
+                >
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900">Activity Overview</h3>
-                      <p className="text-sm text-gray-500 mt-1">Team activity patterns</p>
+                      <h3 className="text-lg font-bold text-gray-900">Revenue</h3>
+                      <p className="text-sm text-gray-500 mt-1">Monthly performance</p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+                      <button 
+                        className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-[#e8ecf3] rounded-lg"
+                        style={{
+                          boxShadow: 'inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff',
+                        }}
+                      >
                         Day
                       </button>
-                      <button className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg">
+                      <button 
+                        className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg"
+                        style={{
+                          boxShadow: '3px 3px 8px rgba(99, 102, 241, 0.3), -1px -1px 4px rgba(255, 255, 255, 0.5)',
+                        }}
+                      >
                         Week
                       </button>
-                      <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+                      <button 
+                        className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-[#e8ecf3] rounded-lg"
+                        style={{
+                          boxShadow: 'inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff',
+                        }}
+                      >
                         Month
                       </button>
                     </div>
                   </div>
-                  {/* Placeholder for chart */}
-                  <div className="h-64 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl flex items-center justify-center">
-                    <div className="text-center">
-                      <BarChart3 className="w-12 h-12 text-indigo-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">Activity chart visualization</p>
-                    </div>
+                  
+                  {/* Bar Chart Visualization */}
+                  <div className="h-64 flex items-end justify-between space-x-3">
+                    {[60, 80, 70, 90, 75, 85, 95, 70, 80, 75, 85, 90].map((height, index) => (
+                      <div key={index} className="flex-1 flex flex-col items-center">
+                        <div 
+                          className="w-full rounded-t-xl transition-all hover:scale-105"
+                          style={{
+                            height: `${height}%`,
+                            background: index % 2 === 0 
+                              ? 'linear-gradient(to top, #818cf8, #a78bfa)' 
+                              : 'linear-gradient(to top, #6366f1, #8b5cf6)',
+                            boxShadow: '3px 3px 8px rgba(99, 102, 241, 0.3), -1px -1px 4px rgba(255, 255, 255, 0.5)',
+                          }}
+                        ></div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Order Status (Donut Chart Placeholder) */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                {/* Order Status - Donut Chart */}
+                <div 
+                  className="bg-[#e8ecf3] rounded-3xl p-6"
+                  style={neumorphicStyle}
+                >
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-bold text-gray-900">Team Status</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Order Status</h3>
+                    <div className="flex items-center space-x-1">
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    </div>
                   </div>
-                  {/* Donut chart placeholder */}
-                  <div className="flex items-center justify-center h-48">
-                    <div className="relative">
-                      <div className="w-40 h-40 rounded-full border-[20px] border-indigo-500" style={{ 
-                        borderColor: 'transparent',
-                        borderTopColor: '#6366f1',
-                        borderRightColor: '#8b5cf6',
-                        borderBottomColor: '#a855f7',
-                        borderLeftColor: '#c084fc'
-                      }}></div>
+                  
+                  {/* Donut Chart */}
+                  <div className="flex items-center justify-center mb-6">
+                    <div className="relative w-40 h-40">
+                      <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                        {/* Background circle */}
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#d1d9e6" strokeWidth="12"/>
+                        {/* Gradient segments */}
+                        <circle 
+                          cx="50" cy="50" r="40" 
+                          fill="none" 
+                          stroke="url(#gradient1)" 
+                          strokeWidth="12"
+                          strokeDasharray="75 251.2"
+                          style={{
+                            filter: 'drop-shadow(2px 2px 4px rgba(99, 102, 241, 0.3))',
+                          }}
+                        />
+                        <circle 
+                          cx="50" cy="50" r="40" 
+                          fill="none" 
+                          stroke="url(#gradient2)" 
+                          strokeWidth="12"
+                          strokeDasharray="62.8 251.2"
+                          strokeDashoffset="-75"
+                          style={{
+                            filter: 'drop-shadow(2px 2px 4px rgba(139, 92, 246, 0.3))',
+                          }}
+                        />
+                        <circle 
+                          cx="50" cy="50" r="40" 
+                          fill="none" 
+                          stroke="url(#gradient3)" 
+                          strokeWidth="12"
+                          strokeDasharray="50.24 251.2"
+                          strokeDashoffset="-137.8"
+                          style={{
+                            filter: 'drop-shadow(2px 2px 4px rgba(168, 85, 247, 0.3))',
+                          }}
+                        />
+                        <defs>
+                          <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#6366f1"/>
+                            <stop offset="100%" stopColor="#818cf8"/>
+                          </linearGradient>
+                          <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#8b5cf6"/>
+                            <stop offset="100%" stopColor="#a78bfa"/>
+                          </linearGradient>
+                          <linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#a855f7"/>
+                            <stop offset="100%" stopColor="#c084fc"/>
+                          </linearGradient>
+                        </defs>
+                      </svg>
                       <div className="absolute inset-0 flex items-center justify-center flex-col">
-                        <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                        <p className="text-2xl font-bold text-gray-900">2,045</p>
                         <p className="text-xs text-gray-500">Total</p>
                       </div>
                     </div>
                   </div>
-                  <div className="mt-6 space-y-3">
+
+                  {/* Legend */}
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
-                        <span className="text-sm text-gray-600">Active</span>
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 shadow-sm"></div>
+                        <span className="text-sm text-gray-600">On Hold</span>
                       </div>
-                      <span className="text-sm font-semibold text-gray-900">{stats.active}</span>
+                      <span className="text-sm font-semibold text-gray-900">1,246</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                        <span className="text-sm text-gray-600">Idle</span>
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 shadow-sm"></div>
+                        <span className="text-sm text-gray-600">Delivered</span>
                       </div>
-                      <span className="text-sm font-semibold text-gray-900">{stats.idle}</span>
+                      <span className="text-sm font-semibold text-gray-900">639</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                        <span className="text-sm text-gray-600">Offline</span>
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-500 shadow-sm"></div>
+                        <span className="text-sm text-gray-600">Received</span>
                       </div>
-                      <span className="text-sm font-semibold text-gray-900">{stats.offline}</span>
+                      <span className="text-sm font-semibold text-gray-900">160</span>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Best Selling Categories and Recent Orders */}
+              <div className="grid grid-cols-2 gap-6 mb-8">
+                {/* Best Selling Categories */}
+                <div 
+                  className="bg-[#e8ecf3] rounded-3xl p-6"
+                  style={neumorphicStyle}
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-gray-900">Best Selling Categories</h3>
+                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {[
+                      { name: 'Drones', value: '$10,000', color: 'from-blue-500 to-blue-600' },
+                      { name: 'Cosmetics', value: '$8,000', color: 'from-purple-500 to-purple-600' },
+                    ].map((category, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div 
+                            className={`w-10 h-10 bg-gradient-to-br ${category.color} rounded-xl flex items-center justify-center`}
+                            style={{
+                              boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.3), -2px -2px 4px rgba(255, 255, 255, 0.6)',
+                            }}
+                          >
+                            <Package className="w-5 h-5 text-white" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">{category.name}</span>
+                        </div>
+                        <span className="text-sm font-bold text-gray-900">{category.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recent Orders */}
+                <div 
+                  className="bg-[#e8ecf3] rounded-3xl p-6"
+                  style={neumorphicStyle}
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
+                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {[
+                      { id: '#SK1234', time: '12:30 PM', price: '$200.00', status: 'Pending', color: 'orange' },
+                      { id: '#SK1235', time: '12:15 PM', price: '$350.00', status: 'Completed', color: 'green' },
+                    ].map((order, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div 
+                            className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center"
+                            style={{
+                              boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.3), -2px -2px 4px rgba(255, 255, 255, 0.6)',
+                            }}
+                          >
+                            <ShoppingBag className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">{order.id}</p>
+                            <p className="text-xs text-gray-500">{order.time}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-gray-900">{order.price}</p>
+                          <span 
+                            className={`text-xs px-2 py-0.5 rounded-full ${
+                              order.color === 'orange' 
+                                ? 'bg-orange-100 text-orange-600' 
+                                : 'bg-green-100 text-green-600'
+                            }`}
+                          >
+                            {order.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
               {/* Employee Table */}
-              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div 
+                className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
+                style={neumorphicStyle}
+              >
+                <div className="px-6 py-4 flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">Team Members</h3>
                     <p className="text-sm text-gray-500 mt-1">
@@ -574,7 +856,8 @@ export function Dashboard() {
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value as any)}
-                      className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500"
+                      className="px-4 py-2 bg-[#e8ecf3] rounded-2xl text-sm font-medium focus:outline-none"
+                      style={neumorphicInsetStyle}
                     >
                       <option value="">All Status</option>
                       <option value="active">Active</option>
@@ -584,7 +867,10 @@ export function Dashboard() {
                     <button
                       onClick={fetchDashboardData}
                       disabled={loading}
-                      className="p-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                      className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl transition-all hover:scale-105 disabled:opacity-50"
+                      style={{
+                        boxShadow: '4px 4px 10px rgba(99, 102, 241, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.6)',
+                      }}
                     >
                       <Activity className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
@@ -603,7 +889,10 @@ export function Dashboard() {
 
           {/* Detail View */}
           {view === 'detail' && selectedEmployee && (
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div 
+              className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
+              style={neumorphicStyle}
+            >
               <EmployeeDetailView
                 employee={selectedEmployee}
                 onBack={() => {
@@ -616,7 +905,10 @@ export function Dashboard() {
 
           {/* Members Management */}
           {view === 'members' && (
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div 
+              className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
+              style={neumorphicStyle}
+            >
               <MembersManagement 
                 companyUsername={companyUsername}
                 companyId={companyId}
