@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-22 11:04 IST - Sidebar: reduce width, tighter spacing, compact layout
+// UPDATED: 2026-01-22 11:09 IST - GeoTrack-style sidebar: logo top, admin section, clean menu, bottom stats panel
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -9,7 +9,8 @@ import {
   LogOut,
   Eye,
   Menu,
-  X
+  X,
+  Crown
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -24,7 +25,6 @@ export function Layout({ children }: LayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const adminName = company?.company_name || user?.full_name || 'Averlon';
-
   const isActive = (path: string) => location.pathname === path;
 
   const navigationItems = [
@@ -44,66 +44,89 @@ export function Layout({ children }: LayoutProps) {
     navigate('/login');
   };
 
-  const sidebarStyle: React.CSSProperties = {
-    background: 'linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%)'
-  };
-
   const NavButton = ({ path, icon: Icon, label }: any) => (
     <button
       onClick={() => handleNavigate(path)}
-      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-        isActive(path) ? 'bg-white text-indigo-600 shadow-sm' : 'text-white hover:bg-white/20'
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
+        isActive(path)
+          ? 'bg-indigo-600 text-white font-medium shadow-sm'
+          : 'text-gray-600 hover:bg-gray-100'
       }`}
     >
       <Icon className="w-4 h-4 flex-shrink-0" />
-      <span className="font-medium text-sm">{label}</span>
+      <span>{label}</span>
     </button>
   );
 
   const SidebarContent = ({ showMobileClose }: { showMobileClose?: boolean }) => (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="h-14 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-md">
-            <Eye className="w-4 h-4 text-indigo-600" />
+    <div className="h-full flex flex-col bg-white">
+      {/* Logo Header */}
+      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+            <Eye className="w-5 h-5 text-white" />
           </div>
-          <span className="text-base font-bold text-white">WorkEye</span>
+          <span className="text-lg font-bold text-gray-900">WorkEye</span>
         </div>
-
-        {showMobileClose ? (
-          <button onClick={() => setMobileMenuOpen(false)} className="p-1 text-white">
+        {showMobileClose && (
+          <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 text-gray-500 hover:text-gray-700">
             <X className="w-5 h-5" />
           </button>
-        ) : null}
+        )}
       </div>
 
-      {/* Admin card */}
-      <div className="px-3 pb-3">
+      {/* Admin Section */}
+      <div className="px-3 pt-4 pb-3">
         <button
           onClick={() => handleNavigate('/profile')}
-          className="w-full text-left bg-white/20 rounded-xl px-3 py-2 border border-white/60 transition-colors hover:bg-white/30"
+          className="w-full text-left bg-pink-50 rounded-xl p-3 border border-pink-200 transition-colors hover:bg-pink-100"
         >
-          <p className="text-xs font-semibold text-white truncate">{adminName}</p>
-          <p className="text-xs text-blue-100">Admin • View profile</p>
+          <div className="flex items-center gap-2 mb-1">
+            <Crown className="w-4 h-4 text-pink-600" />
+            <p className="text-xs font-bold text-pink-600 uppercase tracking-wide">SUPER ADMIN</p>
+          </div>
+          <p className="text-sm font-semibold text-gray-900">{adminName}</p>
+          <p className="text-xs text-gray-500 mt-0.5">All companies access</p>
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
         {navigationItems.map((item) => (
           <NavButton key={item.path} {...item} />
         ))}
       </nav>
 
-      {/* Logout */}
-      <div className="p-3">
+      {/* Bottom Stats Panel */}
+      <div className="px-3 pb-3 pt-2 border-t border-gray-200">
+        <div className="bg-indigo-50 rounded-xl p-3 mb-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Crown className="w-4 h-4 text-indigo-600" />
+            <p className="text-xs font-bold text-indigo-900">Super Administrator</p>
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-600">Users</span>
+              <span className="font-semibold text-gray-900">0/</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-600">Clients</span>
+              <span className="font-semibold text-gray-900">Unlimited</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-600">Storage</span>
+              <span className="font-semibold text-gray-900">Unlimited</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-all border border-white/60"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all text-sm font-medium"
         >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          <span className="font-medium text-sm">Logout</span>
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
         </button>
       </div>
     </div>
@@ -111,8 +134,8 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Desktop sidebar - reduced width */}
-      <aside className="w-56 flex-shrink-0 h-full hidden lg:block" style={sidebarStyle}>
+      {/* Desktop sidebar */}
+      <aside className="w-56 flex-shrink-0 h-full hidden lg:block border-r border-gray-200">
         <SidebarContent />
       </aside>
 
@@ -123,7 +146,7 @@ export function Layout({ children }: LayoutProps) {
             className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside className="fixed inset-y-0 left-0 w-64 h-full z-50 lg:hidden" style={sidebarStyle}>
+          <aside className="fixed inset-y-0 left-0 w-64 h-full z-50 lg:hidden shadow-xl">
             <SidebarContent showMobileClose />
           </aside>
         </>
