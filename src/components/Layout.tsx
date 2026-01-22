@@ -1,18 +1,16 @@
-// UPDATED: 2026-01-22 10:20 IST - Clean minimal sidebar design
-import { useState, useRef, useEffect } from 'react';
+// UPDATED: 2026-01-22 10:36 IST - Vertical sidebar like target UI
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   UsersIcon,
   ClipboardList,
   Settings,
-  ChevronDown,
-  UserCircle,
-  Download,
   LogOut,
   Eye,
   Menu,
-  X
+  X,
+  UserCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -24,56 +22,14 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, company, logout } = useAuth();
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const [downloadingTracker, setDownloadingTracker] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const userName = user?.full_name || company?.company_name || 'Averlon';
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowProfileDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleDownloadTracker = async () => {
-    try {
-      setDownloadingTracker(true);
-      const token = localStorage.getItem('authToken');
-
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'https://workeye-render-demo-backend.onrender.com'}/api/tracker/download`,
-        {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      );
-
-      if (!response.ok) throw new Error('Failed to download tracker');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'workeye-tracker.exe';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error('Download error:', err);
-    } finally {
-      setDownloadingTracker(false);
-    }
-  };
 
   const isActive = (path: string) => location.pathname === path;
 
   const navigationItems = [
+    { path: '/profile', icon: UserCircle, label: 'Profile' },
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/members', icon: UsersIcon, label: 'Team' },
     { path: '/attendance', icon: ClipboardList, label: 'Attendance' },
@@ -85,46 +41,50 @@ export function Layout({ children }: LayoutProps) {
     setMobileMenuOpen(false);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar - Desktop */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-full hidden lg:flex flex-col">
+      <aside className="w-64 bg-gradient-to-b from-indigo-600 to-purple-700 flex-shrink-0 h-full hidden lg:flex flex-col">
         {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-              <Eye className="w-5 h-5 text-white" />
+        <div className="h-20 flex items-center px-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+              <Eye className="w-7 h-7 text-indigo-600" />
             </div>
-            <span className="text-lg font-bold text-gray-900">WorkEye</span>
+            <span className="text-xl font-bold text-white">WorkEye</span>
           </div>
         </div>
 
-        {/* Profile at Top */}
-        <div className="px-4 py-4 border-b border-gray-100">
-          <button
-            onClick={() => navigate('/profile')}
-            className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-semibold text-sm">{userName.charAt(0).toUpperCase()}</span>
+        {/* Profile Card */}
+        <div className="px-4 py-6">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-indigo-600 font-bold text-lg">{userName.charAt(0).toUpperCase()}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{userName}</p>
+                <p className="text-xs text-indigo-100">Administrator</p>
+              </div>
             </div>
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{userName}</p>
-              <p className="text-xs text-gray-500">View Profile</p>
-            </div>
-          </button>
+          </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-2 px-4 space-y-2 overflow-y-auto">
           {navigationItems.map(({ path, icon: Icon, label }) => (
             <button
               key={path}
               onClick={() => navigate(path)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 isActive(path)
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-50'
+                  ? 'bg-white text-indigo-600 shadow-lg'
+                  : 'text-white hover:bg-white/10'
               }`}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
@@ -133,53 +93,15 @@ export function Layout({ children }: LayoutProps) {
           ))}
         </nav>
 
-        {/* Profile Dropdown at Bottom */}
-        <div className="p-4 border-t border-gray-100">
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-              className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-semibold text-sm">{userName.charAt(0).toUpperCase()}</span>
-              </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{userName}</p>
-                <p className="text-xs text-gray-500">Options</p>
-              </div>
-              <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            </button>
-
-            {showProfileDropdown && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-                <button
-                  onClick={() => { navigate('/profile'); setShowProfileDropdown(false); }}
-                  className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors"
-                >
-                  <UserCircle className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">My Profile</span>
-                </button>
-                <button
-                  onClick={handleDownloadTracker}
-                  disabled={downloadingTracker}
-                  className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                >
-                  <Download className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">
-                    {downloadingTracker ? 'Downloading...' : 'Download Tracker'}
-                  </span>
-                </button>
-                <div className="border-t border-gray-100"></div>
-                <button
-                  onClick={() => { logout(); navigate('/login'); }}
-                  className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-red-50 transition-colors"
-                >
-                  <LogOut className="w-5 h-5 text-red-600" />
-                  <span className="text-sm font-medium text-red-600">Logout</span>
-                </button>
-              </div>
-            )}
-          </div>
+        {/* Logout Button */}
+        <div className="p-4">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20"
+          >
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            <span className="font-medium text-sm">Logout</span>
+          </button>
         </div>
       </aside>
 
@@ -190,46 +112,45 @@ export function Layout({ children }: LayoutProps) {
             className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside className="fixed inset-y-0 left-0 w-64 bg-white flex flex-col flex-shrink-0 h-full z-50 lg:hidden transform transition-transform duration-300">
-            {/* Mobile Close Button */}
-            <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-                  <Eye className="w-5 h-5 text-white" />
+          <aside className="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-indigo-600 to-purple-700 flex flex-col flex-shrink-0 h-full z-50 lg:hidden transform transition-transform duration-300">
+            {/* Mobile Header */}
+            <div className="h-20 flex items-center justify-between px-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                  <Eye className="w-7 h-7 text-indigo-600" />
                 </div>
-                <span className="text-lg font-bold text-gray-900">WorkEye</span>
+                <span className="text-xl font-bold text-white">WorkEye</span>
               </div>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-2">
-                <X className="w-6 h-6 text-gray-600" />
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-white">
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            {/* Profile at Top */}
-            <div className="px-4 py-4 border-b border-gray-100">
-              <button
-                onClick={() => handleNavigate('/profile')}
-                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-semibold text-sm">{userName.charAt(0).toUpperCase()}</span>
+            {/* Profile Card */}
+            <div className="px-4 py-6">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-indigo-600 font-bold text-lg">{userName.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{userName}</p>
+                    <p className="text-xs text-indigo-100">Administrator</p>
+                  </div>
                 </div>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{userName}</p>
-                  <p className="text-xs text-gray-500">View Profile</p>
-                </div>
-              </button>
+              </div>
             </div>
 
             {/* Mobile Navigation */}
-            <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+            <nav className="flex-1 py-2 px-4 space-y-2 overflow-y-auto">
               {navigationItems.map(({ path, icon: Icon, label }) => (
                 <button
                   key={path}
                   onClick={() => handleNavigate(path)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     isActive(path)
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-white text-indigo-600 shadow-lg'
+                      : 'text-white hover:bg-white/10'
                   }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
@@ -239,13 +160,13 @@ export function Layout({ children }: LayoutProps) {
             </nav>
 
             {/* Mobile Logout */}
-            <div className="p-4 border-t border-gray-100">
+            <div className="p-4">
               <button
-                onClick={() => { logout(); navigate('/login'); }}
-                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20"
               >
-                <LogOut className="w-5 h-5 text-red-600" />
-                <span className="text-sm font-medium text-red-600">Logout</span>
+                <LogOut className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium text-sm">Logout</span>
               </button>
             </div>
           </aside>
@@ -260,7 +181,7 @@ export function Layout({ children }: LayoutProps) {
             <Menu className="w-6 h-6 text-gray-700" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center">
+            <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center">
               <Eye className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-bold text-gray-900">WorkEye</span>
@@ -268,7 +189,7 @@ export function Layout({ children }: LayoutProps) {
           <div className="w-10"></div>
         </div>
 
-        <main className="flex-1 overflow-auto bg-gray-50">
+        <main className="flex-1 overflow-auto">
           {children}
         </main>
       </div>
