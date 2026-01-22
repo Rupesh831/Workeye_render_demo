@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-22 01:00 IST - Modal rendered via Portal to cover full screen
+// UPDATED: 2026-01-22 12:12 IST - Neumorphic design system
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Trash2, Edit, X, Loader2, UserPlus, Mail, User, Briefcase, Building, CheckCircle, AlertCircle, Users, Search, Download } from 'lucide-react';
@@ -212,9 +212,9 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
 
   const getStatusBadge = (status: 'active' | 'idle' | 'offline') => {
     const styles = {
-      active: 'bg-green-100 text-green-700',
-      idle: 'bg-yellow-100 text-yellow-700',
-      offline: 'bg-slate-100 text-slate-600'
+      active: 'neu-badge-success',
+      idle: 'neu-badge-warning',
+      offline: 'neu-badge-danger'
     };
 
     const labels = {
@@ -248,48 +248,27 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
             overflowY: 'auto'
           }}
           onMouseDown={(e) => {
-            // Click outside closes modal
             if (e.target === e.currentTarget) closeModal();
           }}
         >
-          <div
-            style={{
-              minHeight: '100vh',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '16px'
-            }}
-          >
-            <div
-              className="bg-slate-50 rounded-3xl w-full"
-              style={{
-                maxWidth: '28rem',
-                maxHeight: 'calc(100vh - 32px)',
-                overflowY: 'auto',
-                boxShadow: '12px 12px 24px #d1d9e6, -12px -12px 24px #ffffff'
-              }}
-            >
+          <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+            <div className="neu-card" style={{ width: '100%', maxWidth: '28rem', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto' }}>
               {/* Modal Header */}
-              <div className="px-6 py-4 flex items-center justify-between border-b border-slate-200">
-                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                  <UserPlus className="w-6 h-6 text-blue-600" />
+              <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(190, 195, 201, 0.3)' }}>
+                <h3 className="neu-title" style={{ fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                  <UserPlus style={{ width: '24px', height: '24px', color: '#6366f1' }} />
                   <span>{editingMember ? 'Edit Member' : 'Add New Member'}</span>
                 </h3>
-                <button onClick={closeModal} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
-                  <X className="w-5 h-5 text-slate-400" />
+                <button onClick={closeModal} className="neu-btn-sm" style={{ padding: '8px' }}>
+                  <X style={{ width: '20px', height: '20px' }} />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <form
-                onSubmit={editingMember ? handleUpdateMember : handleAddMember}
-                className="p-6 gap-5"
-                style={{ display: 'flex', flexDirection: 'column' }}
-              >
+              <form onSubmit={editingMember ? handleUpdateMember : handleAddMember} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    <Mail className="w-4 h-4 text-slate-400" style={{ display: 'inline', marginRight: '0.5rem' }} />
+                  <label className="neu-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <Mail style={{ width: '14px', height: '14px' }} />
                     Email Address
                   </label>
                   <input
@@ -297,16 +276,16 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 rounded-2xl focus:outline-none text-slate-900"
-                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    className="neu-input"
+                    style={{ width: '100%' }}
                     placeholder="john.doe@company.com"
                     disabled={!!editingMember}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    <User className="w-4 h-4 text-slate-400" style={{ display: 'inline', marginRight: '0.5rem' }} />
+                  <label className="neu-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <User style={{ width: '14px', height: '14px' }} />
                     Full Name
                   </label>
                   <input
@@ -314,74 +293,63 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 rounded-2xl focus:outline-none text-slate-900"
-                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    className="neu-input"
+                    style={{ width: '100%' }}
                     placeholder="John Doe"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    <Briefcase className="w-4 h-4 text-slate-400" style={{ display: 'inline', marginRight: '0.5rem' }} />
+                  <label className="neu-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <Briefcase style={{ width: '14px', height: '14px' }} />
                     Position
                   </label>
                   <input
                     type="text"
                     value={formData.position}
                     onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 rounded-2xl focus:outline-none text-slate-900"
-                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    className="neu-input"
+                    style={{ width: '100%' }}
                     placeholder="Software Developer"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    <Building className="w-4 h-4 text-slate-400" style={{ display: 'inline', marginRight: '0.5rem' }} />
+                  <label className="neu-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <Building style={{ width: '14px', height: '14px' }} />
                     Department
                   </label>
                   <input
                     type="text"
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 rounded-2xl focus:outline-none text-slate-900"
-                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    className="neu-input"
+                    style={{ width: '100%' }}
                     placeholder="Engineering"
                   />
                 </div>
 
                 {error && (
-                  <div className="bg-orange-50 rounded-2xl p-3 flex items-center gap-2" style={{ boxShadow: '2px 2px 6px rgba(251, 146, 60, 0.2)' }}>
-                    <AlertCircle className="w-4 h-4 text-orange-600" style={{ flexShrink: 0 }} />
-                    <p className="text-sm text-orange-800">{error}</p>
+                  <div style={{ background: 'linear-gradient(145deg, #fed7aa, #fdba74)', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <AlertCircle style={{ width: '16px', height: '16px', color: '#7c2d12', flexShrink: 0 }} />
+                    <p style={{ fontSize: '13px', fontWeight: 600, color: '#7c2d12', margin: 0 }}>{error}</p>
                   </div>
                 )}
 
-                <div className="flex gap-3" style={{ paddingTop: '1rem' }}>
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="flex-1 px-4 py-3 bg-slate-50 text-slate-700 rounded-2xl transition-all hover:shadow-md font-medium"
-                    style={{ boxShadow: '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff' }}
-                    disabled={submitting}
-                  >
+                <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
+                  <button type="button" onClick={closeModal} className="neu-btn" style={{ flex: 1 }} disabled={submitting}>
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl transition-all hover:shadow-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-                    style={{ boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4)' }}
-                  >
+                  <button type="submit" disabled={submitting} className="neu-btn-accent" style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                     {submitting ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 style={{ width: '16px', height: '16px' }} className="animate-spin" />
                         <span>{editingMember ? 'Updating...' : 'Adding...'}</span>
                       </>
                     ) : (
                       <>
-                        <CheckCircle className="w-4 h-4" />
-                        <span>{editingMember ? 'Update Member' : 'Add Member'}</span>
+                        <CheckCircle style={{ width: '16px', height: '16px' }} />
+                        <span>{editingMember ? 'Update' : 'Add Member'}</span>
                       </>
                     )}
                   </button>
@@ -395,71 +363,53 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
     : null;
 
   return (
-    <div className="p-6">
+    <div style={{ minHeight: '100vh', padding: '32px' }}>
       {/* Success/Error Messages */}
       {success && (
-        <div
-          className="mb-6 p-4 bg-green-50 rounded-2xl flex items-center gap-3"
-          style={{ boxShadow: '4px 4px 10px rgba(34, 197, 94, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)' }}
-        >
-          <CheckCircle className="w-5 h-5 text-green-600" />
-          <p className="text-sm font-medium text-green-800">{success}</p>
+        <div className="neu-card" style={{ marginBottom: '24px', padding: '16px', background: 'linear-gradient(145deg, #d1fae5, #a7f3d0)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <CheckCircle style={{ width: '20px', height: '20px', color: '#065f46' }} />
+          <p style={{ fontSize: '14px', fontWeight: 600, color: '#065f46', margin: 0 }}>{success}</p>
         </div>
       )}
 
       {error && !isModalOpen && (
-        <div
-          className="mb-6 p-4 bg-orange-50 rounded-2xl flex items-center gap-3"
-          style={{ boxShadow: '4px 4px 10px rgba(251, 146, 60, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)' }}
-        >
-          <AlertCircle className="w-5 h-5 text-orange-600" />
-          <p className="text-sm font-medium text-orange-800">{error}</p>
+        <div className="neu-card" style={{ marginBottom: '24px', padding: '16px', background: 'linear-gradient(145deg, #fed7aa, #fdba74)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <AlertCircle style={{ width: '20px', height: '20px', color: '#7c2d12' }} />
+          <p style={{ fontSize: '14px', fontWeight: 600, color: '#7c2d12', margin: 0 }}>{error}</p>
         </div>
       )}
 
       {/* Header Actions */}
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div className="relative flex-1" style={{ maxWidth: '28rem' }}>
-          <Search className="absolute w-5 h-5 text-slate-400" style={{ left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', flex: '1 1 auto', maxWidth: '400px' }}>
+          <Search style={{ position: 'absolute', width: '20px', height: '20px', color: '#64748b', left: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
           <input
             type="text"
             placeholder="Search members..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-50 rounded-2xl focus:outline-none text-slate-900"
-            style={{ paddingLeft: '3rem', paddingRight: '1rem', paddingTop: '0.75rem', paddingBottom: '0.75rem', boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
+            className="neu-input"
+            style={{ width: '100%', paddingLeft: '48px' }}
           />
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleDownloadTracker}
-            disabled={downloadingTracker}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl transition-all hover:shadow-lg font-medium flex items-center gap-2 disabled:opacity-50"
-            style={{ boxShadow: '4px 4px 12px rgba(34, 197, 94, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.7)' }}
-          >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <button onClick={handleDownloadTracker} disabled={downloadingTracker} className="neu-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(145deg, #86efac, #6ee7b7)', color: '#065f46' }}>
             {downloadingTracker ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 style={{ width: '20px', height: '20px' }} className="animate-spin" />
                 <span>Downloading...</span>
               </>
             ) : (
               <>
-                <Download className="w-5 h-5" />
+                <Download style={{ width: '20px', height: '20px' }} />
                 <span>Download Tracker</span>
               </>
             )}
           </button>
 
-          <button
-            onClick={() => {
-              resetForm();
-              setShowAddModal(true);
-            }}
-            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl transition-all hover:shadow-lg font-medium flex items-center gap-2"
-            style={{ boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.7)' }}
-          >
-            <Plus className="w-5 h-5" />
+          <button onClick={() => { resetForm(); setShowAddModal(true); }} className="neu-btn-accent" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <Plus style={{ width: '20px', height: '20px' }} />
             <span>Add Member</span>
           </button>
         </div>
@@ -467,98 +417,90 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
 
       {/* Members Table */}
       {loading ? (
-        <div
-          className="bg-slate-50 rounded-3xl p-12 text-center"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" style={{ margin: '0 auto 1rem' }}></div>
-          <p className="text-slate-600 font-medium">Loading members...</p>
+        <div className="neu-card" style={{ padding: '48px', textAlign: 'center' }}>
+          <div style={{ width: '48px', height: '48px', border: '4px solid #6366f1', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto 16px' }} className="animate-spin"></div>
+          <p className="neu-text" style={{ fontWeight: 600 }}>Loading members...</p>
         </div>
       ) : filteredMembers.length === 0 ? (
-        <div
-          className="bg-slate-50 rounded-3xl p-12 text-center"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <Users className="w-16 h-16 text-slate-300" style={{ margin: '0 auto 1rem' }} />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+        <div className="neu-card" style={{ padding: '48px', textAlign: 'center' }}>
+          <Users style={{ width: '64px', height: '64px', color: '#cbd5e1', margin: '0 auto 16px' }} />
+          <h3 className="neu-title" style={{ fontSize: '18px', marginBottom: '8px' }}>
             {searchQuery ? 'No members found' : 'No members yet'}
           </h3>
-          <p className="text-slate-600 mb-6">
+          <p className="neu-text-muted" style={{ marginBottom: '24px' }}>
             {searchQuery ? 'Try adjusting your search criteria' : 'Add your first team member to get started'}
           </p>
           {!searchQuery && (
-            <button
-              onClick={() => {
-                resetForm();
-                setShowAddModal(true);
-              }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl transition-all hover:shadow-lg font-medium"
-              style={{ boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4)' }}
-            >
-              <UserPlus className="w-5 h-5" />
+            <button onClick={() => { resetForm(); setShowAddModal(true); }} className="neu-btn-accent" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <UserPlus style={{ width: '20px', height: '20px' }} />
               <span>Add Your First Member</span>
             </button>
           )}
         </div>
       ) : (
-        <div
-          className="bg-slate-50 rounded-3xl overflow-hidden"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-100 border-b border-slate-200">
+        <div className="neu-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="neu-table">
+              <thead>
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase' }}>Member</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase' }}>Position</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase' }}>Department</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase' }}>Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase' }}>Devices</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600" style={{ textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
+                  <th>Member</th>
+                  <th>Position</th>
+                  <th>Department</th>
+                  <th>Status</th>
+                  <th>Devices</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
-              <tbody style={{ borderTop: '1px solid #e2e8f0' }}>
-                {filteredMembers.map((member, idx) => {
+              <tbody>
+                {filteredMembers.map((member) => {
                   const statusBadge = getStatusBadge(member.status);
                   return (
-                    <tr key={member.id} className="hover:bg-slate-100 transition-colors" style={{ borderBottom: idx < filteredMembers.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold"
-                            style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4)' }}
-                          >
+                    <tr key={member.id}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(145deg, #7477ff, #5558d9)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontWeight: 700,
+                            fontSize: '16px',
+                            boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4)'
+                          }}>
                             {member.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900">{member.name}</p>
-                            <p className="text-sm text-slate-500">{member.email}</p>
+                            <p className="neu-title" style={{ fontSize: '14px', marginBottom: '2px' }}>{member.name}</p>
+                            <p className="neu-text-muted" style={{ fontSize: '12px' }}>{member.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">{member.position || '-'}</td>
-                      <td className="px-6 py-4 text-sm text-slate-600">{member.department || '-'}</td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusBadge.className}`}>
+                      <td>
+                        <span className="neu-text" style={{ fontSize: '14px' }}>{member.position || '-'}</span>
+                      </td>
+                      <td>
+                        <span className="neu-text" style={{ fontSize: '14px' }}>{member.department || '-'}</span>
+                      </td>
+                      <td>
+                        <span className={`neu-badge ${statusBadge.className}`}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', marginRight: '6px', background: 'currentColor' }}></span>
                           {statusBadge.label}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">{member.device_count || 0}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2" style={{ justifyContent: 'flex-end' }}>
-                          <button
-                            onClick={() => handleEditClick(member)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
-                            title="Edit member"
-                          >
-                            <Edit className="w-4 h-4" />
+                      <td>
+                        <span className="neu-text" style={{ fontSize: '14px' }}>{member.device_count || 0}</span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                          <button onClick={() => handleEditClick(member)} className="neu-btn-sm" title="Edit member" style={{ padding: '8px' }}>
+                            <Edit style={{ width: '16px', height: '16px' }} />
                           </button>
-                          <button
-                            onClick={() => handleDeleteMember(member.id)}
-                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
-                            title="Remove member"
-                          >
-                            <Trash2 className="w-4 h-4" />
+                          <button onClick={() => handleDeleteMember(member.id)} className="neu-btn-sm" title="Remove member" style={{ padding: '8px', background: 'linear-gradient(145deg, #fca5a5, #f87171)', color: '#7f1d1d' }}>
+                            <Trash2 style={{ width: '16px', height: '16px' }} />
                           </button>
                         </div>
                       </td>
@@ -571,7 +513,7 @@ export function MembersManagement({ companyUsername, companyId, onMembersUpdate 
         </div>
       )}
 
-      {/* Modal rendered at document.body */}
+      {/* Modal */}
       {modal}
     </div>
   );
