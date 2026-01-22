@@ -4,7 +4,7 @@ import { useRef, useMemo } from 'react';
 import { Clock, Activity, Pause, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 
-interface ActivityData {
+export interface ActivityData {
   id: string;
   name: string;
   email: string;
