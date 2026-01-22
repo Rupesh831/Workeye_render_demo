@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-22 10:36 IST - Vertical sidebar like target UI
+// UPDATED: 2026-01-22 10:44 IST - Fix sidebar visibility (avoid missing lg:flex) + target-like style
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -46,62 +46,72 @@ export function Layout({ children }: LayoutProps) {
     navigate('/login');
   };
 
+  const sidebarStyle: React.CSSProperties = {
+    background: 'linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%)'
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar - Desktop */}
-      <aside className="w-64 bg-gradient-to-b from-indigo-600 to-purple-700 flex-shrink-0 h-full hidden lg:flex flex-col">
-        {/* Logo */}
-        <div className="h-20 flex items-center px-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-              <Eye className="w-7 h-7 text-indigo-600" />
-            </div>
-            <span className="text-xl font-bold text-white">WorkEye</span>
-          </div>
-        </div>
-
-        {/* Profile Card */}
-        <div className="px-4 py-6">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+      {/* NOTE: We use lg:block instead of lg:flex because the compiled CSS currently does not include lg:flex. */}
+      <aside className="w-64 flex-shrink-0 h-full hidden lg:block" style={sidebarStyle}>
+        <div className="h-full flex flex-col">
+          {/* Logo */}
+          <div className="h-20 flex items-center px-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-indigo-600 font-bold text-lg">{userName.charAt(0).toUpperCase()}</span>
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                <Eye className="w-7 h-7 text-indigo-600" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{userName}</p>
-                <p className="text-xs text-indigo-100">Administrator</p>
-              </div>
+              <span className="text-xl font-bold text-white">WorkEye</span>
             </div>
           </div>
-        </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-2 px-4 space-y-2 overflow-y-auto">
-          {navigationItems.map(({ path, icon: Icon, label }) => (
+          {/* Profile Card */}
+          <div className="px-4 py-6">
             <button
-              key={path}
-              onClick={() => navigate(path)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                isActive(path)
-                  ? 'bg-white text-indigo-600 shadow-lg'
-                  : 'text-white hover:bg-white/10'
-              }`}
+              onClick={() => navigate('/profile')}
+              className="w-full text-left bg-white/20 rounded-2xl p-4 border border-white/60 transition-colors hover:bg-white/40"
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              <span className="font-medium text-sm">{label}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-indigo-600 font-bold text-lg">{userName.charAt(0).toUpperCase()}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">{userName}</p>
+                  <p className="text-xs text-blue-100">View profile</p>
+                </div>
+              </div>
             </button>
-          ))}
-        </nav>
+          </div>
 
-        {/* Logout Button */}
-        <div className="p-4">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20"
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            <span className="font-medium text-sm">Logout</span>
-          </button>
+          {/* Navigation */}
+          <nav className="flex-1 py-2 px-4 space-y-2 overflow-y-auto">
+            {navigationItems.map(({ path, icon: Icon, label }) => (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  isActive(path)
+                    ? 'bg-white text-indigo-600 shadow-lg'
+                    : 'text-white hover:bg-white/20'
+                }`}
+              >
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium text-sm">{label}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* Logout Button */}
+          <div className="p-4">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/20 hover:bg-white/40 text-white transition-all border border-white/60"
+            >
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              <span className="font-medium text-sm">Logout</span>
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -112,7 +122,10 @@ export function Layout({ children }: LayoutProps) {
             className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside className="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-indigo-600 to-purple-700 flex flex-col flex-shrink-0 h-full z-50 lg:hidden transform transition-transform duration-300">
+          <aside
+            className="fixed inset-y-0 left-0 w-64 flex flex-col flex-shrink-0 h-full z-50 lg:hidden transform transition-transform duration-300"
+            style={sidebarStyle}
+          >
             {/* Mobile Header */}
             <div className="h-20 flex items-center justify-between px-6">
               <div className="flex items-center gap-3">
@@ -128,17 +141,20 @@ export function Layout({ children }: LayoutProps) {
 
             {/* Profile Card */}
             <div className="px-4 py-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+              <button
+                onClick={() => handleNavigate('/profile')}
+                className="w-full text-left bg-white/20 rounded-2xl p-4 border border-white/60 transition-colors hover:bg-white/40"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-indigo-600 font-bold text-lg">{userName.charAt(0).toUpperCase()}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white truncate">{userName}</p>
-                    <p className="text-xs text-indigo-100">Administrator</p>
+                    <p className="text-xs text-blue-100">View profile</p>
                   </div>
                 </div>
-              </div>
+              </button>
             </div>
 
             {/* Mobile Navigation */}
@@ -150,7 +166,7 @@ export function Layout({ children }: LayoutProps) {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     isActive(path)
                       ? 'bg-white text-indigo-600 shadow-lg'
-                      : 'text-white hover:bg-white/10'
+                      : 'text-white hover:bg-white/20'
                   }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
@@ -163,7 +179,7 @@ export function Layout({ children }: LayoutProps) {
             <div className="p-4">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/20 hover:bg-white/40 text-white transition-all border border-white/60"
               >
                 <LogOut className="w-5 h-5 flex-shrink-0" />
                 <span className="font-medium text-sm">Logout</span>
