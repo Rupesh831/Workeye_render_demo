@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-22 10:54 IST - Target sidebar: logo top, company/admin name (not clickable), menu items, logout; responsive mobile
+// UPDATED: 2026-01-22 11:00 IST - Sidebar fix: clickable admin card -> /profile + better sizing/alignment + mobile drawer
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -23,7 +23,6 @@ export function Layout({ children }: LayoutProps) {
   const { user, company, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Show company name first (target UI), fallback to user full name.
   const adminName = company?.company_name || user?.full_name || 'Averlon';
 
   const isActive = (path: string) => location.pathname === path;
@@ -52,8 +51,8 @@ export function Layout({ children }: LayoutProps) {
   const NavButton = ({ path, icon: Icon, label }: any) => (
     <button
       onClick={() => handleNavigate(path)}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-        isActive(path) ? 'bg-white text-indigo-600 shadow-lg' : 'text-white hover:bg-white/20'
+      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${
+        isActive(path) ? 'bg-white text-indigo-600 shadow-md' : 'text-white hover:bg-white/20'
       }`}
     >
       <Icon className="w-5 h-5 flex-shrink-0" />
@@ -61,38 +60,47 @@ export function Layout({ children }: LayoutProps) {
     </button>
   );
 
-  const SidebarContent = () => (
+  const SidebarContent = ({ showMobileClose }: { showMobileClose?: boolean }) => (
     <div className="h-full flex flex-col">
-      {/* Logo at TOP */}
-      <div className="h-20 flex items-center px-6">
+      {/* Header area */}
+      <div className="h-16 flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-            <Eye className="w-7 h-7 text-indigo-600" />
+          <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+            <Eye className="w-5 h-5 text-indigo-600" />
           </div>
-          <span className="text-xl font-bold text-white">WorkEye</span>
+          <span className="text-lg font-bold text-white">WorkEye</span>
         </div>
+
+        {showMobileClose ? (
+          <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-white">
+            <X className="w-6 h-6" />
+          </button>
+        ) : null}
       </div>
 
-      {/* Admin/Company name (NOT clickable) */}
-      <div className="px-4 pb-4">
-        <div className="bg-white/20 rounded-2xl px-4 py-3 border border-white/60">
+      {/* Admin/Company card -> CLICKABLE to /profile */}
+      <div className="px-4 pt-2 pb-4">
+        <button
+          onClick={() => handleNavigate('/profile')}
+          className="w-full text-left bg-white/20 rounded-2xl px-4 py-3 border border-white/60 transition-colors hover:bg-white/35"
+        >
           <p className="text-sm font-semibold text-white truncate">{adminName}</p>
-          <p className="text-xs text-blue-100">Admin</p>
-        </div>
+          <p className="text-xs text-blue-100">Admin • View profile</p>
+        </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-2 px-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
         {navigationItems.map((item) => (
           <NavButton key={item.path} {...item} />
         ))}
       </nav>
 
-      {/* Logout */}
+      {/* Logout at bottom */}
       <div className="p-4">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/20 hover:bg-white/40 text-white transition-all border border-white/60"
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/35 text-white transition-all border border-white/60"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           <span className="font-medium text-sm">Logout</span>
@@ -105,45 +113,24 @@ export function Layout({ children }: LayoutProps) {
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Desktop sidebar */}
       {/* NOTE: keep lg:block because current build output does not include lg:flex reliably. */}
-      <aside className="w-64 flex-shrink-0 h-full hidden lg:block" style={sidebarStyle}>
+      <aside className="w-72 flex-shrink-0 h-full hidden lg:block" style={sidebarStyle}>
         <SidebarContent />
       </aside>
 
-      {/* Mobile overlay sidebar */}
+      {/* Mobile drawer */}
       {mobileMenuOpen && (
         <>
           <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside
-            className="fixed inset-y-0 left-0 w-64 h-full z-50 lg:hidden"
-            style={sidebarStyle}
-          >
-            <div className="h-full flex flex-col">
-              {/* Mobile top bar with close */}
-              <div className="h-16 flex items-center justify-between px-4 border-b border-white/20">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-                    <Eye className="w-5 h-5 text-indigo-600" />
-                  </div>
-                  <span className="text-lg font-bold text-white">WorkEye</span>
-                </div>
-                <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-white">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Rest content */}
-              <div className="flex-1 overflow-hidden">
-                <SidebarContent />
-              </div>
-            </div>
+          <aside className="fixed inset-y-0 left-0 w-72 h-full z-50 lg:hidden" style={sidebarStyle}>
+            <SidebarContent showMobileClose />
           </aside>
         </>
       )}
 
-      {/* Main content */}
+      {/* Main */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Mobile header */}
         <div className="lg:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm">
