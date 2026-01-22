@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-22 10:31 IST - Dashboard without sidebar
+// UPDATED: 2026-01-22 10:36 IST - Dashboard with sidebar
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
@@ -56,19 +56,20 @@ const App = () => {
         }
       />
       
-      {/* Dashboard WITHOUT Layout (no sidebar) */}
+      {/* Protected Routes - ALL with Layout (sidebar) */}
       <Route
         path="/dashboard"
         element={
           isAuthenticated ? (
-            <Dashboard />
+            <Layout>
+              <Dashboard />
+            </Layout>
           ) : (
             <Navigate to="/login" replace />
           )
         }
       />
       
-      {/* Other routes WITH Layout (sidebar) */}
       <Route
         path="/employee/:id"
         element={
