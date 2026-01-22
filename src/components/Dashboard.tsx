@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-22 11:09 IST - Clean card-based Dashboard UI matching GeoTrack Analytics style
+// UPDATED: 2026-01-22 11:25 IST - Neumorphism design system applied
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EmployeeOverviewTable } from './EmployeeOverviewTable';
@@ -162,149 +162,148 @@ export function Dashboard() {
   }, [members]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header with refresh */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <button
-            onClick={fetchDashboardData}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span className="text-sm font-medium">Refresh</span>
-          </button>
-        </div>
+    <div style={{ minHeight: '100vh', padding: '24px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h1 className="neu-title" style={{ fontSize: '32px', margin: 0 }}>Analytics</h1>
+        <button
+          onClick={fetchDashboardData}
+          disabled={loading}
+          className="neu-btn-accent"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: loading ? 0.7 : 1 }}
+        >
+          <RefreshCw style={{ width: '16px', height: '16px' }} className={loading ? 'rotate-animation' : ''} />
+          <span style={{ fontSize: '14px', fontWeight: 600 }}>Refresh</span>
+        </button>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Top 3 KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
           {/* Total Employees */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-start justify-between mb-4">
+          <div className="neu-card" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">TOTAL EMPLOYEES</p>
-                <h2 className="text-3xl font-bold text-gray-900">{stats.total}</h2>
+                <p className="neu-subtitle" style={{ marginBottom: '8px' }}>TOTAL EMPLOYEES</p>
+                <h2 className="neu-title" style={{ fontSize: '36px', margin: 0 }}>{stats.total}</h2>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-purple-600" />
+              <div className="neu-icon-box" style={{ background: 'linear-gradient(145deg, #c4b5fd, #a78bfa)' }}>
+                <Users style={{ width: '24px', height: '24px', color: '#5b21b6' }} />
               </div>
             </div>
-            <div className="flex items-center text-xs text-green-600">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              <span>7265.4% increase</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <TrendingUp style={{ width: '14px', height: '14px', color: '#10b981' }} />
+              <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>7265.4% increase</span>
             </div>
           </div>
 
           {/* Active Rate */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-start justify-between mb-4">
+          <div className="neu-card" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">ACTIVE RATE</p>
-                <h2 className="text-3xl font-bold text-gray-900">{stats.activeRate}%</h2>
+                <p className="neu-subtitle" style={{ marginBottom: '8px' }}>ACTIVE RATE</p>
+                <h2 className="neu-title" style={{ fontSize: '36px', margin: 0 }}>{stats.activeRate}%</h2>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <Activity className="w-6 h-6 text-green-600" />
+              <div className="neu-icon-box" style={{ background: 'linear-gradient(145deg, #86efac, #6ee7b7)' }}>
+                <Activity style={{ width: '24px', height: '24px', color: '#065f46' }} />
               </div>
             </div>
-            <div className="flex items-center text-xs text-green-600">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              <span>2.3% increase</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <TrendingUp style={{ width: '14px', height: '14px', color: '#10b981' }} />
+              <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>2.3% increase</span>
             </div>
           </div>
 
           {/* Avg Productivity */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-start justify-between mb-4">
+          <div className="neu-card" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">AVG PRODUCTIVITY</p>
-                <h2 className="text-3xl font-bold text-gray-900">{stats.avgProductivity}%</h2>
+                <p className="neu-subtitle" style={{ marginBottom: '8px' }}>AVG PRODUCTIVITY</p>
+                <h2 className="neu-title" style={{ fontSize: '36px', margin: 0 }}>{stats.avgProductivity}%</h2>
               </div>
-              <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center">
-                <Target className="w-6 h-6 text-cyan-600" />
+              <div className="neu-icon-box" style={{ background: 'linear-gradient(145deg, #67e8f9, #22d3ee)' }}>
+                <Target style={{ width: '24px', height: '24px', color: '#164e63' }} />
               </div>
             </div>
-            <div className="flex items-center text-xs text-green-600">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              <span>5.1% increase</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <TrendingUp style={{ width: '14px', height: '14px', color: '#10b981' }} />
+              <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>5.1% increase</span>
             </div>
           </div>
         </div>
 
         {/* 6 Secondary Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-purple-600" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px' }}>
+          <div className="neu-card-flat" style={{ padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #c4b5fd, #a78bfa)' }}>
+                <Users style={{ width: '20px', height: '20px', color: '#5b21b6' }} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">{stats.active}</h3>
+              <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.active}</h3>
             </div>
-            <p className="text-xs text-gray-500 font-medium">Active users</p>
+            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Active users</p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-cyan-600" />
+          <div className="neu-card-flat" style={{ padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #67e8f9, #22d3ee)' }}>
+                <Clock style={{ width: '20px', height: '20px', color: '#164e63' }} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">{stats.avgScreenTime}h</h3>
+              <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.avgScreenTime}h</h3>
             </div>
-            <p className="text-xs text-gray-500 font-medium">Avg screen time</p>
+            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Avg screen time</p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Target className="w-5 h-5 text-blue-600" />
+          <div className="neu-card-flat" style={{ padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #93c5fd, #60a5fa)' }}>
+                <Target style={{ width: '20px', height: '20px', color: '#1e3a8a' }} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">{stats.total}</h3>
+              <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.total}</h3>
             </div>
-            <p className="text-xs text-gray-500 font-medium">Team size</p>
+            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Team size</p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-                <UserX className="w-5 h-5 text-pink-600" />
+          <div className="neu-card-flat" style={{ padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #fbcfe8, #f9a8d4)' }}>
+                <UserX style={{ width: '20px', height: '20px', color: '#831843' }} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">{stats.idle}</h3>
+              <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.idle}</h3>
             </div>
-            <p className="text-xs text-gray-500 font-medium">Idle</p>
+            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Idle</p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Camera className="w-5 h-5 text-orange-600" />
+          <div className="neu-card-flat" style={{ padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #fdba74, #fb923c)' }}>
+                <Camera style={{ width: '20px', height: '20px', color: '#7c2d12' }} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">{stats.totalScreenshots}</h3>
+              <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.totalScreenshots}</h3>
             </div>
-            <p className="text-xs text-gray-500 font-medium">Screenshots</p>
+            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Screenshots</p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-indigo-600" />
+          <div className="neu-card-flat" style={{ padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #c4b5fd, #a78bfa)' }}>
+                <MapPin style={{ width: '20px', height: '20px', color: '#5b21b6' }} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">{stats.offline}</h3>
+              <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.offline}</h3>
             </div>
-            <p className="text-xs text-gray-500 font-medium">Offline</p>
+            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Offline</p>
           </div>
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
           {/* Employee Status */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-base font-semibold text-gray-900 mb-6">Employee Status</h3>
-            <div className="flex items-center justify-center mb-6">
-              <div className="relative" style={{ width: '160px', height: '160px' }}>
-                <svg viewBox="0 0 100 100" className="transform -rotate-90">
-                  <circle cx="50" cy="50" r="35" fill="none" stroke="#f3f4f6" strokeWidth="12" />
+          <div className="neu-card" style={{ padding: '24px' }}>
+            <h3 className="neu-title" style={{ fontSize: '18px', marginBottom: '24px' }}>Employee Status</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ position: 'relative', width: '160px', height: '160px' }}>
+                <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx="50" cy="50" r="35" fill="none" stroke="#d1d5db" strokeWidth="12" />
                   <circle 
                     cx="50" cy="50" r="35" 
                     fill="none" 
@@ -321,39 +320,39 @@ export function Dashboard() {
                     strokeDashoffset={`-${stats.total > 0 ? (stats.active / stats.total) * 219.8 : 0}`}
                   />
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                    <p className="text-xs text-gray-500">Total</p>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <p className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.total}</p>
+                    <p className="neu-text-muted" style={{ fontSize: '12px', margin: 0 }}>Total</p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2" />
-                  <span className="text-sm text-gray-600">Active</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '12px', height: '12px', background: '#10b981', borderRadius: '50%' }} />
+                  <span className="neu-text" style={{ fontSize: '14px' }}>Active</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">{stats.active}</span>
+                <span className="neu-title" style={{ fontSize: '14px' }}>{stats.active}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-red-500 rounded-full mr-2" />
-                  <span className="text-sm text-gray-600">Inactive</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '12px', height: '12px', background: '#ef4444', borderRadius: '50%' }} />
+                  <span className="neu-text" style={{ fontSize: '14px' }}>Inactive</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">{stats.idle}</span>
+                <span className="neu-title" style={{ fontSize: '14px' }}>{stats.idle}</span>
               </div>
             </div>
           </div>
 
           {/* Productivity Coverage */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-base font-semibold text-gray-900 mb-6">Productivity Coverage</h3>
-            <div className="flex items-center justify-center mb-6">
-              <div className="relative" style={{ width: '160px', height: '160px' }}>
-                <svg viewBox="0 0 100 100" className="transform -rotate-90">
-                  <circle cx="50" cy="50" r="35" fill="none" stroke="#f3f4f6" strokeWidth="12" />
+          <div className="neu-card" style={{ padding: '24px' }}>
+            <h3 className="neu-title" style={{ fontSize: '18px', marginBottom: '24px' }}>Productivity Coverage</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ position: 'relative', width: '160px', height: '160px' }}>
+                <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+                  <circle cx="50" cy="50" r="35" fill="none" stroke="#d1d5db" strokeWidth="12" />
                   <circle 
                     cx="50" cy="50" r="35" 
                     fill="none" 
@@ -370,45 +369,46 @@ export function Dashboard() {
                     strokeDashoffset={`-${(stats.avgProductivity / 100) * 219.8}`}
                   />
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">{stats.avgProductivity}%</p>
-                    <p className="text-xs text-gray-500">Avg</p>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <p className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.avgProductivity}%</p>
+                    <p className="neu-text-muted" style={{ fontSize: '12px', margin: 0 }}>Avg</p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-cyan-500 rounded-full mr-2" />
-                  <span className="text-sm text-gray-600">Productive</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '12px', height: '12px', background: '#06b6d4', borderRadius: '50%' }} />
+                  <span className="neu-text" style={{ fontSize: '14px' }}>Productive</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">{stats.avgProductivity}%</span>
+                <span className="neu-title" style={{ fontSize: '14px' }}>{stats.avgProductivity}%</span>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-pink-500 rounded-full mr-2" />
-                  <span className="text-sm text-gray-600">Below target</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '12px', height: '12px', background: '#ec4899', borderRadius: '50%' }} />
+                  <span className="neu-text" style={{ fontSize: '14px' }}>Below target</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">{100 - stats.avgProductivity}%</span>
+                <span className="neu-title" style={{ fontSize: '14px' }}>{100 - stats.avgProductivity}%</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Team Members Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
+        <div className="neu-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(190, 195, 201, 0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
               <div>
-                <h3 className="text-base font-semibold text-gray-900">Team Members</h3>
-                <p className="text-sm text-gray-500 mt-1">{members.length} employees</p>
+                <h3 className="neu-title" style={{ fontSize: '18px', marginBottom: '4px' }}>Team Members</h3>
+                <p className="neu-text-muted" style={{ fontSize: '14px', margin: 0 }}>{members.length} employees</p>
               </div>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="neu-input"
+                style={{ padding: '10px 16px', fontSize: '14px', minWidth: '140px' }}
               >
                 <option value="">All Status</option>
                 <option value="active">Active</option>
@@ -423,6 +423,16 @@ export function Dashboard() {
           />
         </div>
       </div>
+
+      <style>{`
+        .rotate-animation {
+          animation: rotate 1s linear infinite;
+        }
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

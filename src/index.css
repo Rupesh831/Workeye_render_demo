@@ -5,7 +5,7 @@
       --tw-translate-x: 0;
       --tw-translate-y: 0;
       --tw-translate-z: 0;
-n      --tw-space-y-reverse: 0;
+      --tw-space-y-reverse: 0;
       --tw-border-style: solid;
       --tw-gradient-position: initial;
       --tw-gradient-from: #0000;
@@ -59,20 +59,233 @@ n      --tw-space-y-reverse: 0;
   }
 }
 
-/*
-  NOTE: The bulk of this file is generated.
-  A custom override section is appended at the end ("WorkEye layout overrides")
-  to avoid missing Tailwind utilities like flex-col, w-56, etc.
-*/
+/* ============================
+   NEUMORPHISM DESIGN SYSTEM
+   ============================ */
 
-/* --- existing generated tailwind content remains unchanged above --- */
+:root {
+  /* Neumorphism colors */
+  --neu-bg: #e8ecf1;
+  --neu-surface: #e8ecf1;
+  --neu-shadow-light: #ffffff;
+  --neu-shadow-dark: #bec3c9;
+  --neu-text-primary: #1e293b;
+  --neu-text-secondary: #64748b;
+  --neu-accent: #6366f1;
+}
 
-/* WorkEye layout overrides (hard fix) */
+/* Neumorphic base card */
+.neu-card {
+  background: var(--neu-surface);
+  border-radius: 20px;
+  box-shadow: 
+    8px 8px 16px var(--neu-shadow-dark),
+    -8px -8px 16px var(--neu-shadow-light);
+  transition: all 0.3s ease;
+}
+
+.neu-card:hover {
+  box-shadow: 
+    12px 12px 24px var(--neu-shadow-dark),
+    -12px -12px 24px var(--neu-shadow-light);
+}
+
+/* Flat card (less depth) */
+.neu-card-flat {
+  background: var(--neu-surface);
+  border-radius: 16px;
+  box-shadow: 
+    4px 4px 8px var(--neu-shadow-dark),
+    -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* Pressed/inset effect */
+.neu-inset {
+  background: var(--neu-surface);
+  border-radius: 16px;
+  box-shadow: 
+    inset 4px 4px 8px var(--neu-shadow-dark),
+    inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* Icon container */
+.neu-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    6px 6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+}
+
+.neu-icon-box-sm {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    4px 4px 8px var(--neu-shadow-dark),
+    -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* Button */
+.neu-btn {
+  background: var(--neu-surface);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  color: var(--neu-text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 
+    6px 6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+  transition: all 0.2s ease;
+}
+
+.neu-btn:hover {
+  box-shadow: 
+    8px 8px 16px var(--neu-shadow-dark),
+    -8px -8px 16px var(--neu-shadow-light);
+}
+
+.neu-btn:active {
+  box-shadow: 
+    inset 4px 4px 8px var(--neu-shadow-dark),
+    inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* Accent button */
+.neu-btn-accent {
+  background: linear-gradient(145deg, #7477ff, #5558d9);
+  color: white;
+  box-shadow: 
+    6px 6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+}
+
+.neu-btn-accent:hover {
+  background: linear-gradient(145deg, #8588ff, #6669e5);
+}
+
+/* Input */
+.neu-input {
+  background: var(--neu-surface);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: var(--neu-text-primary);
+  box-shadow: 
+    inset 4px 4px 8px var(--neu-shadow-dark),
+    inset -4px -4px 8px var(--neu-shadow-light);
+  transition: all 0.2s ease;
+}
+
+.neu-input:focus {
+  outline: none;
+  box-shadow: 
+    inset 6px 6px 12px var(--neu-shadow-dark),
+    inset -6px -6px 12px var(--neu-shadow-light);
+}
+
+/* Typography */
+.neu-title {
+  color: var(--neu-text-primary);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.neu-subtitle {
+  color: var(--neu-text-secondary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.neu-text {
+  color: var(--neu-text-primary);
+  line-height: 1.6;
+}
+
+.neu-text-muted {
+  color: var(--neu-text-secondary);
+}
+
+/* Status badges */
+.neu-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 
+    3px 3px 6px var(--neu-shadow-dark),
+    -3px -3px 6px var(--neu-shadow-light);
+}
+
+.neu-badge-success {
+  background: linear-gradient(145deg, #86efac, #6ee7b7);
+  color: #065f46;
+}
+
+.neu-badge-warning {
+  background: linear-gradient(145deg, #fde047, #fbbf24);
+  color: #78350f;
+}
+
+.neu-badge-danger {
+  background: linear-gradient(145deg, #fca5a5, #f87171);
+  color: #7f1d1d;
+}
+
+/* Progress bar */
+.neu-progress {
+  height: 12px;
+  border-radius: 8px;
+  background: var(--neu-surface);
+  box-shadow: 
+    inset 3px 3px 6px var(--neu-shadow-dark),
+    inset -3px -3px 6px var(--neu-shadow-light);
+  overflow: hidden;
+}
+
+.neu-progress-fill {
+  height: 100%;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+  transition: width 0.3s ease;
+}
+
+/* Divider */
+.neu-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--neu-shadow-dark) 20%,
+    var(--neu-shadow-dark) 80%,
+    transparent
+  );
+  margin: 24px 0;
+}
+
+/* ============================
+   WORKEYE LAYOUT (sidebar fix)
+   ============================ */
+
 .we-app {
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: #f8fafc;
+  background: var(--neu-bg);
 }
 
 .we-main {
@@ -87,15 +300,17 @@ n      --tw-space-y-reverse: 0;
   flex: 1;
   overflow: auto;
   min-width: 0;
+  background: var(--neu-bg);
 }
 
 .we-sidebar {
   width: 240px;
-  background: #ffffff;
-  border-right: 1px solid #e2e8f0;
+  background: var(--neu-surface);
+  border-right: 1px solid rgba(190, 195, 201, 0.3);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 4px 0 8px rgba(190, 195, 201, 0.2);
 }
 
 .we-sidebar-header {
@@ -104,7 +319,7 @@ n      --tw-space-y-reverse: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(190, 195, 201, 0.2);
 }
 
 .we-logo {
@@ -119,16 +334,19 @@ n      --tw-space-y-reverse: 0;
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: #4f46e5;
+  background: linear-gradient(145deg, #7477ff, #5558d9);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 
+    4px 4px 8px var(--neu-shadow-dark),
+    -2px -2px 6px var(--neu-shadow-light);
 }
 
 .we-logo-text {
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--neu-text-primary);
 }
 
 .we-icon {
@@ -148,23 +366,33 @@ n      --tw-space-y-reverse: 0;
 .we-admin-card {
   width: 100%;
   text-align: left;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--neu-surface);
+  border: none;
   border-radius: 14px;
   padding: 10px 12px;
   cursor: pointer;
+  box-shadow: 
+    4px 4px 8px var(--neu-shadow-dark),
+    -4px -4px 8px var(--neu-shadow-light);
+  transition: all 0.2s ease;
+}
+
+.we-admin-card:hover {
+  box-shadow: 
+    6px 6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
 }
 
 .we-admin-title {
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--neu-text-primary);
   margin-bottom: 2px;
 }
 
 .we-admin-sub {
   font-size: 12px;
-  color: #64748b;
+  color: var(--neu-text-secondary);
 }
 
 .we-nav {
@@ -184,17 +412,22 @@ n      --tw-space-y-reverse: 0;
   border-radius: 12px;
   border: none;
   background: transparent;
-  color: #475569;
+  color: var(--neu-text-secondary);
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .we-nav-btn:hover {
-  background: #f1f5f9;
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--neu-accent);
 }
 
 .we-nav-btn.active {
-  background: #4f46e5;
+  background: linear-gradient(145deg, #7477ff, #5558d9);
   color: #ffffff;
+  box-shadow: 
+    4px 4px 8px var(--neu-shadow-dark),
+    -2px -2px 6px var(--neu-shadow-light);
 }
 
 .we-spacer {
@@ -209,36 +442,48 @@ n      --tw-space-y-reverse: 0;
   gap: 8px;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #334155;
+  border: none;
+  background: var(--neu-surface);
+  color: var(--neu-text-primary);
   cursor: pointer;
+  box-shadow: 
+    4px 4px 8px var(--neu-shadow-dark),
+    -4px -4px 8px var(--neu-shadow-light);
+  transition: all 0.2s ease;
 }
 
 .we-logout:hover {
-  background: #f1f5f9;
+  box-shadow: 
+    6px 6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
 }
 
 .we-icon-btn {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: none;
+  background: var(--neu-surface);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 
+    4px 4px 8px var(--neu-shadow-dark),
+    -4px -4px 8px var(--neu-shadow-light);
+  transition: all 0.2s ease;
 }
 
 .we-icon-btn:hover {
-  background: #f1f5f9;
+  box-shadow: 
+    6px 6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
 }
 
 .we-mobile-header {
   height: 56px;
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--neu-surface);
+  border-bottom: 1px solid rgba(190, 195, 201, 0.3);
   padding: 0 12px;
   display: flex;
   align-items: center;
@@ -255,7 +500,7 @@ n      --tw-space-y-reverse: 0;
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: #4f46e5;
+  background: linear-gradient(145deg, #7477ff, #5558d9);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -264,7 +509,7 @@ n      --tw-space-y-reverse: 0;
 .we-mobile-brand-text {
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--neu-text-primary);
 }
 
 .we-overlay {
