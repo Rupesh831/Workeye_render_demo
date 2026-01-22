@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-21 18:23 IST - Fixed Authentication Flow
+// UPDATED: 2026-01-22 10:31 IST - Dashboard without sidebar
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
@@ -56,20 +56,19 @@ const App = () => {
         }
       />
       
-      {/* Protected Routes */}
+      {/* Dashboard WITHOUT Layout (no sidebar) */}
       <Route
         path="/dashboard"
         element={
           isAuthenticated ? (
-            <Layout>
-              <Dashboard />
-            </Layout>
+            <Dashboard />
           ) : (
             <Navigate to="/login" replace />
           )
         }
       />
       
+      {/* Other routes WITH Layout (sidebar) */}
       <Route
         path="/employee/:id"
         element={
