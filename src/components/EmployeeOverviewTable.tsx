@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-22 00:23 IST - Fixed live activity updates and idle time display
+// UPDATED: 2026-01-22 11:47 IST - Neumorphic table styling
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, TrendingUp, Eye, ArrowUpDown, ArrowUp, ArrowDown, BarChart3 } from 'lucide-react';
@@ -126,20 +126,17 @@ export function EmployeeOverviewTable({ employees, onEmployeeClick }: EmployeeOv
       return <ArrowUpDown className="w-4 h-4 text-slate-400" />;
     }
     if (sortOrder === 'asc') {
-      return <ArrowUp className="w-4 h-4 text-blue-600" />;
+      return <ArrowUp className="w-4 h-4 text-indigo-600" />;
     }
-    return <ArrowDown className="w-4 h-4 text-blue-600" />;
+    return <ArrowDown className="w-4 h-4 text-indigo-600" />;
   };
 
   const sortedEmployees = getSortedEmployees();
 
   const getStatusBadge = (status: string) => {
-    const badges = {
-      active: 'bg-green-100 text-green-700 border-green-200',
-      idle: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      offline: 'bg-slate-200 text-slate-700 border-slate-300'
-    };
-    return badges[status as keyof typeof badges] || badges.offline;
+    if (status === 'active') return 'neu-badge-success';
+    if (status === 'idle') return 'neu-badge-warning';
+    return 'neu-badge-danger';
   };
 
   const handleViewDetails = (employee: Employee) => {
@@ -151,184 +148,204 @@ export function EmployeeOverviewTable({ employees, onEmployeeClick }: EmployeeOv
   };
 
   return (
-    <div className="overflow-x-auto">
-      <div className="inline-block min-w-full align-middle">
-        <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-6 py-4 text-left">
-                <button
-                  onClick={() => handleSort('name')}
-                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
-                >
-                  Employee
-                  <SortIcon field="name" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-left">
-                <button
-                  onClick={() => handleSort('status')}
-                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
-                >
-                  Status
-                  <SortIcon field="status" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-left">
-                <button
-                  onClick={() => handleSort('screenTime')}
-                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
-                >
-                  Screen Time
-                  <SortIcon field="screenTime" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-left">
-                <button
-                  onClick={() => handleSort('activeTime')}
-                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
-                >
-                  Active Time
-                  <SortIcon field="activeTime" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-left">
-                <button
-                  onClick={() => handleSort('idleTime')}
-                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
-                >
-                  Idle Time
-                  <SortIcon field="idleTime" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-left">
-                <button
-                  onClick={() => handleSort('productivity')}
-                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
-                >
-                  Productivity
-                  <SortIcon field="productivity" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-left">
-                <button
-                  onClick={() => handleSort('screenshots')}
-                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
-                >
-                  Screenshots
-                  <SortIcon field="screenshots" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-left">
-                <button
-                  onClick={() => handleSort('lastActivity')}
-                  className="flex items-center gap-2 text-xs font-semibold text-slate-700 uppercase tracking-wider hover:text-blue-600 transition-colors"
-                >
-                  Last Activity
-                  <SortIcon field="lastActivity" />
-                </button>
-              </th>
-              <th className="px-6 py-4 text-left">
-                <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                  Actions
-                </span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-slate-200">
-            {sortedEmployees.map((employee) => {
-              const productivity = Math.round(employee.productivity);
-              const screenshotCount = employee.screenshotsCount || employee.screenshots?.length || 0;
+    <div style={{ overflowX: 'auto' }}>
+      <table className="neu-table">
+        <thead>
+          <tr>
+            <th>
+              <button
+                onClick={() => handleSort('name')}
+                className="neu-btn-sm"
+                style={{ background: 'transparent', boxShadow: 'none', padding: 0 }}
+              >
+                Employee
+                <SortIcon field="name" />
+              </button>
+            </th>
+            <th>
+              <button
+                onClick={() => handleSort('status')}
+                className="neu-btn-sm"
+                style={{ background: 'transparent', boxShadow: 'none', padding: 0 }}
+              >
+                Status
+                <SortIcon field="status" />
+              </button>
+            </th>
+            <th>
+              <button
+                onClick={() => handleSort('screenTime')}
+                className="neu-btn-sm"
+                style={{ background: 'transparent', boxShadow: 'none', padding: 0 }}
+              >
+                Screen Time
+                <SortIcon field="screenTime" />
+              </button>
+            </th>
+            <th>
+              <button
+                onClick={() => handleSort('activeTime')}
+                className="neu-btn-sm"
+                style={{ background: 'transparent', boxShadow: 'none', padding: 0 }}
+              >
+                Active Time
+                <SortIcon field="activeTime" />
+              </button>
+            </th>
+            <th>
+              <button
+                onClick={() => handleSort('idleTime')}
+                className="neu-btn-sm"
+                style={{ background: 'transparent', boxShadow: 'none', padding: 0 }}
+              >
+                Idle Time
+                <SortIcon field="idleTime" />
+              </button>
+            </th>
+            <th>
+              <button
+                onClick={() => handleSort('productivity')}
+                className="neu-btn-sm"
+                style={{ background: 'transparent', boxShadow: 'none', padding: 0 }}
+              >
+                Productivity
+                <SortIcon field="productivity" />
+              </button>
+            </th>
+            <th>
+              <button
+                onClick={() => handleSort('screenshots')}
+                className="neu-btn-sm"
+                style={{ background: 'transparent', boxShadow: 'none', padding: 0 }}
+              >
+                Screenshots
+                <SortIcon field="screenshots" />
+              </button>
+            </th>
+            <th>
+              <button
+                onClick={() => handleSort('lastActivity')}
+                className="neu-btn-sm"
+                style={{ background: 'transparent', boxShadow: 'none', padding: 0 }}
+              >
+                Last Activity
+                <SortIcon field="lastActivity" />
+              </button>
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sortedEmployees.map((employee) => {
+            const productivity = Math.round(employee.productivity);
+            const screenshotCount = employee.screenshotsCount || employee.screenshots?.length || 0;
 
-              return (
-                <tr key={employee.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold shadow-md">
-                        {employee.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-900">{employee.name}</div>
-                        <div className="text-sm text-slate-500">{employee.role}</div>
-                      </div>
+            return (
+              <tr key={employee.id}>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ 
+                      width: '40px', 
+                      height: '40px', 
+                      borderRadius: '50%', 
+                      background: 'linear-gradient(145deg, #7477ff, #5558d9)', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      color: 'white', 
+                      fontWeight: 700,
+                      fontSize: '16px'
+                    }}>
+                      {employee.name.charAt(0).toUpperCase()}
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadge(employee.status)}`}>
-                      <span className="w-2 h-2 rounded-full mr-2 animate-pulse" style={{
-                        backgroundColor: employee.status === 'active' ? '#10b981' : employee.status === 'idle' ? '#f59e0b' : '#6b7280'
-                      }}></span>
-                      {employee.status.charAt(0).toUpperCase() + employee.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-slate-400" />
-                      <span className="font-semibold text-slate-900">{formatTime(employee.screenTime)}</span>
+                    <div>
+                      <div className="neu-title" style={{ fontSize: '14px', marginBottom: '2px' }}>{employee.name}</div>
+                      <div className="neu-text-muted" style={{ fontSize: '12px' }}>{employee.role}</div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      <span className="font-semibold text-green-600">{formatTime(employee.activeTime)}</span>
+                  </div>
+                </td>
+                <td>
+                  <span className={`neu-badge ${getStatusBadge(employee.status)}`}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', marginRight: '6px', background: 'currentColor' }}></span>
+                    {employee.status.charAt(0).toUpperCase() + employee.status.slice(1)}
+                  </span>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Clock style={{ width: '16px', height: '16px', color: '#64748b' }} />
+                    <span className="neu-title" style={{ fontSize: '14px' }}>{formatTime(employee.screenTime)}</span>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#10b981' }}>{formatTime(employee.activeTime)}</span>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }}></div>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#f59e0b' }}>{formatTime(employee.idleTime)}</span>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="neu-progress" style={{ width: '100px' }}>
+                      <div
+                        className="neu-progress-fill"
+                        style={{ width: `${productivity}%` }}
+                      ></div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                      <span className="font-semibold text-yellow-600">{formatTime(employee.idleTime)}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-full max-w-[100px] bg-slate-200 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${productivity}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-semibold text-slate-700 min-w-[40px]">{productivity}%</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-lg bg-purple-50 text-purple-700 text-sm font-medium">
-                      {screenshotCount}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-slate-500">{formatLastActivity(employee.lastActivity)}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleViewDetails(employee)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span>View Details</span>
-                      </button>
-                      <button
-                        onClick={() => handleViewAnalytics(employee)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors font-medium text-sm"
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                        <span>Analytics</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    <span className="neu-title" style={{ fontSize: '14px', minWidth: '40px' }}>{productivity}%</span>
+                  </div>
+                </td>
+                <td>
+                  <span style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    padding: '6px 12px', 
+                    borderRadius: '8px', 
+                    background: 'linear-gradient(145deg, #e9d5ff, #ddd6fe)', 
+                    color: '#6b21a8', 
+                    fontSize: '13px', 
+                    fontWeight: 700 
+                  }}>
+                    {screenshotCount}
+                  </span>
+                </td>
+                <td>
+                  <span className="neu-text-muted" style={{ fontSize: '13px' }}>{formatLastActivity(employee.lastActivity)}</span>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      onClick={() => handleViewDetails(employee)}
+                      className="neu-btn-sm"
+                    >
+                      <Eye style={{ width: '14px', height: '14px' }} />
+                      <span>View</span>
+                    </button>
+                    <button
+                      onClick={() => handleViewAnalytics(employee)}
+                      className="neu-btn-sm active"
+                    >
+                      <BarChart3 style={{ width: '14px', height: '14px' }} />
+                      <span>Chart</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
 
-        {employees.length === 0 && (
-          <div className="text-center py-12 text-slate-500">
-            <p className="text-lg">No employees found</p>
-            <p className="text-sm mt-2">Try adjusting your filters</p>
-          </div>
-        )}
-      </div>
+      {employees.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <p className="neu-title" style={{ fontSize: '18px', marginBottom: '8px' }}>No employees found</p>
+          <p className="neu-text-muted">Try adjusting your filters</p>
+        </div>
+      )}
     </div>
   );
 }

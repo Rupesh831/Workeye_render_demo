@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-22 11:25 IST - Neumorphism design system applied
+// UPDATED: 2026-01-22 11:47 IST - Remove header, clean UI
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EmployeeOverviewTable } from './EmployeeOverviewTable';
@@ -10,8 +10,7 @@ import {
   Target,
   UserX,
   Camera,
-  Clock,
-  RefreshCw
+  Clock
 } from 'lucide-react';
 
 interface Employee {
@@ -162,21 +161,7 @@ export function Dashboard() {
   }, [members]);
 
   return (
-    <div style={{ minHeight: '100vh', padding: '24px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 className="neu-title" style={{ fontSize: '32px', margin: 0 }}>Analytics</h1>
-        <button
-          onClick={fetchDashboardData}
-          disabled={loading}
-          className="neu-btn-accent"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: loading ? 0.7 : 1 }}
-        >
-          <RefreshCw style={{ width: '16px', height: '16px' }} className={loading ? 'rotate-animation' : ''} />
-          <span style={{ fontSize: '14px', fontWeight: 600 }}>Refresh</span>
-        </button>
-      </div>
-
+    <div style={{ minHeight: '100vh', padding: '32px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Top 3 KPI Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
@@ -241,7 +226,7 @@ export function Dashboard() {
               </div>
               <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.active}</h3>
             </div>
-            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Active users</p>
+            <p className="neu-text-muted" style={{ margin: 0 }}>Active users</p>
           </div>
 
           <div className="neu-card-flat" style={{ padding: '16px' }}>
@@ -251,7 +236,7 @@ export function Dashboard() {
               </div>
               <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.avgScreenTime}h</h3>
             </div>
-            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Avg screen time</p>
+            <p className="neu-text-muted" style={{ margin: 0 }}>Avg screen time</p>
           </div>
 
           <div className="neu-card-flat" style={{ padding: '16px' }}>
@@ -261,7 +246,7 @@ export function Dashboard() {
               </div>
               <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.total}</h3>
             </div>
-            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Team size</p>
+            <p className="neu-text-muted" style={{ margin: 0 }}>Team size</p>
           </div>
 
           <div className="neu-card-flat" style={{ padding: '16px' }}>
@@ -271,7 +256,7 @@ export function Dashboard() {
               </div>
               <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.idle}</h3>
             </div>
-            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Idle</p>
+            <p className="neu-text-muted" style={{ margin: 0 }}>Idle</p>
           </div>
 
           <div className="neu-card-flat" style={{ padding: '16px' }}>
@@ -281,7 +266,7 @@ export function Dashboard() {
               </div>
               <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.totalScreenshots}</h3>
             </div>
-            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Screenshots</p>
+            <p className="neu-text-muted" style={{ margin: 0 }}>Screenshots</p>
           </div>
 
           <div className="neu-card-flat" style={{ padding: '16px' }}>
@@ -291,7 +276,7 @@ export function Dashboard() {
               </div>
               <h3 className="neu-title" style={{ fontSize: '24px', margin: 0 }}>{stats.offline}</h3>
             </div>
-            <p className="neu-text-muted" style={{ fontSize: '13px', margin: 0 }}>Offline</p>
+            <p className="neu-text-muted" style={{ margin: 0 }}>Offline</p>
           </div>
         </div>
 
@@ -398,24 +383,22 @@ export function Dashboard() {
 
         {/* Team Members Table */}
         <div className="neu-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(190, 195, 201, 0.3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-              <div>
-                <h3 className="neu-title" style={{ fontSize: '18px', marginBottom: '4px' }}>Team Members</h3>
-                <p className="neu-text-muted" style={{ fontSize: '14px', margin: 0 }}>{members.length} employees</p>
-              </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="neu-input"
-                style={{ padding: '10px 16px', fontSize: '14px', minWidth: '140px' }}
-              >
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="idle">Idle</option>
-                <option value="offline">Offline</option>
-              </select>
+          <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div>
+              <h3 className="neu-title" style={{ fontSize: '20px', marginBottom: '4px' }}>Team Members</h3>
+              <p className="neu-text-muted" style={{ margin: 0 }}>{members.length} employees</p>
             </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="neu-input"
+              style={{ padding: '10px 16px', fontSize: '14px', minWidth: '140px' }}
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="idle">Idle</option>
+              <option value="offline">Offline</option>
+            </select>
           </div>
           <EmployeeOverviewTable
             employees={members}
@@ -423,16 +406,6 @@ export function Dashboard() {
           />
         </div>
       </div>
-
-      <style>{`
-        .rotate-animation {
-          animation: rotate 1s linear infinite;
-        }
-        @keyframes rotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

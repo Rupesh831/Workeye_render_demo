@@ -1,4 +1,6 @@
 /*! tailwindcss v4.1.3 | MIT License | https://tailwindcss.com */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @layer properties {
   @supports (((-webkit-hyphens: none)) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color: rgb(from red r g b)))) {
     *, :before, :after, ::backdrop {
@@ -58,6 +60,32 @@
     }
   }
 }
+
+/* ============================
+   GLOBAL TYPOGRAPHY
+   ============================ */
+
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: 2rem; }  /* 32px */
+h2 { font-size: 1.5rem; } /* 24px */
+h3 { font-size: 1.25rem; } /* 20px */
+h4 { font-size: 1.125rem; } /* 18px */
 
 /* ============================
    NEUMORPHISM DESIGN SYSTEM
@@ -138,9 +166,10 @@
   background: var(--neu-surface);
   border: none;
   border-radius: 12px;
-  padding: 12px 24px;
+  padding: 12px 20px;
   color: var(--neu-text-primary);
   font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
   box-shadow: 
     6px 6px 12px var(--neu-shadow-dark),
@@ -164,13 +193,53 @@
 .neu-btn-accent {
   background: linear-gradient(145deg, #7477ff, #5558d9);
   color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 
+    6px 6px 12px var(--neu-shadow-dark),
+    -6px -6px 12px var(--neu-shadow-light);
+  transition: all 0.2s ease;
+}
+
+.neu-btn-accent:hover {
+  background: linear-gradient(145deg, #8588ff, #6669e5);
+  box-shadow: 
+    8px 8px 16px var(--neu-shadow-dark),
+    -8px -8px 16px var(--neu-shadow-light);
+}
+
+/* Small button */
+.neu-btn-sm {
+  background: var(--neu-surface);
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  color: var(--neu-text-primary);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 
+    4px 4px 8px var(--neu-shadow-dark),
+    -4px -4px 8px var(--neu-shadow-light);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.neu-btn-sm:hover {
   box-shadow: 
     6px 6px 12px var(--neu-shadow-dark),
     -6px -6px 12px var(--neu-shadow-light);
 }
 
-.neu-btn-accent:hover {
-  background: linear-gradient(145deg, #8588ff, #6669e5);
+.neu-btn-sm.active {
+  background: linear-gradient(145deg, #7477ff, #5558d9);
+  color: white;
 }
 
 /* Input */
@@ -180,6 +249,7 @@
   border-radius: 12px;
   padding: 12px 16px;
   color: var(--neu-text-primary);
+  font-size: 14px;
   box-shadow: 
     inset 4px 4px 8px var(--neu-shadow-dark),
     inset -4px -4px 8px var(--neu-shadow-light);
@@ -202,19 +272,21 @@
 
 .neu-subtitle {
   color: var(--neu-text-secondary);
-  font-weight: 500;
-  font-size: 0.875rem;
+  font-weight: 600;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
 .neu-text {
   color: var(--neu-text-primary);
   line-height: 1.6;
+  font-size: 14px;
 }
 
 .neu-text-muted {
   color: var(--neu-text-secondary);
+  font-size: 13px;
 }
 
 /* Status badges */
@@ -223,7 +295,7 @@
   align-items: center;
   padding: 6px 12px;
   border-radius: 8px;
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 600;
   box-shadow: 
     3px 3px 6px var(--neu-shadow-dark),
@@ -262,6 +334,47 @@
   background: linear-gradient(90deg, #6366f1, #8b5cf6);
   box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
   transition: width 0.3s ease;
+}
+
+/* Table */
+.neu-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.neu-table thead th {
+  background: var(--neu-surface);
+  padding: 16px 20px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--neu-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid rgba(190, 195, 201, 0.3);
+}
+
+.neu-table tbody tr {
+  background: var(--neu-surface);
+  transition: all 0.2s ease;
+}
+
+.neu-table tbody tr:hover {
+  box-shadow: 
+    inset 0 2px 4px rgba(190, 195, 201, 0.15),
+    inset 0 -2px 4px rgba(255, 255, 255, 0.15);
+}
+
+.neu-table tbody td {
+  padding: 16px 20px;
+  font-size: 14px;
+  color: var(--neu-text-primary);
+  border-bottom: 1px solid rgba(190, 195, 201, 0.2);
+}
+
+.neu-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 /* Divider */
@@ -413,6 +526,8 @@
   border: none;
   background: transparent;
   color: var(--neu-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -445,6 +560,8 @@
   border: none;
   background: var(--neu-surface);
   color: var(--neu-text-primary);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   box-shadow: 
     4px 4px 8px var(--neu-shadow-dark),
