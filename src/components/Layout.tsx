@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-22 11:00 IST - Sidebar fix: clickable admin card -> /profile + better sizing/alignment + mobile drawer
+// UPDATED: 2026-01-22 11:04 IST - Sidebar: reduce width, tighter spacing, compact layout
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -51,58 +51,58 @@ export function Layout({ children }: LayoutProps) {
   const NavButton = ({ path, icon: Icon, label }: any) => (
     <button
       onClick={() => handleNavigate(path)}
-      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${
-        isActive(path) ? 'bg-white text-indigo-600 shadow-md' : 'text-white hover:bg-white/20'
+      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+        isActive(path) ? 'bg-white text-indigo-600 shadow-sm' : 'text-white hover:bg-white/20'
       }`}
     >
-      <Icon className="w-5 h-5 flex-shrink-0" />
+      <Icon className="w-4 h-4 flex-shrink-0" />
       <span className="font-medium text-sm">{label}</span>
     </button>
   );
 
   const SidebarContent = ({ showMobileClose }: { showMobileClose?: boolean }) => (
     <div className="h-full flex flex-col">
-      {/* Header area */}
-      <div className="h-16 flex items-center justify-between px-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-            <Eye className="w-5 h-5 text-indigo-600" />
+      {/* Header */}
+      <div className="h-14 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-md">
+            <Eye className="w-4 h-4 text-indigo-600" />
           </div>
-          <span className="text-lg font-bold text-white">WorkEye</span>
+          <span className="text-base font-bold text-white">WorkEye</span>
         </div>
 
         {showMobileClose ? (
-          <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-white">
-            <X className="w-6 h-6" />
+          <button onClick={() => setMobileMenuOpen(false)} className="p-1 text-white">
+            <X className="w-5 h-5" />
           </button>
         ) : null}
       </div>
 
-      {/* Admin/Company card -> CLICKABLE to /profile */}
-      <div className="px-4 pt-2 pb-4">
+      {/* Admin card */}
+      <div className="px-3 pb-3">
         <button
           onClick={() => handleNavigate('/profile')}
-          className="w-full text-left bg-white/20 rounded-2xl px-4 py-3 border border-white/60 transition-colors hover:bg-white/35"
+          className="w-full text-left bg-white/20 rounded-xl px-3 py-2 border border-white/60 transition-colors hover:bg-white/30"
         >
-          <p className="text-sm font-semibold text-white truncate">{adminName}</p>
+          <p className="text-xs font-semibold text-white truncate">{adminName}</p>
           <p className="text-xs text-blue-100">Admin • View profile</p>
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
         {navigationItems.map((item) => (
           <NavButton key={item.path} {...item} />
         ))}
       </nav>
 
-      {/* Logout at bottom */}
-      <div className="p-4">
+      {/* Logout */}
+      <div className="p-3">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/35 text-white transition-all border border-white/60"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-all border border-white/60"
         >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
+          <LogOut className="w-4 h-4 flex-shrink-0" />
           <span className="font-medium text-sm">Logout</span>
         </button>
       </div>
@@ -111,9 +111,8 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Desktop sidebar */}
-      {/* NOTE: keep lg:block because current build output does not include lg:flex reliably. */}
-      <aside className="w-72 flex-shrink-0 h-full hidden lg:block" style={sidebarStyle}>
+      {/* Desktop sidebar - reduced width */}
+      <aside className="w-56 flex-shrink-0 h-full hidden lg:block" style={sidebarStyle}>
         <SidebarContent />
       </aside>
 
@@ -124,7 +123,7 @@ export function Layout({ children }: LayoutProps) {
             className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <aside className="fixed inset-y-0 left-0 w-72 h-full z-50 lg:hidden" style={sidebarStyle}>
+          <aside className="fixed inset-y-0 left-0 w-64 h-full z-50 lg:hidden" style={sidebarStyle}>
             <SidebarContent showMobileClose />
           </aside>
         </>
@@ -133,15 +132,15 @@ export function Layout({ children }: LayoutProps) {
       {/* Main */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Mobile header */}
-        <div className="lg:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm">
+        <div className="lg:hidden h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm">
           <button onClick={() => setMobileMenuOpen(true)} className="p-2">
-            <Menu className="w-6 h-6 text-gray-700" />
+            <Menu className="w-5 h-5 text-gray-700" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
               <Eye className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-gray-900">WorkEye</span>
+            <span className="text-base font-bold text-gray-900">WorkEye</span>
           </div>
           <div className="w-10"></div>
         </div>
