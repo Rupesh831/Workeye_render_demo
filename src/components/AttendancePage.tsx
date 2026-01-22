@@ -1,3 +1,4 @@
+// UPDATED: 2026-01-22 12:34 IST - Neumorphic design system
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -10,7 +11,9 @@ import {
   RefreshCw,
   Clock,
   Zap,
-  AlertCircle
+  AlertCircle,
+  Search,
+  Eye
 } from 'lucide-react';
 import { AttendanceDetailView } from './AttendanceDetailView';
 
@@ -101,14 +104,9 @@ export function AttendancePage() {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-50 text-green-700 border-green-200';
-      case 'idle':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
-    }
+    if (status === 'active') return 'neu-badge-success';
+    if (status === 'idle') return 'neu-badge-warning';
+    return 'neu-badge-danger';
   };
 
   if (selectedMember) {
@@ -116,213 +114,194 @@ export function AttendancePage() {
   }
 
   return (
-    <div className="p-6">
+    <div style={{ minHeight: '100vh', padding: '32px' }}>
       {error && (
-        <div 
-          className="mb-6 p-4 bg-red-50 rounded-2xl flex items-start space-x-3"
-          style={{ boxShadow: '4px 4px 10px rgba(239, 68, 68, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)' }}
-        >
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <div className="neu-card" style={{ marginBottom: '24px', padding: '16px', background: 'linear-gradient(145deg, #fecaca, #fca5a5)', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+          <AlertCircle style={{ width: '20px', height: '20px', color: '#7f1d1d', flexShrink: 0, marginTop: '2px' }} />
           <div>
-            <p className="text-sm font-medium text-red-800">Error</p>
-            <p className="text-sm text-red-600 mt-1">{error}</p>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: '#7f1d1d', margin: 0, marginBottom: '4px' }}>Error</p>
+            <p style={{ fontSize: '13px', color: '#991b1b', margin: 0 }}>{error}</p>
           </div>
         </div>
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-6">
-        <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div 
-              className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center"
-              style={{ boxShadow: '3px 3px 6px rgba(96, 165, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
-            >
-              <Users className="w-6 h-6 text-white" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+        <div className="neu-card-flat" style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #93c5fd, #60a5fa)' }}>
+              <Users style={{ width: '20px', height: '20px', color: '#1e3a8a' }} />
             </div>
+            <h3 className="neu-title" style={{ fontSize: '28px', margin: 0 }}>{stats.totalMembers}</h3>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.totalMembers}</h3>
-          <p className="text-sm text-gray-500 font-medium">Total Members</p>
+          <p className="neu-text-muted" style={{ margin: 0 }}>Total Members</p>
         </div>
 
-        <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div 
-              className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center"
-              style={{ boxShadow: '3px 3px 6px rgba(34, 197, 94, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
-            >
-              <LogIn className="w-6 h-6 text-white" />
+        <div className="neu-card-flat" style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #86efac, #6ee7b7)' }}>
+              <LogIn style={{ width: '20px', height: '20px', color: '#065f46' }} />
             </div>
+            <h3 className="neu-title" style={{ fontSize: '28px', margin: 0 }}>{stats.punchedIn}</h3>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.punchedIn}</h3>
-          <p className="text-sm text-gray-500 font-medium">Punched In</p>
+          <p className="neu-text-muted" style={{ margin: 0 }}>Punched In</p>
         </div>
 
-        <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div 
-              className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center"
-              style={{ boxShadow: '3px 3px 6px rgba(251, 146, 60, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
-            >
-              <LogOut className="w-6 h-6 text-white" />
+        <div className="neu-card-flat" style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #fdba74, #fb923c)' }}>
+              <LogOut style={{ width: '20px', height: '20px', color: '#7c2d12' }} />
             </div>
+            <h3 className="neu-title" style={{ fontSize: '28px', margin: 0 }}>{stats.punchedOut}</h3>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.punchedOut}</h3>
-          <p className="text-sm text-gray-500 font-medium">Punched Out</p>
+          <p className="neu-text-muted" style={{ margin: 0 }}>Punched Out</p>
         </div>
 
-        <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div 
-              className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center"
-              style={{ boxShadow: '3px 3px 6px rgba(167, 139, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
-            >
-              <Zap className="w-6 h-6 text-white" />
+        <div className="neu-card-flat" style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #c4b5fd, #a78bfa)' }}>
+              <Zap style={{ width: '20px', height: '20px', color: '#5b21b6' }} />
             </div>
+            <h3 className="neu-title" style={{ fontSize: '28px', margin: 0 }}>{stats.active}</h3>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.active}</h3>
-          <p className="text-sm text-gray-500 font-medium">Active Now</p>
+          <p className="neu-text-muted" style={{ margin: 0 }}>Active Now</p>
         </div>
 
-        <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div 
-              className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center"
-              style={{ boxShadow: '3px 3px 6px rgba(251, 191, 36, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
-            >
-              <Moon className="w-6 h-6 text-white" />
+        <div className="neu-card-flat" style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #fde047, #fbbf24)' }}>
+              <Moon style={{ width: '20px', height: '20px', color: '#78350f' }} />
             </div>
+            <h3 className="neu-title" style={{ fontSize: '28px', margin: 0 }}>{stats.idle}</h3>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.idle}</h3>
-          <p className="text-sm text-gray-500 font-medium">Idle</p>
+          <p className="neu-text-muted" style={{ margin: 0 }}>Idle</p>
         </div>
 
-        <div 
-          className="bg-[#e8ecf3] rounded-3xl p-6 transition-all hover:scale-105"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div 
-              className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center"
-              style={{ boxShadow: '3px 3px 6px rgba(156, 163, 175, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
-            >
-              <Power className="w-6 h-6 text-white" />
+        <div className="neu-card-flat" style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+            <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #cbd5e1, #94a3b8)' }}>
+              <Power style={{ width: '20px', height: '20px', color: '#334155' }} />
             </div>
+            <h3 className="neu-title" style={{ fontSize: '28px', margin: 0 }}>{stats.offline}</h3>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-2">{stats.offline}</h3>
-          <p className="text-sm text-gray-500 font-medium">Offline</p>
+          <p className="neu-text-muted" style={{ margin: 0 }}>Offline</p>
         </div>
       </div>
 
       {/* Members Table */}
-      <div 
-        className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
-        style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-      >
-        <div className="px-6 py-5 flex items-center justify-between border-b border-gray-200">
+      <div className="neu-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid rgba(190, 195, 201, 0.3)' }}>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Attendance Records</h3>
-            <p className="text-sm text-gray-500 mt-1">{filteredMembers.length} members</p>
+            <h3 className="neu-title" style={{ fontSize: '20px', marginBottom: '4px' }}>Attendance Records</h3>
+            <p className="neu-text-muted" style={{ margin: 0 }}>{filteredMembers.length} members</p>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="relative">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ position: 'relative', width: '250px' }}>
+              <Search style={{ position: 'absolute', width: '18px', height: '18px', color: '#64748b', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 pl-4 pr-4 py-2 bg-[#e8ecf3] rounded-2xl text-sm focus:outline-none"
-                style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
+                className="neu-input"
+                style={{ width: '100%', paddingLeft: '42px', paddingRight: '12px' }}
               />
             </div>
             <button
               onClick={loadAttendanceData}
               disabled={loading}
-              className="p-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl transition-all hover:scale-105 disabled:opacity-50"
-              style={{ boxShadow: '4px 4px 10px rgba(99, 102, 241, 0.3)' }}
+              className="neu-btn-accent"
+              style={{ padding: '10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw style={{ width: '20px', height: '20px' }} className={loading ? 'animate-spin' : ''} />
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center">
-            <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Loading attendance...</p>
+          <div style={{ padding: '48px', textAlign: 'center' }}>
+            <div style={{ width: '48px', height: '48px', border: '4px solid #6366f1', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto 16px' }} className="animate-spin"></div>
+            <p className="neu-text" style={{ fontWeight: 600 }}>Loading attendance...</p>
           </div>
         ) : filteredMembers.length === 0 ? (
-          <div className="p-12 text-center">
-            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <div style={{ padding: '48px', textAlign: 'center' }}>
+            <Users style={{ width: '64px', height: '64px', color: '#cbd5e1', margin: '0 auto 16px' }} />
+            <h3 className="neu-title" style={{ fontSize: '18px', marginBottom: '8px' }}>
               {searchQuery ? 'No members found' : 'No attendance data'}
             </h3>
-            <p className="text-gray-600">
+            <p className="neu-text-muted">
               {searchQuery ? 'Try adjusting your search' : 'Attendance data will appear here'}
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+          <div style={{ overflowX: 'auto' }}>
+            <table className="neu-table">
+              <thead>
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Member</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Position</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Punch In</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Punch Out</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Hours</th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                  <th>Member</th>
+                  <th>Position</th>
+                  <th>Status</th>
+                  <th>Punch In</th>
+                  <th>Punch Out</th>
+                  <th>Hours</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {filteredMembers.map((member) => (
-                  <tr key={member.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold"
-                          style={{ boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4)' }}
-                        >
+                  <tr key={member.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(145deg, #7477ff, #5558d9)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontWeight: 700,
+                          fontSize: '16px',
+                          boxShadow: '3px 3px 6px rgba(99, 102, 241, 0.4)'
+                        }}>
                           {member.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{member.name}</p>
-                          <p className="text-sm text-gray-500">{member.email}</p>
+                          <p className="neu-title" style={{ fontSize: '14px', marginBottom: '2px' }}>{member.name}</p>
+                          <p className="neu-text-muted" style={{ fontSize: '12px' }}>{member.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{member.position || '-'}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadge(member.status)}`}>
+                    <td>
+                      <span className="neu-text" style={{ fontSize: '14px' }}>{member.position || '-'}</span>
+                    </td>
+                    <td>
+                      <span className={`neu-badge ${getStatusBadge(member.status)}`}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', marginRight: '6px', background: 'currentColor' }}></span>
                         {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{formatTime(member.punch_in_time)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{formatTime(member.punch_out_time)}</td>
-                    <td className="px-6 py-4 text-sm font-semibold text-indigo-600">{formatHours(member.today_hours)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => setSelectedMember({ id: member.id, name: member.name })}
-                        className="text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline"
-                      >
-                        View Details
-                      </button>
+                    <td>
+                      <span className="neu-text" style={{ fontSize: '14px', fontWeight: 600 }}>{formatTime(member.punch_in_time)}</span>
+                    </td>
+                    <td>
+                      <span className="neu-text" style={{ fontSize: '14px', fontWeight: 600 }}>{formatTime(member.punch_out_time)}</span>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: '#6366f1' }}>{formatHours(member.today_hours)}</span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={() => setSelectedMember({ id: member.id, name: member.name })}
+                          className="neu-btn-sm"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          <Eye style={{ width: '14px', height: '14px' }} />
+                          <span>View</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
