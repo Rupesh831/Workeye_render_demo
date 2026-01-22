@@ -1,4 +1,4 @@
-// UPDATED: 2026-01-22 11:09 IST - GeoTrack-style sidebar: logo top, admin section, clean menu, bottom stats panel
+// UPDATED: 2026-01-22 11:16 IST - Hard override layout/sidebar using custom CSS classes (Tailwind build missing many utilities)
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -9,8 +9,7 @@ import {
   LogOut,
   Eye,
   Menu,
-  X,
-  Crown
+  X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -44,133 +43,88 @@ export function Layout({ children }: LayoutProps) {
     navigate('/login');
   };
 
-  const NavButton = ({ path, icon: Icon, label }: any) => (
-    <button
-      onClick={() => handleNavigate(path)}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
-        isActive(path)
-          ? 'bg-indigo-600 text-white font-medium shadow-sm'
-          : 'text-gray-600 hover:bg-gray-100'
-      }`}
-    >
-      <Icon className="w-4 h-4 flex-shrink-0" />
-      <span>{label}</span>
-    </button>
-  );
-
-  const SidebarContent = ({ showMobileClose }: { showMobileClose?: boolean }) => (
-    <div className="h-full flex flex-col bg-white">
-      {/* Logo Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
-            <Eye className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-lg font-bold text-gray-900">WorkEye</span>
+  const Sidebar = ({ showMobileClose }: { showMobileClose?: boolean }) => (
+    <aside className={showMobileClose ? 'we-sidebar we-sidebar-mobile' : 'we-sidebar we-desktop-only'}>
+      {/* Top logo */}
+      <div className="we-sidebar-header">
+        <div className="we-logo" onClick={() => handleNavigate('/dashboard')} role="button" tabIndex={0}>
+          <span className="we-logo-icon">
+            <Eye className="we-icon" />
+          </span>
+          <span className="we-logo-text">WorkEye</span>
         </div>
-        {showMobileClose && (
-          <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 text-gray-500 hover:text-gray-700">
-            <X className="w-5 h-5" />
+
+        {showMobileClose ? (
+          <button className="we-icon-btn" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
+            <X className="we-icon" />
           </button>
-        )}
+        ) : null}
       </div>
 
-      {/* Admin Section */}
-      <div className="px-3 pt-4 pb-3">
-        <button
-          onClick={() => handleNavigate('/profile')}
-          className="w-full text-left bg-pink-50 rounded-xl p-3 border border-pink-200 transition-colors hover:bg-pink-100"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <Crown className="w-4 h-4 text-pink-600" />
-            <p className="text-xs font-bold text-pink-600 uppercase tracking-wide">SUPER ADMIN</p>
-          </div>
-          <p className="text-sm font-semibold text-gray-900">{adminName}</p>
-          <p className="text-xs text-gray-500 mt-0.5">All companies access</p>
+      {/* Admin name (click -> /profile) */}
+      <div className="we-sidebar-section">
+        <button className="we-admin-card" onClick={() => handleNavigate('/profile')}>
+          <div className="we-admin-title">{adminName}</div>
+          <div className="we-admin-sub">Admin • View profile</div>
         </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-        {navigationItems.map((item) => (
-          <NavButton key={item.path} {...item} />
+      {/* Menu (GREEN in your screenshot) */}
+      <nav className="we-nav">
+        {navigationItems.map(({ path, icon: Icon, label }) => (
+          <button
+            key={path}
+            className={`we-nav-btn ${isActive(path) ? 'active' : ''}`}
+            onClick={() => handleNavigate(path)}
+          >
+            <Icon className="we-icon" />
+            <span>{label}</span>
+          </button>
         ))}
       </nav>
 
-      {/* Bottom Stats Panel */}
-      <div className="px-3 pb-3 pt-2 border-t border-gray-200">
-        <div className="bg-indigo-50 rounded-xl p-3 mb-2">
-          <div className="flex items-center gap-2 mb-2">
-            <Crown className="w-4 h-4 text-indigo-600" />
-            <p className="text-xs font-bold text-indigo-900">Super Administrator</p>
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-600">Users</span>
-              <span className="font-semibold text-gray-900">0/</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-600">Clients</span>
-              <span className="font-semibold text-gray-900">Unlimited</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-600">Storage</span>
-              <span className="font-semibold text-gray-900">Unlimited</span>
-            </div>
-          </div>
-        </div>
+      {/* Push logout to bottom */}
+      <div className="we-spacer" />
 
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all text-sm font-medium"
-        >
-          <LogOut className="w-4 h-4" />
+      {/* Logout (GREEN in your screenshot) */}
+      <div className="we-sidebar-section">
+        <button className="we-logout" onClick={handleLogout}>
+          <LogOut className="we-icon" />
           <span>Logout</span>
         </button>
       </div>
-    </div>
+    </aside>
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="we-app">
       {/* Desktop sidebar */}
-      <aside className="w-56 flex-shrink-0 h-full hidden lg:block border-r border-gray-200">
-        <SidebarContent />
-      </aside>
+      <Sidebar />
 
       {/* Mobile drawer */}
-      {mobileMenuOpen && (
+      {mobileMenuOpen ? (
         <>
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <aside className="fixed inset-y-0 left-0 w-64 h-full z-50 lg:hidden shadow-xl">
-            <SidebarContent showMobileClose />
-          </aside>
+          <div className="we-overlay" onClick={() => setMobileMenuOpen(false)} />
+          <Sidebar showMobileClose />
         </>
-      )}
+      ) : null}
 
       {/* Main */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Mobile header */}
-        <div className="lg:hidden h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm">
-          <button onClick={() => setMobileMenuOpen(true)} className="p-2">
-            <Menu className="w-5 h-5 text-gray-700" />
+      <div className="we-main">
+        <div className="we-mobile-header we-mobile-only">
+          <button className="we-icon-btn" onClick={() => setMobileMenuOpen(true)} aria-label="Open menu">
+            <Menu className="we-icon" />
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <Eye className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-base font-bold text-gray-900">WorkEye</span>
+          <div className="we-mobile-brand">
+            <span className="we-mobile-brand-icon">
+              <Eye className="we-icon" />
+            </span>
+            <span className="we-mobile-brand-text">WorkEye</span>
           </div>
-          <div className="w-10"></div>
+          <div style={{ width: 36 }} />
         </div>
 
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="we-content">{children}</main>
       </div>
     </div>
   );
