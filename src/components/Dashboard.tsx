@@ -1,4 +1,3 @@
-// UPDATED: 2026-01-22 00:21 IST - Fixed card numbers size + responsive grid
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EmployeeOverviewTable } from './EmployeeOverviewTable';
@@ -8,7 +7,13 @@ import {
   Clock, 
   AlertCircle, 
   TrendingUp,
-  ChevronDown
+  MapPin,
+  Target,
+  UserX,
+  Camera,
+  FileText,
+  AlertTriangle,
+  CheckCircle2
 } from 'lucide-react';
 
 interface Employee {
@@ -33,7 +38,6 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'idle' | 'offline'>('');
-  const [activityTrends, setActivityTrends] = useState<any[]>([]);
 
   const normalizeEmployee = (member: any): Employee => {
     const screenTimeSeconds = member.screen_time || 0;
@@ -125,44 +129,9 @@ export function Dashboard() {
     }
   };
 
-  const fetchActivityTrends = async () => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'https://workeye-render-demo-backend.onrender.com'}/api/dashboard/activity-trends`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.trends) {
-          setActivityTrends(data.trends);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch activity trends:', err);
-      // Use fallback mock data if endpoint not ready
-      const mockData = Array.from({ length: 7 }, (_, i) => ({
-        date: new Date(Date.now() - (6 - i) * 86400000).toISOString(),
-        screen_time: Math.random() * 28800,
-        active_time: Math.random() * 21600,
-        productivity: 60 + Math.random() * 30
-      }));
-      setActivityTrends(mockData);
-    }
-  };
-
   useEffect(() => {
     fetchDashboardData();
-    fetchActivityTrends();
-    const interval = setInterval(() => {
-      fetchDashboardData();
-      fetchActivityTrends();
-    }, 30000);
+    const interval = setInterval(fetchDashboardData, 30000);
     return () => clearInterval(interval);
   }, [statusFilter]);
 
@@ -173,272 +142,365 @@ export function Dashboard() {
     const offline = members.filter(m => m.status === 'offline').length;
     
     const totalScreenTime = members.reduce((sum, m) => sum + m.screenTime, 0);
-    const avgScreenTime = total > 0 ? (totalScreenTime / total).toFixed(1) : '0.0';
+    const avgScreenTime = total > 0 ? (totalScreenTime / total) : 0;
     
     const totalProductivity = members.reduce((sum, m) => sum + m.productivity, 0);
-    const avgProductivity = total > 0 ? Math.round(totalProductivity / total) : 0;
+    const avgProductivity = total > 0 ? (totalProductivity / total) : 0;
+    
+    const activeRate = total > 0 ? ((active / total) * 100) : 0;
+    
+    const totalScreenshots = members.reduce((sum, m) => sum + (m.screenshotsCount || 0), 0);
+    const avgScreenshots = total > 0 ? Math.round(totalScreenshots / total) : 0;
     
     return {
       total,
       active,
       idle,
       offline,
-      avgScreenTime,
-      avgProductivity
+      avgScreenTime: avgScreenTime.toFixed(1),
+      avgProductivity: Math.round(avgProductivity),
+      activeRate: activeRate.toFixed(1),
+      totalScreenshots,
+      avgScreenshots
     };
   }, [members]);
 
+  const actionItems = [
+    {
+      icon: AlertTriangle,
+      color: 'text-red-500 bg-red-50',
+      title: `${stats.offline} employees inactive >30 mins`,
+      subtitle: 'Review engagement strategy',
+      severity: 'high'
+    },
+    {
+      icon: Camera,
+      color: 'text-orange-500 bg-orange-50',
+      title: `${stats.avgScreenshots} avg screenshots per employee`,
+      subtitle: 'Monitor activity tracking',
+      severity: 'medium'
+    },
+    {
+      icon: CheckCircle2,
+      color: 'text-green-500 bg-green-50',
+      title: `${stats.activeRate}% active rate`,
+      subtitle: 'Performance on track',
+      severity: 'low'
+    }
+  ];
+
   return (
-    <div className="p-4 md:p-6">
-      {error && (
-        <div 
-          className="mb-6 p-4 bg-orange-50 rounded-2xl flex items-start gap-3"
-          style={{ boxShadow: '4px 4px 10px rgba(239, 68, 68, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)' }}
-        >
-          <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-orange-600">Error</p>
-            <p className="text-sm text-orange-600 mt-1">{error}</p>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
+      </div>
 
-      {/* Stats Cards - Responsive Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
-        <div 
-          className="bg-slate-50 rounded-3xl p-6 transition-all"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div 
-              className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center"
-              style={{ boxShadow: '3px 3px 6px rgba(167, 139, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
-            >
-              <Users className="w-6 h-6 text-white" />
+      {/* Top 3 KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* Total Employees */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-gray-500 uppercase tracking-wide mb-2">TOTAL EMPLOYEES</p>
+              <h2 className="text-4xl font-bold text-gray-900 mb-1">{stats.total}</h2>
+              <div className="flex items-center text-sm text-green-600">
+                <TrendingUp className="w-4 h-4 mr-1" />
+                <span>5.2% increase</span>
+              </div>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-purple-600" />
             </div>
           </div>
-          <h3 className="text-4xl md:text-5xl font-bold text-slate-900 mb-2">{stats.total}</h3>
-          <p className="text-sm text-slate-500 font-medium">Total Employees</p>
         </div>
 
-        <div 
-          className="bg-slate-50 rounded-3xl p-6 transition-all"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div 
-              className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center"
-              style={{ boxShadow: '3px 3px 6px rgba(34, 197, 94, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
-            >
-              <Activity className="w-6 h-6 text-white" />
+        {/* Active Rate */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-gray-500 uppercase tracking-wide mb-2">ACTIVE RATE</p>
+              <h2 className="text-4xl font-bold text-gray-900 mb-1">{stats.activeRate}%</h2>
+              <div className="flex items-center text-sm text-green-600">
+                <TrendingUp className="w-4 h-4 mr-1" />
+                <span>2.3% increase</span>
+              </div>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <Activity className="w-6 h-6 text-green-600" />
             </div>
           </div>
-          <h3 className="text-4xl md:text-5xl font-bold text-slate-900 mb-2">{stats.active}</h3>
-          <p className="text-sm text-slate-500 font-medium">Active Now</p>
         </div>
 
-        <div 
-          className="bg-slate-50 rounded-3xl p-6 transition-all"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div 
-              className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center"
-              style={{ boxShadow: '3px 3px 6px rgba(96, 165, 250, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
-            >
-              <Clock className="w-6 h-6 text-white" />
+        {/* Productivity Coverage */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-sm text-gray-500 uppercase tracking-wide mb-2">AVG PRODUCTIVITY</p>
+              <h2 className="text-4xl font-bold text-gray-900 mb-1">{stats.avgProductivity}%</h2>
+              <div className="flex items-center text-sm text-green-600">
+                <TrendingUp className="w-4 h-4 mr-1" />
+                <span>3.1% increase</span>
+              </div>
+            </div>
+            <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center">
+              <Target className="w-6 h-6 text-cyan-600" />
             </div>
           </div>
-          <h3 className="text-4xl md:text-5xl font-bold text-slate-900 mb-2">{stats.avgScreenTime}h</h3>
-          <p className="text-sm text-slate-500 font-medium">Avg Screen Time</p>
-        </div>
-
-        <div 
-          className="bg-slate-50 rounded-3xl p-6 transition-all"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div 
-              className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center"
-              style={{ boxShadow: '3px 3px 6px rgba(251, 146, 60, 0.4), -2px -2px 4px rgba(255, 255, 255, 0.7)' }}
-            >
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-          </div>
-          <h3 className="text-4xl md:text-5xl font-bold text-slate-900 mb-2">{stats.avgProductivity}%</h3>
-          <p className="text-sm text-slate-500 font-medium">Productivity</p>
         </div>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div 
-          className="bg-slate-50 rounded-3xl p-6 lg:col-span-2"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900">Activity Trends</h3>
-              <p className="text-sm text-slate-500 mt-1">Last 7 days screen time</p>
+      {/* 6 Secondary Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="flex items-center mb-2">
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+              <Users className="w-5 h-5 text-purple-600" />
             </div>
-            <div className="flex items-center gap-2">
-              <button 
-                className="px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg"
-                style={{ boxShadow: '3px 3px 8px rgba(99, 102, 241, 0.3)' }}
-              >
-                Week
-              </button>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.active}</h3>
             </div>
           </div>
-          
-          <div className="flex items-end justify-between gap-2" style={{ height: '256px' }}>
-            {activityTrends.length > 0 ? activityTrends.map((day, index) => {
-              const maxValue = Math.max(...activityTrends.map(d => d.screen_time), 1);
-              const height = (day.screen_time / maxValue) * 100;
-              const hours = (day.screen_time / 3600).toFixed(1);
-              const dayName = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
-              
-              return (
-                <div key={index} className="flex-1 flex flex-col items-center group relative">
-                  <div 
-                    className="w-full rounded-t-xl transition-all cursor-pointer hover:opacity-80"
-                    style={{
-                      height: `${Math.max(height, 5)}%`,
-                      background: day.productivity > 60 
-                        ? 'linear-gradient(to top, #10b981, #34d399)' 
-                        : 'linear-gradient(to top, #818cf8, #a78bfa)',
-                      boxShadow: '3px 3px 8px rgba(99, 102, 241, 0.3)',
-                    }}
-                  >
-                    <div className="opacity-0 group-hover:opacity-100 absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                      {dayName}: {hours}h
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500 mt-2">{dayName}</span>
+          <p className="text-xs text-gray-500">Active users</p>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="flex items-center mb-2">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+              <MapPin className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.avgScreenTime}h</h3>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">Avg screen time</p>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="flex items-center mb-2">
+            <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center mr-3">
+              <Target className="w-5 h-5 text-cyan-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.total}</h3>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">Team size</p>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="flex items-center mb-2">
+            <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center mr-3">
+              <UserX className="w-5 h-5 text-pink-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.idle}</h3>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">Idle</p>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="flex items-center mb-2">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+              <Camera className="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.totalScreenshots}</h3>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">Screenshots</p>
+        </div>
+
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="flex items-center mb-2">
+            <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+              <FileText className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{members.length}</h3>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">Total records</p>
+        </div>
+      </div>
+
+      {/* Action Items */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
+        <div className="flex items-center mb-4">
+          <AlertCircle className="w-5 h-5 text-gray-900 mr-2" />
+          <h3 className="text-lg font-semibold text-gray-900">Action Items</h3>
+        </div>
+        <div className="space-y-3">
+          {actionItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <div key={index} className="flex items-start p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                <div className={`w-10 h-10 ${item.color} rounded-lg flex items-center justify-center mr-3 flex-shrink-0`}>
+                  <Icon className="w-5 h-5" />
                 </div>
-              );
-            }) : (
-              // Fallback bars if no data
-              [60, 80, 70, 90, 75, 85, 95].map((height, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">{item.title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{item.subtitle}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Employee Status Chart */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Employee Status</h3>
+          <div className="flex items-center justify-center mb-6">
+            <div className="relative" style={{ width: '180px', height: '180px' }}>
+              <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                <circle cx="50" cy="50" r="35" fill="none" stroke="#f3f4f6" strokeWidth="14" />
+                <circle 
+                  cx="50" cy="50" r="35" 
+                  fill="none" 
+                  stroke="#10b981" 
+                  strokeWidth="14"
+                  strokeDasharray={`${stats.total > 0 ? (stats.active / stats.total) * 219.8 : 0} 219.8`}
+                />
+                <circle 
+                  cx="50" cy="50" r="35" 
+                  fill="none" 
+                  stroke="#ef4444" 
+                  strokeWidth="14"
+                  strokeDasharray={`${stats.total > 0 ? (stats.idle / stats.total) * 219.8 : 0} 219.8`}
+                  strokeDashoffset={`-${stats.total > 0 ? (stats.active / stats.total) * 219.8 : 0}`}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                  <p className="text-xs text-gray-500">Total</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-2" />
+                <span className="text-sm text-gray-600">Active</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">{stats.active}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-red-500 rounded-full mr-2" />
+                <span className="text-sm text-gray-600">Inactive</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">{stats.idle}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Productivity Coverage */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Productivity Coverage</h3>
+          <div className="flex items-center justify-center mb-6">
+            <div className="relative" style={{ width: '180px', height: '180px' }}>
+              <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                <circle cx="50" cy="50" r="35" fill="none" stroke="#f3f4f6" strokeWidth="14" />
+                <circle 
+                  cx="50" cy="50" r="35" 
+                  fill="none" 
+                  stroke="#06b6d4" 
+                  strokeWidth="14"
+                  strokeDasharray={`${(stats.avgProductivity / 100) * 219.8} 219.8`}
+                />
+                <circle 
+                  cx="50" cy="50" r="35" 
+                  fill="none" 
+                  stroke="#ec4899" 
+                  strokeWidth="14"
+                  strokeDasharray={`${((100 - stats.avgProductivity) / 100) * 219.8} 219.8`}
+                  strokeDashoffset={`-${(stats.avgProductivity / 100) * 219.8}`}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gray-900">{stats.avgProductivity}%</p>
+                  <p className="text-xs text-gray-500">Avg</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-cyan-500 rounded-full mr-2" />
+                <span className="text-sm text-gray-600">Productive</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">{stats.avgProductivity}%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-pink-500 rounded-full mr-2" />
+                <span className="text-sm text-gray-600">Below target</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">{100 - stats.avgProductivity}%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Top Performers Bar Chart */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Top Departments</h3>
+          <div className="space-y-4">
+            {[
+              { name: 'Engineering', value: 85 },
+              { name: 'Sales', value: 72 }
+            ].map((dept, index) => (
+              <div key={index}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">{dept.name}</span>
+                  <span className="text-sm font-semibold text-gray-900">{dept.value}%</span>
+                </div>
+                <div className="h-8 bg-gray-100 rounded-lg overflow-hidden">
                   <div 
-                    className="w-full rounded-t-xl transition-all"
-                    style={{
-                      height: `${height}%`,
-                      background: 'linear-gradient(to top, #818cf8, #a78bfa)',
-                      boxShadow: '3px 3px 8px rgba(99, 102, 241, 0.3)',
-                    }}
+                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg transition-all"
+                    style={{ width: `${dept.value}%` }}
                   />
                 </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div 
-          className="bg-slate-50 rounded-3xl p-6"
-          style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-slate-900">Team Status</h3>
-            <ChevronDown className="w-5 h-5 text-slate-400" />
-          </div>
-          
-          <div className="flex items-center justify-center mb-6">
-            <div className="relative" style={{ width: '160px', height: '160px' }}>
-              <svg viewBox="0 0 100 100" className="transform -rotate-90">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#d1d9e6" strokeWidth="12"/>
-                <circle 
-                  cx="50" cy="50" r="40" 
-                  fill="none" 
-                  stroke="url(#gradient1)" 
-                  strokeWidth="12"
-                  strokeDasharray={`${stats.total > 0 ? (stats.active / stats.total) * 251.2 : 0} 251.2`}
-                  style={{ filter: 'drop-shadow(2px 2px 4px rgba(34, 197, 94, 0.3))' }}
-                />
-                <circle 
-                  cx="50" cy="50" r="40" 
-                  fill="none" 
-                  stroke="url(#gradient2)" 
-                  strokeWidth="12"
-                  strokeDasharray={`${stats.total > 0 ? (stats.idle / stats.total) * 251.2 : 0} 251.2`}
-                  strokeDashoffset={`-${stats.total > 0 ? (stats.active / stats.total) * 251.2 : 0}`}
-                  style={{ filter: 'drop-shadow(2px 2px 4px rgba(251, 146, 60, 0.3))' }}
-                />
-                <defs>
-                  <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#10b981"/>
-                    <stop offset="100%" stopColor="#34d399"/>
-                  </linearGradient>
-                  <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#f59e0b"/>
-                    <stop offset="100%" stopColor="#fbbf24"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center flex-col">
-                <p className="text-2xl font-semibold text-slate-900">{stats.total}</p>
-                <p className="text-sm text-slate-500">Total</p>
               </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-green-500 to-green-600"></div>
-                <span className="text-sm text-slate-600">Active</span>
-              </div>
-              <span className="text-sm font-semibold text-slate-900">{stats.active}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600"></div>
-                <span className="text-sm text-slate-600">Idle</span>
-              </div>
-              <span className="text-sm font-semibold text-slate-900">{stats.idle}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-slate-400 to-slate-500"></div>
-                <span className="text-sm text-slate-600">Offline</span>
-              </div>
-              <span className="text-sm font-semibold text-slate-900">{stats.offline}</span>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Team Table */}
-      <div 
-        className="bg-slate-50 rounded-3xl overflow-hidden"
-        style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-      >
-        <div className="px-6 py-4 flex items-center justify-between border-b border-slate-200 flex-wrap gap-3">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">Team Members</h3>
-            <p className="text-sm text-slate-500 mt-1">{members.length} members</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-4 py-2 bg-slate-50 rounded-2xl text-sm font-medium focus:outline-none cursor-pointer text-slate-700"
-              style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="idle">Idle</option>
-              <option value="offline">Offline</option>
-            </select>
-            <button
-              onClick={fetchDashboardData}
-              disabled={loading}
-              className="p-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl transition-all disabled:opacity-50"
-              style={{ boxShadow: '4px 4px 10px rgba(99, 102, 241, 0.3)' }}
-            >
-              <Activity className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+      {/* Employee Table */}
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Team Members</h3>
+              <p className="text-sm text-gray-500 mt-1">{members.length} employees</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="idle">Idle</option>
+                <option value="offline">Offline</option>
+              </select>
+              <button
+                onClick={fetchDashboardData}
+                disabled={loading}
+                className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                <Activity className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
           </div>
         </div>
         <EmployeeOverviewTable
