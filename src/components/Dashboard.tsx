@@ -4,16 +4,12 @@ import { EmployeeOverviewTable } from './EmployeeOverviewTable';
 import { 
   Activity, 
   Users, 
-  Clock, 
-  AlertCircle, 
   TrendingUp,
   MapPin,
   Target,
   UserX,
   Camera,
-  FileText,
-  AlertTriangle,
-  CheckCircle2
+  FileText
 } from 'lucide-react';
 
 interface Employee {
@@ -165,30 +161,6 @@ export function Dashboard() {
     };
   }, [members]);
 
-  const actionItems = [
-    {
-      icon: AlertTriangle,
-      color: 'text-red-500 bg-red-50',
-      title: `${stats.offline} employees inactive >30 mins`,
-      subtitle: 'Review engagement strategy',
-      severity: 'high'
-    },
-    {
-      icon: Camera,
-      color: 'text-orange-500 bg-orange-50',
-      title: `${stats.avgScreenshots} avg screenshots per employee`,
-      subtitle: 'Monitor activity tracking',
-      severity: 'medium'
-    },
-    {
-      icon: CheckCircle2,
-      color: 'text-green-500 bg-green-50',
-      title: `${stats.activeRate}% active rate`,
-      subtitle: 'Performance on track',
-      severity: 'low'
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Header */}
@@ -196,8 +168,8 @@ export function Dashboard() {
         <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
       </div>
 
-      {/* Top 3 KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      {/* Top 3 KPI Cards - ALWAYS SIDE BY SIDE */}
+      <div className="grid grid-cols-3 gap-6 mb-6">
         {/* Total Employees */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex items-start justify-between">
@@ -250,8 +222,8 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* 6 Secondary Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      {/* 6 Secondary Metrics - ALWAYS SIDE BY SIDE */}
+      <div className="grid grid-cols-6 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="flex items-center mb-2">
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
@@ -325,32 +297,8 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Action Items */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-        <div className="flex items-center mb-4">
-          <AlertCircle className="w-5 h-5 text-gray-900 mr-2" />
-          <h3 className="text-lg font-semibold text-gray-900">Action Items</h3>
-        </div>
-        <div className="space-y-3">
-          {actionItems.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <div key={index} className="flex items-start p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
-                <div className={`w-10 h-10 ${item.color} rounded-lg flex items-center justify-center mr-3 flex-shrink-0`}>
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{item.subtitle}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      {/* Charts Row - Only 2 charts (removed Top Departments) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Employee Status Chart */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Employee Status</h3>
@@ -446,30 +394,6 @@ export function Dashboard() {
               </div>
               <span className="text-sm font-semibold text-gray-900">{100 - stats.avgProductivity}%</span>
             </div>
-          </div>
-        </div>
-
-        {/* Top Performers Bar Chart */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Top Departments</h3>
-          <div className="space-y-4">
-            {[
-              { name: 'Engineering', value: 85 },
-              { name: 'Sales', value: 72 }
-            ].map((dept, index) => (
-              <div key={index}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">{dept.name}</span>
-                  <span className="text-sm font-semibold text-gray-900">{dept.value}%</span>
-                </div>
-                <div className="h-8 bg-gray-100 rounded-lg overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg transition-all"
-                    style={{ width: `${dept.value}%` }}
-                  />
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
