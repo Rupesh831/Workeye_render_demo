@@ -5,6 +5,7 @@ ANALYTICS_ROUTES.PY - Advanced Analytics (Synchronous + psycopg2)
 ✅ Member-specific analytics
 ✅ PostgreSQL aggregations
 ✅ FIXED: Uses admin_auth for proper authentication
+✅ FIXED: Changed activity_logs to activity_log to match schema
 """
 
 from flask import Blueprint, request, jsonify
@@ -40,14 +41,14 @@ def get_member_analytics(member_id):
             if not member:
                 return jsonify({'error': 'Member not found'}), 404
             
-            # Total activity stats
+            # Total activity stats - FIXED: activity_log (not activity_logs)
             cur.execute(
                 """
                 SELECT 
                     COUNT(*) as total_activities,
-                    COALESCE(SUM(duration_seconds), 0) / 3600.0 as total_hours,
+                    COALESCE(SUM(total_seconds), 0) / 3600.0 as total_hours,
                     COUNT(DISTINCT DATE(timestamp)) as active_days
-                FROM activity_logs
+                FROM activity_log
                 WHERE member_id = %s 
                   AND timestamp >= %s 
                   AND timestamp <= %s
@@ -56,19 +57,19 @@ def get_member_analytics(member_id):
             )
             stats = cur.fetchone()
             
-            # Top apps
+            # Top apps - FIXED: activity_log (not activity_logs)
             cur.execute(
                 """
                 SELECT 
-                    app_name,
+                    current_process as app_name,
                     COUNT(*) as count,
-                    COALESCE(SUM(duration_seconds), 0) / 3600.0 as hours
-                FROM activity_logs
+                    COALESCE(SUM(total_seconds), 0) / 3600.0 as hours
+                FROM activity_log
                 WHERE member_id = %s 
                   AND timestamp >= %s 
                   AND timestamp <= %s
-                  AND app_name IS NOT NULL
-                GROUP BY app_name
+                  AND current_process IS NOT NULL
+                GROUP BY current_process
                 ORDER BY hours DESC
                 LIMIT 10
                 """,
@@ -76,14 +77,14 @@ def get_member_analytics(member_id):
             )
             top_apps = cur.fetchall()
             
-            # Daily activity
+            # Daily activity - FIXED: activity_log (not activity_logs)
             cur.execute(
                 """
                 SELECT 
                     DATE(timestamp) as date,
                     COUNT(*) as activity_count,
-                    COALESCE(SUM(duration_seconds), 0) / 3600.0 as hours
-                FROM activity_logs
+                    COALESCE(SUM(total_seconds), 0) / 3600.0 as hours
+                FROM activity_log
                 WHERE member_id = %s 
                   AND timestamp >= %s 
                   AND timestamp <= %s
@@ -123,15 +124,16 @@ def get_productivity_trends():
         with get_db() as conn:
             cur = conn.cursor()
             
+            # FIXED: activity_log (not activity_logs)
             cur.execute(
                 """
                 SELECT 
                     DATE(timestamp) as date,
                     COUNT(DISTINCT member_id) as active_members,
                     COUNT(*) as total_activities,
-                    COALESCE(SUM(duration_seconds), 0) / 3600.0 as total_hours,
-                    COALESCE(AVG(duration_seconds), 0) as avg_duration_seconds
-                FROM activity_logs
+                    COALESCE(SUM(total_seconds), 0) / 3600.0 as total_hours,
+                    COALESCE(AVG(total_seconds), 0) as avg_duration_seconds
+                FROM activity_log
                 WHERE company_id = %s 
                   AND timestamp >= %s
                 GROUP BY date
@@ -167,20 +169,21 @@ def get_app_usage():
         with get_db() as conn:
             cur = conn.cursor()
             
+            # FIXED: activity_log (not activity_logs)
             cur.execute(
                 """
                 SELECT 
-                    app_name,
+                    current_process as app_name,
                     COUNT(*) as usage_count,
                     COUNT(DISTINCT member_id) as unique_users,
-                    COALESCE(SUM(duration_seconds), 0) / 3600.0 as total_hours,
-                    COALESCE(AVG(duration_seconds), 0) as avg_duration_seconds
-                FROM activity_logs
+                    COALESCE(SUM(total_seconds), 0) / 3600.0 as total_hours,
+                    COALESCE(AVG(total_seconds), 0) as avg_duration_seconds
+                FROM activity_log
                 WHERE company_id = %s 
                   AND timestamp >= %s 
                   AND timestamp <= %s
-                  AND app_name IS NOT NULL
-                GROUP BY app_name
+                  AND current_process IS NOT NULL
+                GROUP BY current_process
                 ORDER BY total_hours DESC
                 """,
                 (company_id, start_date, end_date)
@@ -296,23 +299,19 @@ def get_activity_analytics():
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Get activity logs with pagination
+            # Get activity logs with pagination - FIXED: activity_log (not activity_logs)
             cur.execute(
                 """
                 SELECT 
                     id,
                     timestamp,
-                    window_title,
-                    process_name,
-                    app_name,
-                    url,
-                    domain,
+                    current_window as window_title,
+                    current_process as process_name,
                     is_idle,
-                    is_locked,
-                    duration_seconds,
-                    tracking_date,
-                    created_at
-                FROM activity_logs
+                    locked,
+                    total_seconds as duration_seconds,
+                    timestamp::date as tracking_date
+                FROM activity_log
                 WHERE company_id = %s 
                   AND member_id = %s
                   AND timestamp >= %s 
@@ -324,11 +323,11 @@ def get_activity_analytics():
             )
             logs = cur.fetchall()
             
-            # Get total count for pagination
+            # Get total count for pagination - FIXED: activity_log (not activity_logs)
             cur.execute(
                 """
                 SELECT COUNT(*) as total
-                FROM activity_logs
+                FROM activity_log
                 WHERE company_id = %s 
                   AND member_id = %s
                   AND timestamp >= %s 
@@ -351,7 +350,9 @@ def get_activity_analytics():
     
     except Exception as e:
         print(f"❌ Activity analytics error: {e}")
-        return jsonify({'error': 'Failed to fetch activity analytics'}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to fetch activity analytics', 'details': str(e)}), 500
 
 
 # ============================================================================
@@ -374,21 +375,20 @@ def get_apps_analytics():
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Get raw application logs
+            # Get raw application logs - FIXED: activity_log (not activity_logs)
             cur.execute(
                 """
                 SELECT 
-                    app_name,
-                    process_name,
+                    current_process as app_name,
                     timestamp,
-                    duration_seconds,
-                    tracking_date
-                FROM activity_logs
+                    total_seconds as duration_seconds,
+                    timestamp::date as tracking_date
+                FROM activity_log
                 WHERE company_id = %s 
                   AND member_id = %s
                   AND timestamp >= %s 
                   AND timestamp <= %s
-                  AND app_name IS NOT NULL
+                  AND current_process IS NOT NULL
                 ORDER BY timestamp
                 """,
                 (company_id, member_id, start_date, end_date)
@@ -425,21 +425,20 @@ def get_websites_analytics():
         with get_db() as conn:
             cur = conn.cursor()
             
-            # Get raw website logs
+            # Get raw website logs from browser_history JSONB - FIXED: activity_log (not activity_logs)
             cur.execute(
                 """
                 SELECT 
-                    url,
-                    domain,
+                    browser_history,
                     timestamp,
-                    duration_seconds,
-                    tracking_date
-                FROM activity_logs
+                    total_seconds as duration_seconds,
+                    timestamp::date as tracking_date
+                FROM activity_log
                 WHERE company_id = %s 
                   AND member_id = %s
                   AND timestamp >= %s 
                   AND timestamp <= %s
-                  AND url IS NOT NULL
+                  AND browser_history IS NOT NULL
                 ORDER BY timestamp
                 """,
                 (company_id, member_id, start_date, end_date)
@@ -494,16 +493,16 @@ def get_work_behavior_analytics():
             )
             attendance = cur.fetchone()
             
-            # Get activity logs for the day
+            # Get activity logs for the day - FIXED: activity_log (not activity_logs)
             cur.execute(
                 """
                 SELECT 
                     timestamp,
-                    app_name,
+                    current_process as app_name,
                     is_idle,
-                    is_locked,
-                    duration_seconds
-                FROM activity_logs
+                    locked,
+                    total_seconds as duration_seconds
+                FROM activity_log
                 WHERE company_id = %s 
                   AND member_id = %s
                   AND DATE(timestamp) = %s
