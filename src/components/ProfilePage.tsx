@@ -1,7 +1,7 @@
-// UPDATED: 2026-01-21 17:16 IST - Neumorphic Design
+// UPDATED: 2026-01-22 11:57 IST - Neumorphic design system
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Save, X, Eye, Building2, Mail, User, Shield, Briefcase, Trash2, AlertTriangle } from 'lucide-react';
+import { Edit, Save, X, Building2, Mail, User, Shield, Briefcase, Trash2, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { auth as authAPI } from '../config/api';
 import {
@@ -118,56 +118,71 @@ export function ProfilePage() {
   };
 
   return (
-    <div className="p-6">
+    <div style={{ minHeight: '100vh', padding: '32px' }}>
       {/* Message Display */}
       {message && (
         <div 
-          className={`mb-6 p-4 rounded-2xl flex items-center space-x-3 ${
-            message.type === 'success' 
-              ? 'bg-green-50' 
-              : 'bg-red-50'
-          }`}
-          style={{ boxShadow: message.type === 'success'
-            ? '4px 4px 10px rgba(34, 197, 94, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)'
-            : '4px 4px 10px rgba(239, 68, 68, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)'
+          className="neu-card"
+          style={{ 
+            marginBottom: '24px',
+            padding: '16px',
+            background: message.type === 'success' ? 'linear-gradient(145deg, #d1fae5, #a7f3d0)' : 'linear-gradient(145deg, #fecaca, #fca5a5)',
           }}
         >
-          <p className={`text-sm font-medium ${
-            message.type === 'success' ? 'text-green-800' : 'text-red-800'
-          }`}>
+          <p style={{ 
+            fontSize: '14px', 
+            fontWeight: 600,
+            color: message.type === 'success' ? '#065f46' : '#7f1d1d',
+            margin: 0
+          }}>
             {message.text}
           </p>
         </div>
       )}
 
-      <div 
-        className="bg-[#e8ecf3] rounded-3xl overflow-hidden"
-        style={{ boxShadow: '8px 8px 16px #d1d9e6, -8px -8px 16px #ffffff' }}
-      >
+      <div className="neu-card" style={{ overflow: 'hidden', maxWidth: '900px', margin: '0 auto' }}>
         {/* Profile Header */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div 
-                className="w-20 h-20 rounded-full bg-white flex items-center justify-center text-2xl font-bold shadow-xl"
-                style={{ boxShadow: '4px 4px 12px rgba(0, 0, 0, 0.2), -2px -2px 8px rgba(255, 255, 255, 0.9)' }}
-              >
-                <span className="bg-gradient-to-br from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  {user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
-                </span>
+        <div style={{ 
+          background: 'linear-gradient(145deg, #7477ff, #5558d9)',
+          padding: '32px 24px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: 'var(--neu-surface)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '28px',
+                fontWeight: 800,
+                color: '#6366f1',
+                boxShadow: '6px 6px 12px rgba(0,0,0,0.2), -3px -3px 8px rgba(255,255,255,0.8)'
+              }}>
+                {user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
               </div>
-              <div className="text-white">
-                <h2 className="text-2xl font-bold">{user?.full_name || 'User'}</h2>
-                <p className="text-purple-100">{formData.role}</p>
+              <div style={{ color: 'white' }}>
+                <h1 className="neu-title" style={{ fontSize: '32px', margin: 0, marginBottom: '4px', color: 'white' }}>
+                  {user?.full_name || 'User'}
+                </h1>
+                <p style={{ fontSize: '14px', color: '#e0e7ff', margin: 0 }}>{formData.role}</p>
               </div>
             </div>
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-white text-indigo-600 rounded-2xl hover:scale-105 transition-all font-medium flex items-center space-x-2"
-                style={{ boxShadow: '3px 3px 8px rgba(0, 0, 0, 0.15), -2px -2px 6px rgba(255, 255, 255, 0.9)' }}
+                className="neu-btn"
+                style={{ 
+                  background: 'white',
+                  color: '#6366f1',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
               >
-                <Edit className="w-4 h-4" />
+                <Edit style={{ width: '16px', height: '16px' }} />
                 <span>Edit Profile</span>
               </button>
             )}
@@ -175,48 +190,39 @@ export function ProfilePage() {
         </div>
 
         {/* Profile Content */}
-        <div className="p-6 space-y-6">
+        <div style={{ padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
           {/* Company Info */}
-          <div 
-            className="bg-[#e8ecf3] rounded-2xl p-5"
-            style={{ boxShadow: 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff' }}
-          >
-            <div className="flex items-center space-x-2 mb-3">
-              <div 
-                className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center"
-                style={{ boxShadow: '2px 2px 4px rgba(96, 165, 250, 0.4)' }}
-              >
-                <Building2 className="w-4 h-4 text-white" />
+          <div className="neu-inset" style={{ padding: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #93c5fd, #60a5fa)' }}>
+                <Building2 style={{ width: '20px', height: '20px', color: '#1e3a8a' }} />
               </div>
-              <h3 className="font-semibold text-gray-900">Company Information</h3>
+              <h2 className="neu-title" style={{ fontSize: '18px', margin: 0 }}>Company Information</h2>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Company Name:</span>
-                <span className="text-sm font-medium text-gray-900">{company?.company_name || 'N/A'}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="neu-text-muted">Company Name:</span>
+                <span className="neu-title" style={{ fontSize: '14px' }}>{company?.company_name || 'N/A'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Company Username:</span>
-                <span className="text-sm font-medium text-gray-900">{company?.company_username || user?.company_username || 'N/A'}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="neu-text-muted">Company Username:</span>
+                <span className="neu-title" style={{ fontSize: '14px' }}>{company?.company_username || user?.company_username || 'N/A'}</span>
               </div>
             </div>
           </div>
 
           {/* Personal Information */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <div 
-                className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center"
-                style={{ boxShadow: '2px 2px 4px rgba(167, 139, 250, 0.4)' }}
-              >
-                <User className="w-4 h-4 text-white" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #c4b5fd, #a78bfa)' }}>
+                <User style={{ width: '20px', height: '20px', color: '#5b21b6' }} />
               </div>
-              <h3 className="font-semibold text-gray-900">Personal Information</h3>
+              <h2 className="neu-title" style={{ fontSize: '18px', margin: 0 }}>Personal Information</h2>
             </div>
             
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="neu-subtitle" style={{ display: 'block', marginBottom: '8px' }}>
                   Full Name
                 </label>
                 <input
@@ -224,17 +230,14 @@ export function ProfilePage() {
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full px-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none disabled:opacity-70 text-gray-900 font-medium"
-                  style={{ boxShadow: isEditing 
-                    ? 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff'
-                    : '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff'
-                  }}
+                  className={isEditing ? 'neu-input' : 'neu-btn'}
+                  style={{ width: '100%', opacity: isEditing ? 1 : 0.7 }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
+                <label className="neu-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <Mail style={{ width: '14px', height: '14px' }} />
                   Email Address
                 </label>
                 <input
@@ -242,17 +245,14 @@ export function ProfilePage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full px-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none disabled:opacity-70 text-gray-900 font-medium"
-                  style={{ boxShadow: isEditing 
-                    ? 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff'
-                    : '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff'
-                  }}
+                  className={isEditing ? 'neu-input' : 'neu-btn'}
+                  style={{ width: '100%', opacity: isEditing ? 1 : 0.7 }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Briefcase className="w-4 h-4" />
+                <label className="neu-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <Briefcase style={{ width: '14px', height: '14px' }} />
                   Position
                 </label>
                 <input
@@ -260,11 +260,8 @@ export function ProfilePage() {
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   disabled={!isEditing}
-                  className="w-full px-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none disabled:opacity-70 text-gray-900 font-medium"
-                  style={{ boxShadow: isEditing 
-                    ? 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff'
-                    : '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff'
-                  }}
+                  className={isEditing ? 'neu-input' : 'neu-btn'}
+                  style={{ width: '100%', opacity: isEditing ? 1 : 0.7 }}
                 />
               </div>
             </div>
@@ -273,19 +270,16 @@ export function ProfilePage() {
           {/* Change Password */}
           {isEditing && (
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div 
-                  className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center"
-                  style={{ boxShadow: '2px 2px 4px rgba(34, 197, 94, 0.4)' }}
-                >
-                  <Shield className="w-4 h-4 text-white" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                <div className="neu-icon-box-sm" style={{ background: 'linear-gradient(145deg, #86efac, #6ee7b7)' }}>
+                  <Shield style={{ width: '20px', height: '20px', color: '#065f46' }} />
                 </div>
-                <h3 className="font-semibold text-gray-900">Change Password (Optional)</h3>
+                <h2 className="neu-title" style={{ fontSize: '18px', margin: 0 }}>Change Password (Optional)</h2>
               </div>
               
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="neu-subtitle" style={{ display: 'block', marginBottom: '8px' }}>
                     Current Password
                   </label>
                   <input
@@ -293,13 +287,13 @@ export function ProfilePage() {
                     value={formData.current_password}
                     onChange={(e) => setFormData({ ...formData, current_password: e.target.value })}
                     placeholder="Enter current password"
-                    className="w-full px-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
-                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    className="neu-input"
+                    style={{ width: '100%' }}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="neu-subtitle" style={{ display: 'block', marginBottom: '8px' }}>
                     New Password
                   </label>
                   <input
@@ -307,13 +301,13 @@ export function ProfilePage() {
                     value={formData.new_password}
                     onChange={(e) => setFormData({ ...formData, new_password: e.target.value })}
                     placeholder="Enter new password"
-                    className="w-full px-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
-                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    className="neu-input"
+                    style={{ width: '100%' }}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="neu-subtitle" style={{ display: 'block', marginBottom: '8px' }}>
                     Confirm New Password
                   </label>
                   <input
@@ -321,8 +315,8 @@ export function ProfilePage() {
                     value={formData.confirm_password}
                     onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
                     placeholder="Confirm new password"
-                    className="w-full px-4 py-3 bg-[#e8ecf3] rounded-2xl focus:outline-none text-gray-900"
-                    style={{ boxShadow: 'inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff' }}
+                    className="neu-input"
+                    style={{ width: '100%' }}
                   />
                 </div>
               </div>
@@ -331,39 +325,41 @@ export function ProfilePage() {
 
           {/* Action Buttons */}
           {isEditing && (
-            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', paddingTop: '16px', borderTop: '1px solid rgba(190, 195, 201, 0.3)' }}>
               <button
                 onClick={handleCancel}
                 disabled={loading}
-                className="px-6 py-3 bg-[#e8ecf3] text-gray-700 rounded-2xl transition-all hover:scale-105 font-medium flex items-center gap-2 disabled:opacity-50"
-                style={{ boxShadow: '6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff' }}
+                className="neu-btn"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
               >
-                <X className="w-4 h-4" />
+                <X style={{ width: '16px', height: '16px' }} />
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl transition-all hover:scale-105 font-medium disabled:opacity-50 flex items-center gap-2"
-                style={{ boxShadow: '4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.7)' }}
+                className="neu-btn-accent"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
               >
-                <Save className="w-4 h-4" />
+                <Save style={{ width: '16px', height: '16px' }} />
                 {loading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           )}
 
           {/* Danger Zone */}
-          <div className="pt-6 border-t border-red-100">
-            <div 
-              className="bg-red-50 rounded-2xl p-6"
-              style={{ boxShadow: '4px 4px 10px rgba(239, 68, 68, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)' }}
-            >
-              <div className="flex items-start space-x-3 mb-4">
-                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div style={{ paddingTop: '24px', borderTop: '1px solid rgba(190, 195, 201, 0.3)' }}>
+            <div style={{ 
+              background: 'linear-gradient(145deg, #fecaca, #fca5a5)',
+              borderRadius: '16px',
+              padding: '24px',
+              boxShadow: '4px 4px 10px rgba(239, 68, 68, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.7)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
+                <AlertTriangle style={{ width: '20px', height: '20px', color: '#7f1d1d', flexShrink: 0, marginTop: '2px' }} />
                 <div>
-                  <h3 className="font-semibold text-red-800 mb-1">Danger Zone</h3>
-                  <p className="text-sm text-red-600">
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#7f1d1d', marginBottom: '8px' }}>Danger Zone</h3>
+                  <p style={{ fontSize: '13px', color: '#991b1b', margin: 0, lineHeight: 1.6 }}>
                     Permanently delete your account and all associated data. This action cannot be undone.
                   </p>
                 </div>
@@ -371,10 +367,23 @@ export function ProfilePage() {
               <button
                 onClick={() => setShowDeleteDialog(true)}
                 disabled={isEditing || loading}
-                className="px-4 py-2 bg-red-600 text-white rounded-2xl hover:bg-red-700 transition-all font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ boxShadow: '3px 3px 8px rgba(220, 38, 38, 0.4)' }}
+                style={{
+                  padding: '10px 16px',
+                  background: 'linear-gradient(145deg, #dc2626, #b91c1c)',
+                  color: 'white',
+                  borderRadius: '12px',
+                  border: 'none',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  cursor: isEditing || loading ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  opacity: isEditing || loading ? 0.5 : 1,
+                  boxShadow: '3px 3px 8px rgba(220, 38, 38, 0.4)'
+                }}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 style={{ width: '16px', height: '16px' }} />
                 Delete Account
               </button>
             </div>
